@@ -303,6 +303,30 @@
                     </ul>
                 </div>
             </div>
+
+            <!-- Przystanki & Notatki (zwijana sekcja) -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+                <button type="button" onclick="toggleTransportPanel()" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
+                    <h3 class="font-bold text-bari-primary flex items-center gap-2">
+                        <i class="fa-solid fa-signs-post text-blue-500"></i> Przystanki & Notatki
+                    </h3>
+                    <i id="transport-panel-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+                </button>
+                <div id="transport-panel-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                    <div class="mt-4">
+                        <label for="transport-notes" class="text-[10px] uppercase text-slate-500 font-bold mb-2 block"><i class="fa-solid fa-note-sticky"></i> Notatki</label>
+                        <textarea id="transport-notes" rows="4" placeholder="Numery linii, nazwy przystanków, godziny odjazdów..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-bari-primary resize-none" oninput="saveTransportNotes(this.value)"></textarea>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-[10px] uppercase text-slate-500 font-bold mb-2"><i class="fa-solid fa-camera"></i> Zdjęcia przystanków</p>
+                        <input type="file" id="transport-stop-upload" class="hidden" accept="image/*" onchange="handleStopPhotoUpload(event)">
+                        <button type="button" onclick="document.getElementById('transport-stop-upload').click()" class="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-bold mb-3 border border-slate-200 active:scale-95 transition-transform text-sm">
+                            <i class="fa-solid fa-plus text-bari-accent"></i> Dodaj zdjęcie przystanku
+                        </button>
+                        <div id="transport-stops-gallery" class="grid grid-cols-2 gap-3"></div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- ZAKŁADKA 6: NARZĘDZIA (Rozliczenia, Słownik, Awaria) -->
@@ -541,7 +565,8 @@
                         {id: 'pb6i3', text: 'Wylot do Krakowa 23:05', checked: false}
                     ]
                 }
-            ]
+            ],
+            transportStopPhotos: []
         };
 
         // Migawka stanu "fabrycznego" – kopia domyślnych danych zanim cokolwiek wczytamy
@@ -587,6 +612,7 @@
                 if(parsed.checkoutData) state.checkoutData = parsed.checkoutData;
                 if(parsed.bagsData) state.bagsData = parsed.bagsData;
                 if(parsed.planBari) state.planBari = parsed.planBari;
+                if(parsed.transportStopPhotos) state.transportStopPhotos = parsed.transportStopPhotos;
             } catch(e) {}
         }
 
@@ -601,8 +627,15 @@
                 inlineFields[key] = value;
                 try { localStorage.setItem('bariApp_' + key, value); } catch(e) {}
                 renderAll();
+            } else if (key === 'transport_notes') {
+                inlineFields.transport_notes = value;
+                try { localStorage.setItem('bariApp_transport_notes', value); } catch(e) {}
+                const notesEl = document.getElementById('transport-notes');
+                if (notesEl && notesEl.value !== value) notesEl.value = value || '';
             } else if (key.indexOf('img_') === 0) {
-                applyImage(key.slice(4), value); // zdjęcie od drugiej osoby
+                const imgId = key.slice(4);
+                if (imgId.indexOf('stop-') === 0) applyStopPhoto(imgId, value);
+                else applyImage(imgId, value);
             } else {
                 return; // inne klucze (np. kopie zapasowe) nie zmieniają widoku
             }
@@ -658,6 +691,7 @@
 
             inlineFields.baza_wifi = (serverData && serverData.baza_wifi !== undefined) ? serverData.baza_wifi : (localStorage.getItem('bariApp_baza_wifi') || '');
             inlineFields.awaria_ekuz = (serverData && serverData.awaria_ekuz !== undefined) ? serverData.awaria_ekuz : (localStorage.getItem('bariApp_awaria_ekuz') || '');
+            inlineFields.transport_notes = (serverData && serverData.transport_notes !== undefined) ? serverData.transport_notes : (localStorage.getItem('bariApp_transport_notes') || '');
 
             // Zdjęcia z serwera (klucze img_*)
             if (serverData) {
@@ -826,6 +860,10 @@
             if(wifiEl) wifiEl.innerText = inlineFields.baza_wifi || '_Wpisz Wi-Fi_';
             const ekuzEl = document.getElementById('awaria_ekuz');
             if(ekuzEl) ekuzEl.innerText = inlineFields.awaria_ekuz || '_Wpisz tutaj_';
+
+            const notesEl = document.getElementById('transport-notes');
+            if (notesEl && document.activeElement !== notesEl) notesEl.value = inlineFields.transport_notes || '';
+            renderTransportStops();
         }
 
         /* --- INTERAKCJE --- */
@@ -881,6 +919,121 @@
                 saveState(); renderAll(); showToast("Usunięto!");
             });
         }
+        /* --- TRANSPORT: NOTATKI & PRZYSTANKI --- */
+        let transportPanelOpen = localStorage.getItem('bariApp_transport_panel_open') === '1';
+        let transportNotesTimer = null;
+
+        function updateTransportPanelUI() {
+            const body = document.getElementById('transport-panel-body');
+            const chevron = document.getElementById('transport-panel-chevron');
+            if (!body) return;
+            if (transportPanelOpen) {
+                body.classList.remove('hidden');
+                if (chevron) chevron.classList.add('rotate-180');
+            } else {
+                body.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }
+        }
+
+        function toggleTransportPanel() {
+            transportPanelOpen = !transportPanelOpen;
+            updateTransportPanelUI();
+            try { localStorage.setItem('bariApp_transport_panel_open', transportPanelOpen ? '1' : '0'); } catch(e) {}
+        }
+
+        function saveTransportNotes(val) {
+            inlineFields.transport_notes = val;
+            try { localStorage.setItem('bariApp_transport_notes', val); } catch(e) {}
+            clearTimeout(transportNotesTimer);
+            transportNotesTimer = setTimeout(() => syncToServer('transport_notes', val), 800);
+        }
+
+        function getStopPhotoData(imgId) {
+            try { return localStorage.getItem('bariApp_' + imgId) || ''; } catch(e) { return ''; }
+        }
+
+        function renderTransportStops() {
+            const gallery = document.getElementById('transport-stops-gallery');
+            if (!gallery) return;
+            gallery.innerHTML = '';
+            const photos = state.transportStopPhotos || [];
+            if (photos.length === 0) {
+                gallery.innerHTML = '<p class="col-span-2 text-xs text-slate-400 text-center py-4">Brak zdjęć – dodaj tabliczkę przystanku</p>';
+                return;
+            }
+            photos.forEach((photo, idx) => {
+                const imgId = 'stop-' + photo.id;
+                const dataUrl = getStopPhotoData(imgId);
+                const div = document.createElement('div');
+                div.className = 'relative';
+                div.innerHTML = dataUrl
+                    ? `<img src="${dataUrl}" class="w-full aspect-square object-cover rounded-xl border border-slate-200 shadow-sm" alt="Przystanek ${idx + 1}">`
+                    : `<div class="w-full aspect-square bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 text-xs">Ładowanie...</div>`;
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'absolute top-2 right-2 bg-slate-800/70 text-white w-7 h-7 rounded-full text-xs';
+                removeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                removeBtn.onclick = () => removeStopPhoto(photo.id);
+                div.appendChild(removeBtn);
+                gallery.appendChild(div);
+            });
+        }
+
+        function applyStopPhoto(imgId, dataUrl) {
+            try {
+                if (dataUrl) localStorage.setItem('bariApp_' + imgId, dataUrl);
+                else localStorage.removeItem('bariApp_' + imgId);
+            } catch(e) {}
+            renderTransportStops();
+        }
+
+        async function handleStopPhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            setSyncStatus('syncing');
+            try {
+                let dataUrl = await compressImage(file, 1280, 0.7);
+                if (dataUrl.length > IMG_MAX_BYTES) dataUrl = await compressImage(file, 1000, 0.6);
+                if (dataUrl.length > IMG_MAX_BYTES) dataUrl = await compressImage(file, 800, 0.5);
+                const id = generateId();
+                const imgId = 'stop-' + id;
+                if (!state.transportStopPhotos) state.transportStopPhotos = [];
+                state.transportStopPhotos.push({ id });
+                applyStopPhoto(imgId, dataUrl);
+                syncToServer('img_' + imgId, dataUrl);
+                saveState();
+                showToast("Zdjęcie przystanku zapisane");
+            } catch(e) {
+                console.warn('Błąd zdjęcia przystanku:', e);
+                setSyncStatus('offline');
+                showToast("Nie udało się wczytać zdjęcia");
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        function removeStopPhoto(id) {
+            openConfirm("Usunąć to zdjęcie przystanku? Zniknie też u drugiej osoby.", () => {
+                state.transportStopPhotos = (state.transportStopPhotos || []).filter(p => p.id !== id);
+                const imgId = 'stop-' + id;
+                applyStopPhoto(imgId, '');
+                syncToServer('img_' + imgId, '');
+                saveState();
+                showToast("Usunięto zdjęcie");
+            });
+        }
+
+        function clearAllStopPhotos() {
+            (state.transportStopPhotos || []).forEach(p => {
+                const imgId = 'stop-' + p.id;
+                try { localStorage.removeItem('bariApp_' + imgId); } catch(e) {}
+                syncToServer('img_' + imgId, '');
+            });
+            state.transportStopPhotos = [];
+            renderTransportStops();
+        }
+
         function editInline(elId, title) {
             const el = document.getElementById(elId);
             const current = inlineFields[elId] || '';
@@ -1206,18 +1359,21 @@
 
         /* --- DANE: RESET FABRYCZNY + KOPIE ZAPASOWE --- */
         function resetToFactory() {
-            openConfirm("Przywrócić ustawienia fabryczne? Znikną wszystkie zaznaczenia, dodane pozycje, wpisane pola (Wi-Fi, EKUZ) i zdjęcia. Tej operacji nie można cofnąć.", () => {
+            openConfirm("Przywrócić ustawienia fabryczne? Znikną wszystkie zaznaczenia, dodane pozycje, wpisane pola (Wi-Fi, EKUZ, notatki transportu) i zdjęcia. Tej operacji nie można cofnąć.", () => {
+                clearAllStopPhotos();
                 state = JSON.parse(JSON.stringify(FACTORY_STATE));
-                inlineFields = { baza_wifi: '', awaria_ekuz: '' };
+                inlineFields = { baza_wifi: '', awaria_ekuz: '', transport_notes: '' };
                 try {
                     localStorage.setItem('bariApp_stateV6', JSON.stringify(state));
                     localStorage.setItem('bariApp_baza_wifi', '');
                     localStorage.setItem('bariApp_awaria_ekuz', '');
+                    localStorage.setItem('bariApp_transport_notes', '');
                 } catch(e) {}
                 // zapis na serwerze => zsynchronizuje też drugi telefon
                 syncToServer('main', JSON.stringify(state));
                 syncToServer('baza_wifi', '');
                 syncToServer('awaria_ekuz', '');
+                syncToServer('transport_notes', '');
                 // wyczyść zdjęcia (też u drugiej osoby)
                 Object.keys(IMG_CLEAR_BTN).forEach(imgId => {
                     applyImage(imgId, '');
@@ -1234,6 +1390,11 @@
                 const data = localStorage.getItem('bariApp_' + imgId);
                 if (data) images[imgId] = data;
             });
+            (state.transportStopPhotos || []).forEach(p => {
+                const imgId = 'stop-' + p.id;
+                const data = localStorage.getItem('bariApp_' + imgId);
+                if (data) images[imgId] = data;
+            });
             return {
                 app: 'bari',
                 version: 2,
@@ -1241,6 +1402,7 @@
                 main: JSON.stringify(state),
                 baza_wifi: inlineFields.baza_wifi || '',
                 awaria_ekuz: inlineFields.awaria_ekuz || '',
+                transport_notes: inlineFields.transport_notes || '',
                 images: images
             };
         }
@@ -1250,19 +1412,28 @@
             applyMain(backup.main);
             inlineFields.baza_wifi = backup.baza_wifi || '';
             inlineFields.awaria_ekuz = backup.awaria_ekuz || '';
+            inlineFields.transport_notes = backup.transport_notes || '';
             try {
                 localStorage.setItem('bariApp_stateV6', JSON.stringify(state));
                 localStorage.setItem('bariApp_baza_wifi', inlineFields.baza_wifi);
                 localStorage.setItem('bariApp_awaria_ekuz', inlineFields.awaria_ekuz);
+                localStorage.setItem('bariApp_transport_notes', inlineFields.transport_notes);
             } catch(e) {}
             syncToServer('main', JSON.stringify(state));
             syncToServer('baza_wifi', inlineFields.baza_wifi);
             syncToServer('awaria_ekuz', inlineFields.awaria_ekuz);
+            syncToServer('transport_notes', inlineFields.transport_notes);
             // Zdjęcia z kopii (jeśli są)
             if (backup.images) {
                 Object.keys(IMG_CLEAR_BTN).forEach(imgId => {
                     const data = backup.images[imgId] || '';
                     applyImage(imgId, data);
+                    syncToServer('img_' + imgId, data);
+                });
+                Object.keys(backup.images).forEach(imgId => {
+                    if (imgId.indexOf('stop-') !== 0) return;
+                    const data = backup.images[imgId] || '';
+                    applyStopPhoto(imgId, data);
                     syncToServer('img_' + imgId, data);
                 });
             }
@@ -1350,6 +1521,8 @@
             if (savedImg && mapImg && mapImg.classList.contains('hidden')) {
                 applyImage('saved-map', savedImg);
             }
+
+            updateTransportPanelUI();
         };
     </script>
 </body>
