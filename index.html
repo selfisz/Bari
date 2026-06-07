@@ -99,8 +99,11 @@
         <span>Za chwilę sjesta (13:00)! Zjedz i zrób zakupy <b>teraz</b>.</span>
     </div>
 
-    <!-- FLOATING PHRASEBOOK BUTTON -->
-    <button onclick="togglePhrasebook(true)" class="fixed bottom-24 right-4 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-2xl z-[60] active:scale-90 transition-transform border-4 border-white" title="Słownik & Tłumacz">
+    <!-- FLOATING: mapa + słownik -->
+    <button type="button" onclick="openMapShortcut()" class="fixed bottom-24 right-[5.25rem] bg-blue-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-2xl z-[60] active:scale-90 transition-transform border-4 border-white" title="Mapa Bari">
+        <i class="fa-solid fa-map-location-dot"></i>
+    </button>
+    <button type="button" onclick="togglePhrasebook(true)" class="fixed bottom-24 right-4 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-2xl z-[60] active:scale-90 transition-transform border-4 border-white" title="Słownik & Tłumacz">
         <i class="fa-solid fa-book"></i>
     </button>
 
@@ -307,7 +310,7 @@
 
 
             <!-- Interaktywna mapa Bari -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+            <div id="baza-map-section" class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
                 <button type="button" onclick="toggleBazaMapPanel()" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
                     <h3 class="font-bold text-bari-primary flex items-center gap-2">
                         <i class="fa-solid fa-map-location-dot text-blue-500"></i> Mapa Bari
@@ -659,6 +662,8 @@
             shopData: [
                 {id: 'sh1', text: 'Zgrzewka wody mineralnej', checked: false},
                 {id: 'sh2', text: 'Lokalne wino Primitivo', checked: false},
+                {id: 'sh_magnet1', text: '🧲 Magnesy na pamiątkę (Polignano/Monopoli — dzień 3)', checked: false},
+                {id: 'sh_magnet2', text: '🧲 Magnesy — ostatnia szansa (Bari — dzień 6)', checked: false},
                 {id: 'sh4', text: '<del>Ogórki konserwowe</del> (ZAKAZ!)', checked: true}
             ],
             checkoutData: [
@@ -828,11 +833,19 @@
                 ensureSiestaItems();
                 ensureCheckinItems();
                 ensureMagnetItems();
+                ensureMagnetShopItems();
                 ensurePlanDayMeta();
             } catch(e) {}
         }
 
         const SIESTA_TEXT = '13:00–17:00 — <b>SIESTA</b>: Sklepy i większość lokali zamknięta. Jedz i rób zakupy rano lub po 17:00.';
+        const MAGNET_SHOP_ITEMS = [
+            { id: 'sh_magnet1', text: '🧲 Magnesy na pamiątkę (Polignano/Monopoli — dzień 3)', checked: false },
+            { id: 'sh_magnet2', text: '🧲 Magnesy — ostatnia szansa (Bari — dzień 6)', checked: false }
+        ];
+        const PLAN_DAY_DATES = {
+            pb1: 10, pb2: 11, pb3: 12, pb4: 13, pb5: 14, pb6: 15
+        };
         const MAGNET_ITEMS = {
             pb3: { id: 'pb3magnet', after: 'pb3siesta', text: '🧲 <b>Magnesy na pamiątkę!</b> Polignano i Monopoli — stragany przy plaży i w starym mieście.' },
             pb6: { id: 'pb6magnet', after: 'pb6checkin', text: '🧲 <b>Ostatnia szansa na magnesy!</b> Kup w Bari zanim pojedziecie na lotnisko.' }
@@ -907,6 +920,40 @@
         function isMagnetReminderDay() {
             const now = new Date();
             return now.getFullYear() === TRIP_YEAR && now.getMonth() === 5 && (now.getDate() === 12 || now.getDate() === 15);
+        }
+
+        function isDuringTrip() {
+            const now = new Date();
+            return now.getFullYear() === TRIP_YEAR && now.getMonth() === 5
+                && now.getDate() >= 10 && now.getDate() <= 15;
+        }
+
+        function getTodayPlanDayId() {
+            const now = new Date();
+            if (now.getFullYear() !== TRIP_YEAR || now.getMonth() !== 5) return null;
+            const entry = Object.entries(PLAN_DAY_DATES).find(([, d]) => d === now.getDate());
+            return entry ? entry[0] : null;
+        }
+
+        function scrollToTodayPlan() {
+            const todayId = getTodayPlanDayId();
+            if (!todayId) return;
+            setTimeout(() => {
+                const el = document.getElementById('plan-day-today');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 150);
+        }
+
+        function ensureMagnetShopItems() {
+            if (!state.shopData) state.shopData = [];
+            let changed = false;
+            MAGNET_SHOP_ITEMS.forEach(item => {
+                if (!state.shopData.some(s => s.id === item.id)) {
+                    state.shopData.push({ ...item });
+                    changed = true;
+                }
+            });
+            return changed;
         }
 
         function handleRemoteChange(key, value) {
@@ -1018,7 +1065,7 @@
             }
 
             if (!state.planDayMeta) ensurePlanDayMeta();
-            let migrated = ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensurePlanDayMeta();
+            let migrated = ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureMagnetShopItems() || ensurePlanDayMeta();
             if (migrated) saveState();
             renderAll();
         }
@@ -1159,9 +1206,14 @@
 
             const planContainer = document.getElementById('plan-container');
             planContainer.innerHTML = '';
+            const todayPlanId = getTodayPlanDayId();
             state.planBari.forEach(day => {
+                const isToday = day.id === todayPlanId;
                 const dayDiv = document.createElement('div');
-                dayDiv.className = 'bg-white rounded-xl p-4 shadow-sm border border-slate-100';
+                dayDiv.className = isToday
+                    ? 'rounded-xl p-4 shadow-md border-2 border-bari-accent bg-gradient-to-br from-orange-50 to-white ring-2 ring-orange-200/80'
+                    : 'bg-white rounded-xl p-4 shadow-sm border border-slate-100';
+                if (isToday) dayDiv.id = 'plan-day-today';
                 const weatherMeta = PLAN_WEATHER_LOC[day.id];
                 const weatherBlock = weatherMeta ? `
                     <div id="weather-${day.id}" class="shrink-0 bg-sky-50 border border-sky-100 rounded-xl px-3 py-2 text-center min-w-[5.5rem]">
@@ -1185,10 +1237,14 @@
                         <button type="button" onclick="editPlanTime('${day.id}','return')" class="text-[10px] font-bold bg-slate-50 border border-dashed border-slate-300 px-2.5 py-1.5 rounded-lg text-slate-500">+ Powrót</button>
                     </div>
                 `;
+                const todayBadge = isToday ? '<span class="shrink-0 bg-bari-accent text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide shadow-sm">Dziś</span>' : '';
                 dayDiv.innerHTML = `
                     <div class="flex justify-between items-start gap-3 mb-2">
                         <h3 class="font-bold text-bari-dark flex-1 leading-snug">${day.date}</h3>
-                        ${weatherBlock}
+                        <div class="flex flex-col items-end gap-1.5 shrink-0">
+                            ${todayBadge}
+                            ${weatherBlock}
+                        </div>
                     </div>
                     ${timesHtml}
                     <div id="plan-items-${day.id}" class="space-y-1"></div>
@@ -1919,7 +1975,26 @@
             btnElement.classList.remove('text-slate-400'); btnElement.classList.add('text-bari-primary');
             window.scrollTo(0,0);
             if (tabId === 'baza') setTimeout(invalidateBariMap, 150);
-            if (tabId === 'plan') fetchPlanWeather();
+            if (tabId === 'plan') {
+                fetchPlanWeather();
+                scrollToTodayPlan();
+            }
+        }
+
+        function openMapShortcut() {
+            switchToBazaTab();
+            if (!bazaMapPanelOpen) {
+                bazaMapPanelOpen = true;
+                try { localStorage.setItem('bariApp_baza_map_panel_open', '1'); } catch(e) {}
+                updateBazaMapPanelUI();
+            } else {
+                initBariMap();
+                setTimeout(invalidateBariMap, 200);
+            }
+            setTimeout(() => {
+                const section = document.getElementById('baza-map-section');
+                if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 400);
         }
 
         function switchToBazaTab() {
@@ -3028,6 +3103,11 @@
             updateBazaMapPanelUI();
             updateLiveShareUI();
             if (liveShareActive && myLiveUser) startLiveShare();
+
+            if (isDuringTrip()) {
+                const planBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => (b.getAttribute('onclick') || '').includes("'plan'"));
+                if (planBtn) switchTab('plan', planBtn);
+            }
         };
     </script>
 </body>
