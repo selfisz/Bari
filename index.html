@@ -63,6 +63,8 @@
             font-size: 14px;
         }
         .bari-map-marker::before { content: none; }
+        .bari-live-marker { box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2); }
+        .bari-live-marker.gosia { box-shadow: 0 0 0 4px rgba(219, 39, 119, 0.2); }
         .leaflet-popup-content { margin: 10px 12px; font-size: 13px; line-height: 1.35; }
         .leaflet-popup-content-wrapper { border-radius: 12px; }
     </style>
@@ -85,8 +87,14 @@
         </div>
     </header>
 
+    <!-- Przypomnienie: magnesy (dzień 3 i 6) -->
+    <div id="magnet-alert" class="hidden fixed top-[7.5rem] left-4 right-4 z-[55] bg-purple-600 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-bold flex items-center gap-2 border-2 border-purple-400">
+        <i class="fa-solid fa-magnet text-lg"></i>
+        <span>🧲 Dziś kup <b>magnesy na pamiątkę</b>! Stragany, sklepy turystyczne.</span>
+    </div>
+
     <!-- Przypomnienie przed sjestą (12:00) -->
-    <div id="siesta-alert" class="hidden fixed top-[7.5rem] left-4 right-4 z-[55] bg-orange-500 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-bold flex items-center gap-2 border-2 border-orange-300">
+    <div id="siesta-alert" class="hidden fixed top-[11rem] left-4 right-4 z-[55] bg-orange-500 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-bold flex items-center gap-2 border-2 border-orange-300">
         <i class="fa-solid fa-utensils text-lg"></i>
         <span>Za chwilę sjesta (13:00)! Zjedz i zrób zakupy <b>teraz</b>.</span>
     </div>
@@ -145,6 +153,16 @@
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-bold text-xl text-bari-dark"><i class="fa-solid fa-gear text-slate-500"></i> Ustawienia</h3>
                 <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-700 text-2xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Przypomnienia -->
+            <div class="bg-purple-50 rounded-xl p-4 border border-purple-200 mb-4">
+                <h4 class="font-bold text-bari-primary mb-2 flex items-center gap-2"><i class="fa-solid fa-bell text-purple-600"></i> Przypomnienia</h4>
+                <p class="text-[10px] text-purple-800 mb-3">Magnesy (dzień 3 i 6), sjesta. Na iPhone: dodaj apkę na ekran główny, potem włącz powiadomienia.</p>
+                <button type="button" onclick="enableTripNotifications()" id="notif-enable-btn" class="w-full bg-purple-600 text-white py-2.5 rounded-lg font-bold text-sm active:scale-95">
+                    <i class="fa-solid fa-bell"></i> Włącz powiadomienia
+                </button>
+                <p id="notif-status" class="text-[10px] text-purple-600 mt-2 text-center"></p>
             </div>
 
             <!-- Dane i kopia zapasowa -->
@@ -297,11 +315,30 @@
                     <i id="baza-map-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
                 </button>
                 <div id="baza-map-panel-body" class="hidden px-4 pb-4 border-t border-slate-100">
-                    <p class="text-[10px] text-slate-500 mt-3 mb-2">Przesuwaj i przybliżaj. Kliknij pinezkę albo punkt z listy.</p>
+                    <!-- Udostępnianie lokalizacji -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mt-3 mb-3">
+                        <p class="text-[10px] font-bold text-blue-800 uppercase mb-2"><i class="fa-solid fa-location-crosshairs"></i> Gdzie jesteśmy?</p>
+                        <p class="text-[10px] text-blue-700 mb-2">Wybierz siebie, włącz udostępnianie — druga osoba zobaczy Cię na mapie i dojedzie nawigacją.</p>
+                        <div class="flex gap-2 mb-2">
+                            <button type="button" id="live-user-dawid" onclick="setLiveUser('dawid')" class="flex-1 py-2 rounded-lg text-xs font-bold border-2 border-blue-200 bg-white text-blue-700 active:scale-95">Dawid</button>
+                            <button type="button" id="live-user-gosia" onclick="setLiveUser('gosia')" class="flex-1 py-2 rounded-lg text-xs font-bold border-2 border-pink-200 bg-white text-pink-700 active:scale-95">Gosia</button>
+                        </div>
+                        <button type="button" id="live-share-btn" onclick="toggleLiveShare()" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-bold text-sm active:scale-95 mb-2">
+                            <i class="fa-solid fa-satellite-dish"></i> Udostępnij moją lokalizację
+                        </button>
+                        <p id="live-share-status" class="text-[10px] text-blue-800 text-center"></p>
+                        <div id="live-nav-buttons" class="grid grid-cols-2 gap-2 mt-2 hidden">
+                            <button type="button" onclick="navigateToUser('dawid')" class="bg-white border border-blue-300 text-blue-700 py-2 rounded-lg text-[10px] font-bold active:scale-95"><i class="fa-solid fa-person"></i> Do Dawida</button>
+                            <button type="button" onclick="navigateToUser('gosia')" class="bg-white border border-pink-300 text-pink-700 py-2 rounded-lg text-[10px] font-bold active:scale-95"><i class="fa-solid fa-person-dress"></i> Do Gosi</button>
+                        </div>
+                    </div>
+
+                    <p class="text-[10px] text-slate-500 mb-2">Przesuwaj i przybliżaj. Kliknij pinezkę albo punkt z listy.</p>
                     <button type="button" id="map-add-pin-btn" onclick="toggleMapAddPinMode()" class="w-full bg-slate-100 text-slate-700 py-2.5 rounded-xl font-bold mb-2 border border-slate-200 active:scale-95 transition-all text-sm">
                         <i class="fa-solid fa-map-pin text-indigo-500"></i> Dodaj własną pinezkę
                     </button>
                     <p id="map-add-pin-hint" class="hidden text-[10px] text-indigo-600 font-bold mb-2 text-center"><i class="fa-solid fa-hand-pointer"></i> Kliknij mapę w wybranym miejscu</p>
+                    <p id="map-food-pick-hint" class="hidden text-[10px] text-orange-600 font-bold mb-2 text-center"><i class="fa-solid fa-utensils"></i> Kliknij mapę — tu jest restauracja / gelato</p>
                     <div id="bari-map" class="w-full rounded-xl border border-slate-200 shadow-inner overflow-hidden mb-3"></div>
                     <div id="bari-map-legend" class="space-y-2"></div>
                 </div>
@@ -484,7 +521,7 @@
                 <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-utensils text-orange-500"></i> Restauracje & Gelato</h3>
                 <div id="food-spots-list" class="space-y-2 mb-3"></div>
                 <button onclick="addFoodSpot()" class="w-full text-xs text-slate-500 font-bold py-3 border border-slate-200 rounded-lg active:bg-slate-50"><i class="fa-solid fa-plus"></i> Dodaj miejsce</button>
-                <p class="text-[9px] text-slate-400 mt-2">Dodaj pinezkę na mapie w zakładce Baza → „Dodaj własną pinezkę”.</p>
+                <p class="text-[9px] text-slate-400 mt-2">Po dodaniu wskaż miejsce na mapie (zakładka Baza) — pojawi się pomarańczowa pinezka 🍽. Możesz też użyć „Moja lokalizacja” przy wpisie.</p>
             </div>
 
             <!-- Kalkulator EUR/PLN na żywo -->
@@ -521,10 +558,17 @@
                     <i class="fa-solid fa-landmark"></i> Ambasada RP (Rzym): +39 06 36204200
                 </a>
                 <div class="space-y-2 mb-3">
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex justify-between items-center cursor-pointer hover:bg-yellow-50" onclick="editInline('awaria_ekuz', 'EKUZ / ubezpieczyciel')">
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 flex justify-between items-center cursor-pointer hover:bg-blue-100" onclick="editInline('ekuz_dawid', 'EKUZ Dawid')">
                         <div>
-                            <p class="text-[10px] uppercase text-slate-500 font-bold">Numer EKUZ / ubezpieczyciel</p>
-                            <p class="font-mono font-bold text-sm" id="awaria_ekuz">_Wpisz numer_</p>
+                            <p class="text-[10px] uppercase text-blue-600 font-bold">EKUZ — Dawid</p>
+                            <p class="font-mono font-bold text-sm" id="ekuz_dawid">_Wpisz numer_</p>
+                        </div>
+                        <i class="fa-solid fa-pen text-slate-300"></i>
+                    </div>
+                    <div class="bg-pink-50 p-3 rounded-lg border border-pink-100 flex justify-between items-center cursor-pointer hover:bg-pink-100" onclick="editInline('ekuz_gosia', 'EKUZ Gosia')">
+                        <div>
+                            <p class="text-[10px] uppercase text-pink-600 font-bold">EKUZ — Gosia</p>
+                            <p class="font-mono font-bold text-sm" id="ekuz_gosia">_Wpisz numer_</p>
                         </div>
                         <i class="fa-solid fa-pen text-slate-300"></i>
                     </div>
@@ -535,14 +579,6 @@
                         </div>
                         <i class="fa-solid fa-pen text-slate-300"></i>
                     </div>
-                </div>
-                <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">Zablokuj kartę (w razie kradzieży)</p>
-                <div class="grid grid-cols-1 gap-2">
-                    <a href="tel:+48123456789" class="bg-slate-50 border border-slate-200 py-2.5 px-3 rounded-xl text-xs font-bold text-slate-700 active:scale-95 flex justify-between items-center">
-                        <span><i class="fa-solid fa-credit-card text-red-500"></i> Erste Bank — zablokuj w apce lub zadzwoń</span>
-                        <i class="fa-solid fa-phone text-slate-400"></i>
-                    </a>
-                    <p class="text-[9px] text-slate-400 px-1">Numer na karcie / w apce banku. Zapisz go w kontaktach przed wyjazdem!</p>
                 </div>
             </div>
 
@@ -644,7 +680,7 @@
                     id: 'bag2', name: 'Plecak Dawida (Pod fotel)', icon: 'fa-backpack', color: 'text-blue-600',
                     items: [
                         {id: 'b2i1', text: 'Paszporty / Dowody', sec: true, checked: false},
-                        {id: 'b2i2', text: 'Portfel (Karta Erste, Karta EKUZ)', sec: true, checked: false},
+                        {id: 'b2i2', text: 'Portfel (Karty płatnicze, EKUZ)', sec: true, checked: false},
                         {id: 'b2i5', text: '<b class="text-green-700">Dokładnie 21€ dla Katii (Sprzątaczki)</b>', sec: false, checked: false},
                         {id: 'b2i3', text: 'Powerbank (Musi być w podręcznym!)', sec: true, checked: false}
                     ]
@@ -688,6 +724,7 @@
                         {id: 'pb3i2', text: 'Zejście na słynną plażę Lama Monachile pod mostem', checked: false},
                         {id: 'pb3i3', text: 'Pomnik Domenico Modugno (super klify do zdjęć)', checked: false},
                         {id: 'pb3siesta', text: '13:00–17:00 — <b>SIESTA</b>: Nad morzem plaże OK, ale sklepy mogą być zamknięte. Lunch rano lub wieczorem.', checked: false, siesta: true},
+                        {id: 'pb3magnet', text: '🧲 <b>Magnesy na pamiątkę!</b> Polignano i Monopoli — stragany przy plaży i w starym mieście.', checked: false, magnet: true},
                         {id: 'pb3i4', text: 'Pociąg (5 min) do Monopoli <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow active:scale-95 transition-transform"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
                         {id: 'pb3i5', text: 'Spacer na Stary Port (Porto Antico) po zachodzie', checked: false}
                     ]
@@ -718,6 +755,7 @@
                         {id: 'pb6i1', text: 'Film z Check-outu', checked: false},
                         {id: 'pb6siesta', text: '13:00–17:00 — <b>SIESTA</b>: Ostatni dzień — zrób zakupy i lunch przed południem (wylot wieczorem).', checked: false, siesta: true},
                         {id: 'pb6checkin', text: '⚠️ <b>Bilet lotniskowy 5.30€</b> — QR na bramce (bez kasowania) lub kasownik przy papierowym. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Info</a>', checked: false, checkin: true},
+                        {id: 'pb6magnet', text: '🧲 <b>Ostatnia szansa na magnesy!</b> Kup w Bari zanim pojedziecie na lotnisko.', checked: false, magnet: true},
                         {id: 'pb6i2', text: 'Spacer na Quintino Sella -> Pociąg na Lotnisko (5.30€)', checked: false},
                         {id: 'pb6i3', text: 'Wylot do Krakowa 23:05', checked: false}
                     ]
@@ -789,11 +827,17 @@
                 if(parsed.planDayMeta) state.planDayMeta = parsed.planDayMeta;
                 ensureSiestaItems();
                 ensureCheckinItems();
+                ensureMagnetItems();
                 ensurePlanDayMeta();
             } catch(e) {}
         }
 
         const SIESTA_TEXT = '13:00–17:00 — <b>SIESTA</b>: Sklepy i większość lokali zamknięta. Jedz i rób zakupy rano lub po 17:00.';
+        const MAGNET_ITEMS = {
+            pb3: { id: 'pb3magnet', after: 'pb3siesta', text: '🧲 <b>Magnesy na pamiątkę!</b> Polignano i Monopoli — stragany przy plaży i w starym mieście.' },
+            pb6: { id: 'pb6magnet', after: 'pb6checkin', text: '🧲 <b>Ostatnia szansa na magnesy!</b> Kup w Bari zanim pojedziecie na lotnisko.' }
+        };
+        const TRIP_YEAR = 2026;
         const SIESTA_AFTER = { pb1: 'pb1i4', pb2: 'pb2checkin', pb3: 'pb3checkin', pb4: 'pb4i3', pb5: 'pb5checkin', pb6: 'pb6checkin' };
         const CHECKIN_ITEMS = {
             pb2: { id: 'pb2checkin', after: 'pb2i1' },
@@ -847,6 +891,24 @@
             return changed;
         }
 
+        function ensureMagnetItems() {
+            if (!state.planBari) return false;
+            let changed = false;
+            Object.entries(MAGNET_ITEMS).forEach(([dayId, cfg]) => {
+                const day = state.planBari.find(d => d.id === dayId);
+                if (!day || day.items.some(i => i.id === cfg.id || i.magnet)) return;
+                const idx = day.items.findIndex(i => i.id === cfg.after) + 1;
+                day.items.splice(idx < 1 ? day.items.length : idx, 0, { id: cfg.id, text: cfg.text, checked: false, magnet: true });
+                changed = true;
+            });
+            return changed;
+        }
+
+        function isMagnetReminderDay() {
+            const now = new Date();
+            return now.getFullYear() === TRIP_YEAR && now.getMonth() === 5 && (now.getDate() === 12 || now.getDate() === 15);
+        }
+
         function handleRemoteChange(key, value) {
             if (value === undefined || value === null) return;
             if (lastWritten[key] === value) return; // echo własnej zmiany – pomiń
@@ -854,7 +916,7 @@
                 applyMain(value);
                 try { localStorage.setItem('bariApp_stateV6', value); } catch(e) {}
                 renderAll();
-            } else if (key === 'baza_wifi' || key === 'awaria_ekuz' || key === 'awaria_polisa' || key === 'transport_bus') {
+            } else if (key === 'baza_wifi' || key === 'ekuz_dawid' || key === 'ekuz_gosia' || key === 'awaria_polisa' || key === 'transport_bus') {
                 inlineFields[key] = value;
                 try { localStorage.setItem('bariApp_' + key, value); } catch(e) {}
                 renderAll();
@@ -863,6 +925,12 @@
                 try { localStorage.setItem('bariApp_transport_notes', value); } catch(e) {}
                 const notesEl = document.getElementById('transport-notes');
                 if (notesEl && notesEl.value !== value) notesEl.value = value || '';
+            } else if (key === 'loc_dawid' || key === 'loc_gosia') {
+                const who = key.slice(4);
+                liveLocations[who] = value ? parseLiveLocation(value) : null;
+                try { localStorage.setItem('bariApp_' + key, value || ''); } catch(e) {}
+                renderLiveLocationMarkers();
+                updateLiveShareUI();
             } else if (key.indexOf('img_') === 0) {
                 const imgId = key.slice(4);
                 if (imgId.indexOf('stop-') === 0) applyStopPhoto(imgId, value);
@@ -922,10 +990,20 @@
             }
 
             inlineFields.baza_wifi = (serverData && serverData.baza_wifi !== undefined) ? serverData.baza_wifi : (localStorage.getItem('bariApp_baza_wifi') || '');
-            inlineFields.awaria_ekuz = (serverData && serverData.awaria_ekuz !== undefined) ? serverData.awaria_ekuz : (localStorage.getItem('bariApp_awaria_ekuz') || '');
+            inlineFields.ekuz_dawid = (serverData && serverData.ekuz_dawid !== undefined) ? serverData.ekuz_dawid : (localStorage.getItem('bariApp_ekuz_dawid') || '');
+            inlineFields.ekuz_gosia = (serverData && serverData.ekuz_gosia !== undefined) ? serverData.ekuz_gosia : (localStorage.getItem('bariApp_ekuz_gosia') || '');
+            if (!inlineFields.ekuz_dawid) {
+                const legacyEkuz = (serverData && serverData.awaria_ekuz) || localStorage.getItem('bariApp_awaria_ekuz') || '';
+                if (legacyEkuz) inlineFields.ekuz_dawid = legacyEkuz;
+            }
             inlineFields.transport_notes = (serverData && serverData.transport_notes !== undefined) ? serverData.transport_notes : (localStorage.getItem('bariApp_transport_notes') || '');
             inlineFields.transport_bus = (serverData && serverData.transport_bus !== undefined) ? serverData.transport_bus : (localStorage.getItem('bariApp_transport_bus') || 'Via Trevisani ↔ Centrum — wpisz numery linii');
             inlineFields.awaria_polisa = (serverData && serverData.awaria_polisa !== undefined) ? serverData.awaria_polisa : (localStorage.getItem('bariApp_awaria_polisa') || '');
+
+            liveLocations.dawid = parseLiveLocation((serverData && serverData.loc_dawid) || localStorage.getItem('bariApp_loc_dawid'));
+            liveLocations.gosia = parseLiveLocation((serverData && serverData.loc_gosia) || localStorage.getItem('bariApp_loc_gosia'));
+            myLiveUser = localStorage.getItem('bariApp_live_user') || '';
+            if (localStorage.getItem('bariApp_live_share') === '1' && myLiveUser) liveShareActive = true;
 
             // Zdjęcia z serwera (klucze img_*)
             if (serverData) {
@@ -940,7 +1018,7 @@
             }
 
             if (!state.planDayMeta) ensurePlanDayMeta();
-            let migrated = ensureSiestaItems() || ensureCheckinItems() || ensurePlanDayMeta();
+            let migrated = ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensurePlanDayMeta();
             if (migrated) saveState();
             renderAll();
         }
@@ -1037,7 +1115,7 @@
 
             listArray.forEach((item) => {
                 const div = document.createElement('div');
-                const itemStyle = item.siesta ? 'bg-orange-50 border-orange-200' : (item.checkin ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200');
+                const itemStyle = item.siesta ? 'bg-orange-50 border-orange-200' : (item.magnet ? 'bg-purple-50 border-purple-200' : (item.checkin ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'));
                 div.className = 'flex justify-between items-center p-3 rounded-lg border shadow-sm mb-2 ' + itemStyle;
 
                 const onChangeStr = parentId ? `toggleNestedItem('${stateKey}', '${parentId}', '${item.id}')` : `toggleItem('${stateKey}', '${item.id}')`;
@@ -1048,7 +1126,7 @@
                     <label class="cb-container ${item.checked ? 'crossed' : ''} flex-1 m-0">
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="${onChangeStr}">
                         <span class="checkmark mt-[-10px]"></span>
-                        <span class="ml-2 text-sm leading-tight pr-2 block">${item.text} ${item.siesta ? '<i class="fa-solid fa-sun text-orange-500 ml-1 text-xs"></i>' : ''} ${item.checkin ? '<i class="fa-solid fa-ticket text-red-500 ml-1 text-xs"></i>' : ''} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}</span>
+                        <span class="ml-2 text-sm leading-tight pr-2 block">${item.text} ${item.siesta ? '<i class="fa-solid fa-sun text-orange-500 ml-1 text-xs"></i>' : ''} ${item.magnet ? '<i class="fa-solid fa-magnet text-purple-500 ml-1 text-xs"></i>' : ''} ${item.checkin ? '<i class="fa-solid fa-ticket text-red-500 ml-1 text-xs"></i>' : ''} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}</span>
                     </label>
                     <div class="flex gap-4 ml-2 text-slate-300 shrink-0">
                         <button onclick="${editStr}" class="hover:text-bari-primary active:scale-90"><i class="fa-solid fa-pen"></i></button>
@@ -1141,8 +1219,10 @@
 
             const wifiEl = document.getElementById('baza_wifi');
             if(wifiEl) wifiEl.innerText = inlineFields.baza_wifi || '_Wpisz Wi-Fi_';
-            const ekuzEl = document.getElementById('awaria_ekuz');
-            if(ekuzEl) ekuzEl.innerText = inlineFields.awaria_ekuz || '_Wpisz tutaj_';
+            const ekuzDawidEl = document.getElementById('ekuz_dawid');
+            if (ekuzDawidEl) ekuzDawidEl.textContent = inlineFields.ekuz_dawid || '_Wpisz numer_';
+            const ekuzGosiaEl = document.getElementById('ekuz_gosia');
+            if (ekuzGosiaEl) ekuzGosiaEl.textContent = inlineFields.ekuz_gosia || '_Wpisz numer_';
 
             const notesEl = document.getElementById('transport-notes');
             if (notesEl && document.activeElement !== notesEl) notesEl.value = inlineFields.transport_notes || '';
@@ -1152,8 +1232,13 @@
             renderBariMapLegend();
             renderCashWallet();
             renderFoodSpots();
+            renderFoodMapMarkers();
+            renderLiveLocationMarkers();
+            updateLiveShareUI();
             updateSiestaAlert();
+            updateMagnetAlert();
             updateCheckoutVideoAlert();
+            updateNotifStatus();
 
             const busEl = document.getElementById('transport_bus');
             if (busEl) busEl.textContent = inlineFields.transport_bus || 'Via Trevisani ↔ Centrum — wpisz numery linii';
@@ -1444,15 +1529,22 @@
                 list.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">Brak — dodaj pizzerię, gelato...</p>';
                 return;
             }
-            list.innerHTML = spots.map(s => `
+            list.innerHTML = spots.map(s => {
+                const onMap = s.lat != null && s.lng != null;
+                return `
                 <div class="flex items-center gap-2 bg-orange-50 border border-orange-100 p-2.5 rounded-lg">
                     <div class="flex-1 min-w-0">
-                        <p class="font-bold text-sm text-slate-800 truncate">${escapeHtml(s.name)}</p>
-                        ${s.note ? `<p class="text-[10px] text-slate-500 truncate">${escapeHtml(s.note)}</p>` : ''}
+                        <p class="font-bold text-sm text-slate-800 truncate">${escapeHtml(s.name)} ${onMap ? '<i class="fa-solid fa-map-pin text-orange-500 text-[10px]"></i>' : ''}</p>
+                        ${s.note ? `<p class="text-[10px] text-slate-500 truncate">${escapeHtml(s.note)}</p>` : '<p class="text-[10px] text-orange-500">Brak pinezki na mapie</p>'}
                     </div>
-                    <button type="button" onclick="deleteFoodSpot('${s.id}')" class="text-slate-300 hover:text-red-500 p-2"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            `).join('');
+                    <div class="flex shrink-0 gap-0.5">
+                        ${onMap ? `<button type="button" onclick="focusFoodSpot('${s.id}')" class="text-blue-500 p-2" title="Pokaż na mapie"><i class="fa-solid fa-map"></i></button>` : ''}
+                        ${!onMap ? `<button type="button" onclick="startFoodMapPick('${s.id}')" class="text-orange-500 p-2" title="Wskaż na mapie"><i class="fa-solid fa-location-dot"></i></button>` : ''}
+                        <button type="button" onclick="useMyLocationForFood('${s.id}')" class="text-emerald-500 p-2" title="Moja lokalizacja"><i class="fa-solid fa-crosshairs"></i></button>
+                        <button type="button" onclick="deleteFoodSpot('${s.id}')" class="text-slate-300 hover:text-red-500 p-2"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         function addFoodSpot() {
@@ -1462,12 +1554,81 @@
                 onConfirm: (name, note) => {
                     if (!name || !name.trim()) return;
                     if (!state.foodSpots) state.foodSpots = [];
-                    state.foodSpots.push({ id: generateId(), name: name.trim(), note: (note || '').trim() });
+                    const spot = { id: generateId(), name: name.trim(), note: (note || '').trim(), lat: null, lng: null };
+                    state.foodSpots.push(spot);
                     saveState();
                     renderFoodSpots();
-                    showToast('Dodano miejsce');
+                    showToast('Dodano — wskaż na mapie');
+                    setTimeout(() => {
+                        openConfirm('Wskaż to miejsce na mapie teraz?', () => startFoodMapPick(spot.id));
+                    }, 350);
                 }
             });
+        }
+
+        function setFoodSpotLocation(spotId, lat, lng) {
+            const spot = (state.foodSpots || []).find(s => s.id === spotId);
+            if (!spot) return;
+            spot.lat = lat;
+            spot.lng = lng;
+            saveState();
+            renderFoodSpots();
+            renderFoodMapMarkers();
+            renderBariMapLegend();
+            cancelFoodMapPick();
+            showToast('Restauracja na mapie!');
+            focusFoodSpot(spotId);
+        }
+
+        function useMyLocationForFood(spotId) {
+            if (!navigator.geolocation) { showToast('Brak GPS w przeglądarce'); return; }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => setFoodSpotLocation(spotId, pos.coords.latitude, pos.coords.longitude),
+                () => showToast('Brak dostępu do lokalizacji'),
+                { enableHighAccuracy: true, timeout: 15000 }
+            );
+        }
+
+        function startFoodMapPick(spotId) {
+            cancelMapPinMode();
+            pendingFoodSpotId = spotId;
+            foodMapPickMode = true;
+            updateFoodMapPickUI();
+            switchToBazaTab();
+            if (!bazaMapPanelOpen) {
+                bazaMapPanelOpen = true;
+                updateBazaMapPanelUI();
+            } else {
+                initBariMap();
+            }
+        }
+
+        function cancelFoodMapPick() {
+            foodMapPickMode = false;
+            pendingFoodSpotId = null;
+            updateFoodMapPickUI();
+        }
+
+        function updateFoodMapPickUI() {
+            const hint = document.getElementById('map-food-pick-hint');
+            const mapEl = document.getElementById('bari-map');
+            if (hint) hint.classList.toggle('hidden', !foodMapPickMode);
+            if (mapEl) mapEl.classList.toggle('ring-2', foodMapPickMode), mapEl.classList.toggle('ring-orange-400', foodMapPickMode);
+        }
+
+        function focusFoodSpot(spotId) {
+            switchToBazaTab();
+            if (!bazaMapPanelOpen) {
+                bazaMapPanelOpen = true;
+                updateBazaMapPanelUI();
+            } else {
+                initBariMap();
+            }
+            const spot = (state.foodSpots || []).find(s => s.id === spotId);
+            const marker = bariMapFoodMarkers[spotId];
+            if (!spot || spot.lat == null || !marker || !bariMap) return;
+            bariMap.flyTo([spot.lat, spot.lng], 17, { duration: 0.6 });
+            setTimeout(() => marker.openPopup(), 400);
         }
 
         function deleteFoodSpot(id) {
@@ -1475,6 +1636,8 @@
                 state.foodSpots = (state.foodSpots || []).filter(s => s.id !== id);
                 saveState();
                 renderFoodSpots();
+                renderFoodMapMarkers();
+                renderBariMapLegend();
             });
         }
 
@@ -1497,12 +1660,84 @@
         }
 
         /* --- PRZYPOMNIENIA --- */
+        function updateMagnetAlert() {
+            const el = document.getElementById('magnet-alert');
+            if (!el) return;
+            el.classList.toggle('hidden', !isMagnetReminderDay());
+        }
+
         function updateSiestaAlert() {
             const el = document.getElementById('siesta-alert');
             if (!el) return;
             const h = new Date().getHours();
-            const show = h >= 12 && h < 13;
-            el.classList.toggle('hidden', !show);
+            el.classList.toggle('hidden', !(h >= 12 && h < 13));
+        }
+
+        function updateNotifStatus() {
+            const el = document.getElementById('notif-status');
+            const btn = document.getElementById('notif-enable-btn');
+            if (!el) return;
+            if (!('Notification' in window)) {
+                el.textContent = 'Powiadomienia niedostępne — zostanie banner w apce.';
+                if (btn) btn.classList.add('hidden');
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                el.textContent = '✓ Powiadomienia włączone (magnesy, sjesta)';
+                if (btn) btn.textContent = 'Powiadomienia aktywne ✓';
+            } else if (Notification.permission === 'denied') {
+                el.textContent = 'Zablokowane w ustawieniach telefonu.';
+            } else {
+                el.textContent = 'Kliknij, by dostać przypomnienie o magnesach.';
+            }
+        }
+
+        async function enableTripNotifications() {
+            if (!('Notification' in window)) {
+                showToast('Brak powiadomień w tej przeglądarce');
+                return;
+            }
+            const perm = await Notification.requestPermission();
+            updateNotifStatus();
+            if (perm === 'granted') {
+                try { localStorage.setItem('bariApp_notif_enabled', '1'); } catch(e) {}
+                showToast('Przypomnienia włączone!');
+                runTripNotifications();
+            } else {
+                showToast('Bez zgody — zostanie banner w apce');
+            }
+        }
+
+        function runTripNotifications() {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+            const now = new Date();
+            const todayKey = now.toISOString().slice(0, 10);
+            const hour = now.getHours();
+
+            if (isMagnetReminderDay() && hour >= 9 && hour < 21) {
+                const mKey = 'bariApp_notif_magnet_' + todayKey;
+                if (!localStorage.getItem(mKey)) {
+                    const dayLabel = now.getDate() === 12 ? 'Dzień 3' : 'Dzień 6';
+                    new Notification('Bari Autopilot 🧲', {
+                        body: dayLabel + ': Kup magnesy na pamiątkę! Stragany i sklepy turystyczne.',
+                        icon: '/icons/icon-192.png',
+                        tag: 'magnet-' + todayKey
+                    });
+                    try { localStorage.setItem(mKey, '1'); } catch(e) {}
+                }
+            }
+
+            if (hour >= 12 && hour < 13) {
+                const sKey = 'bariApp_notif_siesta_' + todayKey;
+                if (!localStorage.getItem(sKey)) {
+                    new Notification('Bari Autopilot ☀️', {
+                        body: 'Za chwilę sjesta (13:00)! Zjedz i zrób zakupy teraz.',
+                        icon: '/icons/icon-192.png',
+                        tag: 'siesta-' + todayKey
+                    });
+                    try { localStorage.setItem(sKey, '1'); } catch(e) {}
+                }
+            }
         }
 
         function updateCheckoutVideoAlert() {
@@ -1522,7 +1757,7 @@
                 onConfirm: (val) => {
                     if(val !== null) {
                         inlineFields[elId] = val;
-                        const placeholders = { baza_wifi: '_Wpisz Wi-Fi_', awaria_ekuz: '_Wpisz numer_', awaria_polisa: '_Wpisz numer polisy_', transport_bus: 'Via Trevisani ↔ Centrum — wpisz numery linii' };
+                        const placeholders = { baza_wifi: '_Wpisz Wi-Fi_', ekuz_dawid: '_Wpisz numer_', ekuz_gosia: '_Wpisz numer_', awaria_polisa: '_Wpisz numer polisy_', transport_bus: 'Via Trevisani ↔ Centrum — wpisz numery linii' };
                         el.innerText = val || placeholders[elId] || '_Wpisz tutaj_';
                         localStorage.setItem('bariApp_' + elId, val);
                         syncToServer(elId, val);
@@ -1687,6 +1922,11 @@
             if (tabId === 'plan') fetchPlanWeather();
         }
 
+        function switchToBazaTab() {
+            const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => (b.getAttribute('onclick') || '').includes("'baza'"));
+            if (btn) switchTab('baza', btn);
+        }
+
         /* --- POGODA W PLANIE (10–15.06) --- */
         const PLAN_WEATHER_LOC = {
             pb1: { date: '2026-06-10', lat: 41.117, lng: 16.871, label: 'Bari' },
@@ -1779,12 +2019,25 @@
         ];
 
         const CUSTOM_PIN_COLOR = '#6366f1';
+        const FOOD_PIN_COLOR = '#ea580c';
+        const LIVE_USERS = {
+            dawid: { label: 'Dawid', color: '#2563eb', icon: 'fa-person' },
+            gosia: { label: 'Gosia', color: '#db2777', icon: 'fa-person-dress' }
+        };
 
         let bariMap = null;
         let bariMapMarkers = {};
         let bariMapCustomMarkers = {};
+        let bariMapFoodMarkers = {};
+        let bariMapLiveMarkers = {};
         let mapAddPinMode = false;
+        let foodMapPickMode = false;
+        let pendingFoodSpotId = null;
         let bazaMapPanelOpen = localStorage.getItem('bariApp_baza_map_panel_open') === '1';
+        let myLiveUser = '';
+        let liveLocations = { dawid: null, gosia: null };
+        let liveShareActive = false;
+        let geoWatchId = null;
 
         function escapeHtml(str) {
             return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -1812,6 +2065,193 @@
 
         function mapsNavUrl(poi) {
             return 'https://maps.google.com/?q=' + encodeURIComponent(poi.lat + ',' + poi.lng);
+        }
+
+        function mapsDirectionsUrl(from, to) {
+            return 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(from.lat + ',' + from.lng)
+                + '&destination=' + encodeURIComponent(to.lat + ',' + to.lng) + '&travelmode=walking';
+        }
+
+        function parseLiveLocation(value) {
+            if (!value) return null;
+            try {
+                const o = JSON.parse(value);
+                if (o && typeof o.lat === 'number' && typeof o.lng === 'number') return o;
+            } catch(e) {}
+            return null;
+        }
+
+        function formatLiveAge(ts) {
+            if (!ts) return '';
+            const min = Math.round((Date.now() - ts) / 60000);
+            if (min < 1) return 'przed chwilą';
+            if (min < 60) return min + ' min temu';
+            return Math.round(min / 60) + ' h temu';
+        }
+
+        function setLiveUser(who) {
+            myLiveUser = who;
+            try { localStorage.setItem('bariApp_live_user', who); } catch(e) {}
+            updateLiveShareUI();
+        }
+
+        function updateLiveShareUI() {
+            const dBtn = document.getElementById('live-user-dawid');
+            const gBtn = document.getElementById('live-user-gosia');
+            const shareBtn = document.getElementById('live-share-btn');
+            const status = document.getElementById('live-share-status');
+            const navBtns = document.getElementById('live-nav-buttons');
+            if (dBtn) {
+                dBtn.className = 'flex-1 py-2 rounded-lg text-xs font-bold border-2 active:scale-95 '
+                    + (myLiveUser === 'dawid' ? 'border-blue-600 bg-blue-600 text-white' : 'border-blue-200 bg-white text-blue-700');
+            }
+            if (gBtn) {
+                gBtn.className = 'flex-1 py-2 rounded-lg text-xs font-bold border-2 active:scale-95 '
+                    + (myLiveUser === 'gosia' ? 'border-pink-600 bg-pink-600 text-white' : 'border-pink-200 bg-white text-pink-700');
+            }
+            if (shareBtn) {
+                if (liveShareActive) {
+                    shareBtn.className = 'w-full bg-red-500 text-white py-2.5 rounded-lg font-bold text-sm active:scale-95 mb-2';
+                    shareBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Wyłącz udostępnianie';
+                } else {
+                    shareBtn.className = 'w-full bg-blue-600 text-white py-2.5 rounded-lg font-bold text-sm active:scale-95 mb-2';
+                    shareBtn.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Udostępnij moją lokalizację';
+                }
+            }
+            if (status) {
+                const parts = [];
+                ['dawid', 'gosia'].forEach(who => {
+                    const loc = liveLocations[who];
+                    const cfg = LIVE_USERS[who];
+                    if (loc && loc.lat != null) {
+                        const stale = loc.ts && (Date.now() - loc.ts > 30 * 60000);
+                        parts.push(cfg.label + ': ' + (stale ? 'nieaktualna' : formatLiveAge(loc.ts)));
+                    }
+                });
+                if (!myLiveUser) parts.unshift('Wybierz Dawid lub Gosię');
+                else if (liveShareActive) parts.unshift('Udostępniasz jako ' + LIVE_USERS[myLiveUser].label);
+                status.textContent = parts.join(' · ') || 'Brak lokalizacji na mapie';
+            }
+            if (navBtns) {
+                const showNav = (liveLocations.dawid && liveLocations.dawid.lat != null) || (liveLocations.gosia && liveLocations.gosia.lat != null);
+                navBtns.classList.toggle('hidden', !showNav);
+            }
+        }
+
+        function toggleLiveShare() {
+            if (!myLiveUser) { showToast('Najpierw wybierz: Dawid lub Gosia'); return; }
+            if (liveShareActive) stopLiveShare();
+            else startLiveShare();
+        }
+
+        function publishMyLocation(lat, lng) {
+            const payload = JSON.stringify({ lat, lng, ts: Date.now() });
+            liveLocations[myLiveUser] = { lat, lng, ts: Date.now() };
+            try { localStorage.setItem('bariApp_loc_' + myLiveUser, payload); } catch(e) {}
+            syncToServer('loc_' + myLiveUser, payload);
+            renderLiveLocationMarkers();
+            updateLiveShareUI();
+        }
+
+        function startLiveShare() {
+            if (!navigator.geolocation) { showToast('Brak GPS'); return; }
+            if (geoWatchId != null) return;
+            liveShareActive = true;
+            try { localStorage.setItem('bariApp_live_share', '1'); } catch(e) {}
+            navigator.geolocation.getCurrentPosition(
+                (pos) => publishMyLocation(pos.coords.latitude, pos.coords.longitude),
+                () => showToast('Brak dostępu do lokalizacji'),
+                { enableHighAccuracy: true, timeout: 20000 }
+            );
+            geoWatchId = navigator.geolocation.watchPosition(
+                (pos) => publishMyLocation(pos.coords.latitude, pos.coords.longitude),
+                () => {},
+                { enableHighAccuracy: true, maximumAge: 20000, timeout: 25000 }
+            );
+            updateLiveShareUI();
+            showToast('Lokalizacja udostępniona');
+        }
+
+        function stopLiveShare() {
+            liveShareActive = false;
+            try { localStorage.removeItem('bariApp_live_share'); } catch(e) {}
+            if (geoWatchId != null) { navigator.geolocation.clearWatch(geoWatchId); geoWatchId = null; }
+            updateLiveShareUI();
+            showToast('Wyłączono udostępnianie');
+        }
+
+        function navigateToUser(who) {
+            const target = liveLocations[who];
+            if (!target || target.lat == null) { showToast('Brak lokalizacji ' + LIVE_USERS[who].label); return; }
+            const me = myLiveUser ? liveLocations[myLiveUser] : null;
+            if (me && me.lat != null) window.open(mapsDirectionsUrl(me, target), '_blank');
+            else window.open(mapsNavUrl(target), '_blank');
+        }
+
+        function createLiveUserMarkerIcon(who) {
+            const cfg = LIVE_USERS[who];
+            const extra = who === 'gosia' ? ' gosia' : '';
+            return L.divIcon({
+                className: '',
+                html: `<div class="bari-map-marker bari-live-marker${extra}" style="border-color:${cfg.color};color:${cfg.color}"><i class="fa-solid ${cfg.icon}"></i></div>`,
+                iconSize: [38, 38],
+                iconAnchor: [19, 19],
+                popupAnchor: [0, -20]
+            });
+        }
+
+        function createFoodMapMarkerIcon() {
+            return L.divIcon({
+                className: '',
+                html: `<div class="bari-map-marker" style="border-color:${FOOD_PIN_COLOR};color:${FOOD_PIN_COLOR}"><i class="fa-solid fa-utensils"></i></div>`,
+                iconSize: [34, 34],
+                iconAnchor: [17, 34],
+                popupAnchor: [0, -34]
+            });
+        }
+
+        function buildLiveUserPopup(who) {
+            const cfg = LIVE_USERS[who];
+            const loc = liveLocations[who];
+            const age = loc && loc.ts ? formatLiveAge(loc.ts) : '';
+            return `
+                <p class="font-bold text-slate-800 mb-1">${cfg.label} <span class="text-[10px] text-slate-400">${age}</span></p>
+                <button type="button" onclick="navigateToUser('${who}')" class="inline-block bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Nawiguj do ${cfg.label}</button>
+            `;
+        }
+
+        function buildFoodSpotPopup(spot) {
+            const noteHtml = spot.note ? `<p class="text-slate-600 text-xs mb-2">${escapeHtml(spot.note)}</p>` : '';
+            return `
+                <p class="font-bold text-slate-800 mb-1">${escapeHtml(spot.name)} <span class="text-[10px] text-orange-500">🍽</span></p>
+                ${noteHtml}
+                <a href="${mapsNavUrl(spot)}" target="_blank" class="inline-block bg-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Nawiguj</a>
+            `;
+        }
+
+        function renderLiveLocationMarkers() {
+            if (!bariMap) return;
+            Object.values(bariMapLiveMarkers).forEach(m => bariMap.removeLayer(m));
+            bariMapLiveMarkers = {};
+            ['dawid', 'gosia'].forEach(who => {
+                const loc = liveLocations[who];
+                if (!loc || loc.lat == null) return;
+                const marker = L.marker([loc.lat, loc.lng], { icon: createLiveUserMarkerIcon(who), zIndexOffset: 1000 }).addTo(bariMap);
+                marker.bindPopup(buildLiveUserPopup(who));
+                bariMapLiveMarkers[who] = marker;
+            });
+        }
+
+        function renderFoodMapMarkers() {
+            if (!bariMap) return;
+            Object.values(bariMapFoodMarkers).forEach(m => bariMap.removeLayer(m));
+            bariMapFoodMarkers = {};
+            (state.foodSpots || []).forEach(spot => {
+                if (spot.lat == null || spot.lng == null) return;
+                const marker = L.marker([spot.lat, spot.lng], { icon: createFoodMapMarkerIcon() }).addTo(bariMap);
+                marker.bindPopup(buildFoodSpotPopup(spot));
+                bariMapFoodMarkers[spot.id] = marker;
+            });
         }
 
         function buildCustomPinPopup(pin) {
@@ -1844,6 +2284,22 @@
                 </button>
             `).join('');
 
+            const foodOnMap = (state.foodSpots || []).filter(s => s.lat != null && s.lng != null);
+            const foodHtml = foodOnMap.length ? `
+                <p class="text-[10px] uppercase font-bold text-slate-400 pt-3 pb-1">Restauracje & Gelato</p>
+                ${foodOnMap.map(spot => `
+                    <button type="button" onclick="focusFoodSpot('${spot.id}')" class="w-full flex items-center gap-3 bg-orange-50 border border-orange-100 p-2.5 rounded-lg text-left active:scale-[0.98] transition-transform hover:bg-orange-100">
+                        <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm bg-orange-100 text-orange-600 border-2 border-orange-400">
+                            <i class="fa-solid fa-utensils text-xs"></i>
+                        </span>
+                        <span class="min-w-0">
+                            <span class="block text-sm font-bold text-slate-800 truncate">${escapeHtml(spot.name)}</span>
+                            <span class="block text-[10px] text-slate-500 truncate">${spot.note ? escapeHtml(spot.note) : 'Miejsce na jedzenie'}</span>
+                        </span>
+                    </button>
+                `).join('')}
+            ` : '';
+
             const customPins = state.customMapPins || [];
             const customHtml = customPins.length ? `
                 <p class="text-[10px] uppercase font-bold text-slate-400 pt-3 pb-1">Twoje pinezki</p>
@@ -1864,7 +2320,7 @@
                 `).join('')}
             ` : '';
 
-            legend.innerHTML = builtinHtml + customHtml;
+            legend.innerHTML = builtinHtml + foodHtml + customHtml;
         }
 
         function renderCustomMapPins() {
@@ -1896,7 +2352,13 @@
             }
         }
 
+        function cancelMapPinMode() {
+            mapAddPinMode = false;
+            updateMapAddPinModeUI();
+        }
+
         function toggleMapAddPinMode() {
+            if (!mapAddPinMode) cancelFoodMapPick();
             mapAddPinMode = !mapAddPinMode;
             updateMapAddPinModeUI();
             if (mapAddPinMode) {
@@ -1999,11 +2461,17 @@
             });
 
             bariMap.on('click', (e) => {
+                if (foodMapPickMode && pendingFoodSpotId) {
+                    setFoodSpotLocation(pendingFoodSpotId, e.latlng.lat, e.latlng.lng);
+                    return;
+                }
                 if (!mapAddPinMode) return;
                 promptAddCustomPin(e.latlng.lat, e.latlng.lng);
             });
 
             renderCustomMapPins();
+            renderFoodMapMarkers();
+            renderLiveLocationMarkers();
             renderBariMapLegend();
             setTimeout(() => bariMap.invalidateSize(), 100);
         }
@@ -2021,6 +2489,7 @@
                 body.classList.remove('hidden');
                 if (chevron) chevron.classList.add('rotate-180');
                 initBariMap();
+                updateLiveShareUI();
                 setTimeout(invalidateBariMap, 200);
             } else {
                 body.classList.add('hidden');
@@ -2075,6 +2544,7 @@
         function openSettings() {
             const panel = document.getElementById('settings-panel');
             const sheet = document.getElementById('settings-sheet');
+            updateNotifStatus();
             panel.classList.remove('hidden');
             setTimeout(() => { panel.classList.remove('opacity-0'); sheet.classList.remove('translate-y-full'); }, 10);
         }
@@ -2353,18 +2823,20 @@
                 clearAllStopPhotos();
                 clearAllTicketPhotos();
                 state = JSON.parse(JSON.stringify(FACTORY_STATE));
-                inlineFields = { baza_wifi: '', awaria_ekuz: '', awaria_polisa: '', transport_notes: '', transport_bus: 'Via Trevisani ↔ Centrum — wpisz numery linii' };
+                inlineFields = { baza_wifi: '', ekuz_dawid: '', ekuz_gosia: '', awaria_polisa: '', transport_notes: '', transport_bus: 'Via Trevisani ↔ Centrum — wpisz numery linii' };
                 try {
                     localStorage.setItem('bariApp_stateV6', JSON.stringify(state));
                     localStorage.setItem('bariApp_baza_wifi', '');
-                    localStorage.setItem('bariApp_awaria_ekuz', '');
+                    localStorage.setItem('bariApp_ekuz_dawid', '');
+                    localStorage.setItem('bariApp_ekuz_gosia', '');
                     localStorage.setItem('bariApp_awaria_polisa', '');
                     localStorage.setItem('bariApp_transport_notes', '');
                     localStorage.setItem('bariApp_transport_bus', inlineFields.transport_bus);
                 } catch(e) {}
                 syncToServer('main', JSON.stringify(state));
                 syncToServer('baza_wifi', '');
-                syncToServer('awaria_ekuz', '');
+                syncToServer('ekuz_dawid', '');
+                syncToServer('ekuz_gosia', '');
                 syncToServer('awaria_polisa', '');
                 syncToServer('transport_notes', '');
                 syncToServer('transport_bus', inlineFields.transport_bus);
@@ -2400,7 +2872,8 @@
                 exportedAt: new Date().toISOString(),
                 main: JSON.stringify(state),
                 baza_wifi: inlineFields.baza_wifi || '',
-                awaria_ekuz: inlineFields.awaria_ekuz || '',
+                ekuz_dawid: inlineFields.ekuz_dawid || '',
+                ekuz_gosia: inlineFields.ekuz_gosia || '',
                 awaria_polisa: inlineFields.awaria_polisa || '',
                 transport_notes: inlineFields.transport_notes || '',
                 transport_bus: inlineFields.transport_bus || '',
@@ -2412,21 +2885,24 @@
             if (!backup || !backup.main) return false;
             applyMain(backup.main);
             inlineFields.baza_wifi = backup.baza_wifi || '';
-            inlineFields.awaria_ekuz = backup.awaria_ekuz || '';
+            inlineFields.ekuz_dawid = backup.ekuz_dawid || backup.awaria_ekuz || '';
+            inlineFields.ekuz_gosia = backup.ekuz_gosia || '';
             inlineFields.awaria_polisa = backup.awaria_polisa || '';
             inlineFields.transport_notes = backup.transport_notes || '';
             inlineFields.transport_bus = backup.transport_bus || 'Via Trevisani ↔ Centrum — wpisz numery linii';
             try {
                 localStorage.setItem('bariApp_stateV6', JSON.stringify(state));
                 localStorage.setItem('bariApp_baza_wifi', inlineFields.baza_wifi);
-                localStorage.setItem('bariApp_awaria_ekuz', inlineFields.awaria_ekuz);
+                localStorage.setItem('bariApp_ekuz_dawid', inlineFields.ekuz_dawid);
+                localStorage.setItem('bariApp_ekuz_gosia', inlineFields.ekuz_gosia);
                 localStorage.setItem('bariApp_awaria_polisa', inlineFields.awaria_polisa);
                 localStorage.setItem('bariApp_transport_notes', inlineFields.transport_notes);
                 localStorage.setItem('bariApp_transport_bus', inlineFields.transport_bus);
             } catch(e) {}
             syncToServer('main', JSON.stringify(state));
             syncToServer('baza_wifi', inlineFields.baza_wifi);
-            syncToServer('awaria_ekuz', inlineFields.awaria_ekuz);
+            syncToServer('ekuz_dawid', inlineFields.ekuz_dawid);
+            syncToServer('ekuz_gosia', inlineFields.ekuz_gosia);
             syncToServer('awaria_polisa', inlineFields.awaria_polisa);
             syncToServer('transport_notes', inlineFields.transport_notes);
             syncToServer('transport_bus', inlineFields.transport_bus);
@@ -2522,8 +2998,16 @@
             updateCountdown();
             updateDynamicGreeting();
             fetchEuroRate();
-            setInterval(() => { updateCountdown(); updateDynamicGreeting(); updateSiestaAlert(); }, 60000);
+            setInterval(() => {
+                updateCountdown();
+                updateDynamicGreeting();
+                updateSiestaAlert();
+                updateMagnetAlert();
+                runTripNotifications();
+            }, 60000);
             updateSiestaAlert();
+            updateMagnetAlert();
+            if (localStorage.getItem('bariApp_notif_enabled') === '1') runTripNotifications();
 
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/sw.js').catch(() => {});
@@ -2542,6 +3026,8 @@
 
             updateTransportPanelUI();
             updateBazaMapPanelUI();
+            updateLiveShareUI();
+            if (liveShareActive && myLiveUser) startLiveShare();
         };
     </script>
 </body>
