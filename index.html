@@ -381,6 +381,22 @@
                     <i class="fa-solid fa-pen text-slate-300"></i>
                 </div>
             </div>
+
+            <!-- Dane, kopia zapasowa, reset -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mt-4">
+                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-database text-slate-500"></i> Dane i kopia zapasowa</h3>
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <button onclick="backupToCloud()" class="bg-bari-primary text-white py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform"><i class="fa-solid fa-cloud-arrow-up"></i> Wyślij kopię (chmura)</button>
+                    <button onclick="restoreFromCloud()" class="bg-slate-100 text-slate-700 border border-slate-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-200"><i class="fa-solid fa-cloud-arrow-down"></i> Przywróć z chmury</button>
+                    <button onclick="exportBackupFile()" class="bg-slate-100 text-slate-700 border border-slate-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-200"><i class="fa-solid fa-file-arrow-down"></i> Pobierz plik kopii</button>
+                    <button onclick="document.getElementById('backup-file-input').click()" class="bg-slate-100 text-slate-700 border border-slate-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-200"><i class="fa-solid fa-file-arrow-up"></i> Wczytaj plik kopii</button>
+                </div>
+                <input type="file" id="backup-file-input" class="hidden" accept="application/json,.json" onchange="importBackupFile(event)">
+                <button onclick="resetToFactory()" class="w-full mt-2 bg-red-50 text-red-700 border border-red-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-red-100">
+                    <i class="fa-solid fa-arrow-rotate-left"></i> Przywróć ustawienia fabryczne
+                </button>
+                <p class="text-[10px] text-slate-400 mt-2 leading-snug">Kopia obejmuje listy, plan, rozliczenia i pola tekstowe. Zdjęcia nie są jeszcze objęte kopią.</p>
+            </div>
         </section>
 
     </main>
@@ -540,6 +556,9 @@
             ]
         };
 
+        // Migawka stanu "fabrycznego" – kopia domyślnych danych zanim cokolwiek wczytamy
+        const FACTORY_STATE = JSON.parse(JSON.stringify(state));
+
         let inlineFields = {};
         let saveTimer = null;
 
@@ -589,9 +608,11 @@
             if (key === 'main') {
                 applyMain(value);
                 try { localStorage.setItem('bariApp_stateV6', value); } catch(e) {}
-            } else {
+            } else if (key === 'baza_wifi' || key === 'awaria_ekuz') {
                 inlineFields[key] = value;
                 try { localStorage.setItem('bariApp_' + key, value); } catch(e) {}
+            } else {
+                return; // inne klucze (np. kopie zapasowe) nie zmieniają widoku
             }
             renderAll();
             setSyncStatus('synced');
@@ -1098,6 +1119,119 @@
                 const img = document.getElementById(imgId);
                 img.src = ''; img.classList.add('hidden');
                 document.getElementById('clear-map').classList.add('hidden');
+            });
+        }
+
+        /* --- DANE: RESET FABRYCZNY + KOPIE ZAPASOWE --- */
+        function resetToFactory() {
+            openConfirm("Przywrócić ustawienia fabryczne? Znikną wszystkie zaznaczenia, dodane pozycje i wpisane pola (Wi-Fi, EKUZ). Tej operacji nie można cofnąć.", () => {
+                state = JSON.parse(JSON.stringify(FACTORY_STATE));
+                inlineFields = { baza_wifi: '', awaria_ekuz: '' };
+                try {
+                    localStorage.setItem('bariApp_stateV6', JSON.stringify(state));
+                    localStorage.setItem('bariApp_baza_wifi', '');
+                    localStorage.setItem('bariApp_awaria_ekuz', '');
+                } catch(e) {}
+                // zapis na serwerze => zsynchronizuje też drugi telefon
+                syncToServer('main', JSON.stringify(state));
+                syncToServer('baza_wifi', '');
+                syncToServer('awaria_ekuz', '');
+                renderAll();
+                showToast("Przywrócono ustawienia fabryczne");
+            });
+        }
+
+        function buildBackup() {
+            return {
+                app: 'bari',
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                main: JSON.stringify(state),
+                baza_wifi: inlineFields.baza_wifi || '',
+                awaria_ekuz: inlineFields.awaria_ekuz || ''
+            };
+        }
+
+        function applyBackup(backup) {
+            if (!backup || !backup.main) return false;
+            applyMain(backup.main);
+            inlineFields.baza_wifi = backup.baza_wifi || '';
+            inlineFields.awaria_ekuz = backup.awaria_ekuz || '';
+            try {
+                localStorage.setItem('bariApp_stateV6', JSON.stringify(state));
+                localStorage.setItem('bariApp_baza_wifi', inlineFields.baza_wifi);
+                localStorage.setItem('bariApp_awaria_ekuz', inlineFields.awaria_ekuz);
+            } catch(e) {}
+            syncToServer('main', JSON.stringify(state));
+            syncToServer('baza_wifi', inlineFields.baza_wifi);
+            syncToServer('awaria_ekuz', inlineFields.awaria_ekuz);
+            renderAll();
+            return true;
+        }
+
+        function exportBackupFile() {
+            const backup = buildBackup();
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const stamp = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
+            a.href = url;
+            a.download = 'bari-backup-' + stamp + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Pobrano kopię");
+        }
+
+        function importBackupFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                let backup = null;
+                try { backup = JSON.parse(e.target.result); } catch(err) {}
+                if (!backup || !backup.main) { showToast("Niepoprawny plik kopii"); event.target.value = ''; return; }
+                openConfirm("Wczytać kopię z pliku? Nadpisze obecne dane na obu telefonach.", () => {
+                    applyBackup(backup);
+                    showToast("Wczytano kopię z pliku");
+                });
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        async function backupToCloud() {
+            if (!supabaseClient) { showToast("Brak połączenia z chmurą"); return; }
+            const payload = JSON.stringify(buildBackup());
+            setSyncStatus('syncing');
+            try {
+                const { error } = await supabaseClient
+                    .from('app_state')
+                    .upsert({ room_id: ROOM_ID, key: 'backup_manual', value: payload, updated_at: new Date().toISOString() }, { onConflict: 'room_id,key' });
+                lastWritten['backup_manual'] = payload;
+                if (error) { setSyncStatus('offline'); showToast("Błąd zapisu kopii"); console.warn(error); }
+                else { setSyncStatus('synced'); showToast("Zapisano kopię w chmurze"); }
+            } catch(e) { setSyncStatus('offline'); showToast("Błąd zapisu kopii"); console.warn(e); }
+        }
+
+        async function restoreFromCloud() {
+            if (!supabaseClient) { showToast("Brak połączenia z chmurą"); return; }
+            let row = null;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('app_state').select('value').eq('room_id', ROOM_ID).eq('key', 'backup_manual').maybeSingle();
+                if (error) { showToast("Błąd odczytu kopii"); console.warn(error); return; }
+                row = data;
+            } catch(e) { showToast("Błąd odczytu kopii"); console.warn(e); return; }
+            if (!row || !row.value) { showToast("Brak kopii w chmurze"); return; }
+            let backup = null;
+            try { backup = JSON.parse(row.value); } catch(e) {}
+            if (!backup || !backup.main) { showToast("Kopia w chmurze uszkodzona"); return; }
+            const when = backup.exportedAt ? new Date(backup.exportedAt).toLocaleString('pl-PL') : '';
+            openConfirm("Przywrócić kopię z chmury" + (when ? (" z " + when) : "") + "? Nadpisze obecne dane na obu telefonach.", () => {
+                applyBackup(backup);
+                showToast("Przywrócono kopię z chmury");
             });
         }
 
