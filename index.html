@@ -376,9 +376,9 @@
                     <p id="map-food-pick-hint" class="hidden text-[10px] text-orange-600 font-bold mb-2 text-center"><i class="fa-solid fa-utensils"></i> Kliknij mapę — tu jest restauracja / gelato</p>
                     <div id="bari-map-wrapper" class="relative mb-3 rounded-xl overflow-hidden border border-slate-200 shadow-inner">
                         <div class="map-fs-toolbar">
-                            <span class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-blue-300"></i> Mapa Bari — pełny ekran</span>
-                            <button type="button" onclick="toggleMapFullscreen(false)" class="bg-white/15 hover:bg-white/25 w-10 h-10 rounded-xl flex items-center justify-center active:scale-95" title="Zmniejsz mapę">
-                                <i class="fa-solid fa-compress"></i>
+                            <span class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-blue-300"></i> Mapa Bari</span>
+                            <button type="button" onclick="closeMapFullscreen()" class="bg-white text-slate-800 hover:bg-orange-100 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 active:scale-95 shadow-sm" title="Zamknij mapę">
+                                <i class="fa-solid fa-xmark"></i> Zamknij
                             </button>
                         </div>
                         <div id="bari-map" class="w-full"></div>
@@ -2091,7 +2091,10 @@
         }
 
         function openJournalTab() {
-            if (mapFullscreen) toggleMapFullscreen(false);
+            if (mapFullscreen) {
+                mapFsRestoreTab = null;
+                toggleMapFullscreen(false);
+            }
             document.querySelectorAll('.tab-content').forEach(sec => sec.classList.remove('active'));
             document.getElementById('tab-dziennik').classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -2103,8 +2106,16 @@
         }
 
         /* --- NAWIGACJA --- */
+        function getActiveTabId() {
+            const active = document.querySelector('.tab-content.active');
+            return active ? active.id.replace('tab-', '') : null;
+        }
+
         function switchTab(tabId, btnElement) {
-            if (mapFullscreen) toggleMapFullscreen(false);
+            if (mapFullscreen) {
+                mapFsRestoreTab = null;
+                toggleMapFullscreen(false);
+            }
             document.querySelectorAll('.tab-content').forEach(sec => sec.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -2123,19 +2134,20 @@
         }
 
         function openMapShortcut() {
-            switchToBazaTab();
+            mapFsRestoreTab = getActiveTabId();
             if (!bazaMapPanelOpen) {
                 bazaMapPanelOpen = true;
                 try { localStorage.setItem('bariApp_baza_map_panel_open', '1'); } catch(e) {}
-                updateBazaMapPanelUI();
+                const body = document.getElementById('baza-map-panel-body');
+                const chevron = document.getElementById('baza-map-chevron');
+                if (body) body.classList.remove('hidden');
+                if (chevron) chevron.classList.add('rotate-180');
+                initBariMap();
+                updateLiveShareUI();
             } else {
                 initBariMap();
-                setTimeout(invalidateBariMap, 200);
             }
-            setTimeout(() => {
-                const section = document.getElementById('baza-map-section');
-                if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 400);
+            toggleMapFullscreen(true);
         }
 
         function switchToBazaTab() {
@@ -2698,6 +2710,40 @@
         }
 
         let mapFullscreen = false;
+        let mapFsPlaceholder = null;
+        let mapFsRestoreTab = null;
+
+        function mountMapToBody() {
+            const wrapper = document.getElementById('bari-map-wrapper');
+            if (!wrapper || wrapper.parentNode === document.body) return;
+            mapFsPlaceholder = document.createComment('bari-map-fs-anchor');
+            wrapper.parentNode.insertBefore(mapFsPlaceholder, wrapper);
+            document.body.appendChild(wrapper);
+        }
+
+        function unmountMapFromBody() {
+            const wrapper = document.getElementById('bari-map-wrapper');
+            if (!wrapper || !mapFsPlaceholder || !mapFsPlaceholder.parentNode) return;
+            mapFsPlaceholder.parentNode.insertBefore(wrapper, mapFsPlaceholder);
+            mapFsPlaceholder.remove();
+            mapFsPlaceholder = null;
+        }
+
+        function restoreTabAfterMapFs() {
+            const tabId = mapFsRestoreTab;
+            mapFsRestoreTab = null;
+            if (!tabId || tabId === 'baza') return;
+            if (tabId === 'dziennik') {
+                openJournalTab();
+                return;
+            }
+            const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => (b.getAttribute('onclick') || '').includes("'" + tabId + "'"));
+            if (btn) switchTab(tabId, btn);
+        }
+
+        function closeMapFullscreen() {
+            toggleMapFullscreen(false);
+        }
 
         function toggleMapFullscreen(force) {
             if (typeof force === 'boolean') mapFullscreen = force;
@@ -2710,14 +2756,20 @@
                 if (!bazaMapPanelOpen) {
                     bazaMapPanelOpen = true;
                     try { localStorage.setItem('bariApp_baza_map_panel_open', '1'); } catch(e) {}
-                    updateBazaMapPanelUI();
+                    const body = document.getElementById('baza-map-panel-body');
+                    const chevron = document.getElementById('baza-map-chevron');
+                    if (body) body.classList.remove('hidden');
+                    if (chevron) chevron.classList.add('rotate-180');
                 }
                 initBariMap();
+                mountMapToBody();
                 document.body.classList.add('map-fs-lock');
                 wrapper.classList.add('map-fs-active');
             } else {
                 document.body.classList.remove('map-fs-lock');
                 wrapper.classList.remove('map-fs-active');
+                unmountMapFromBody();
+                restoreTabAfterMapFs();
             }
 
             const expandBtn = document.getElementById('map-fs-expand-btn');
@@ -2728,7 +2780,7 @@
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && mapFullscreen) toggleMapFullscreen(false);
+            if (e.key === 'Escape' && mapFullscreen) closeMapFullscreen();
         });
 
         function updateBazaMapPanelUI() {
