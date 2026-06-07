@@ -395,7 +395,7 @@
                 <button onclick="resetToFactory()" class="w-full mt-2 bg-red-50 text-red-700 border border-red-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-red-100">
                     <i class="fa-solid fa-arrow-rotate-left"></i> Przywróć ustawienia fabryczne
                 </button>
-                <p class="text-[10px] text-slate-400 mt-2 leading-snug">Kopia obejmuje listy, plan, rozliczenia i pola tekstowe. Zdjęcia nie są jeszcze objęte kopią.</p>
+                <p class="text-[10px] text-slate-400 mt-2 leading-snug">Kopia obejmuje listy, plan, rozliczenia, pola tekstowe i zdjęcia. Zdjęcia synchronizują się na żywo z drugim telefonem (są zmniejszane przed wysłaniem).</p>
             </div>
         </section>
 
@@ -608,13 +608,16 @@
             if (key === 'main') {
                 applyMain(value);
                 try { localStorage.setItem('bariApp_stateV6', value); } catch(e) {}
+                renderAll();
             } else if (key === 'baza_wifi' || key === 'awaria_ekuz') {
                 inlineFields[key] = value;
                 try { localStorage.setItem('bariApp_' + key, value); } catch(e) {}
+                renderAll();
+            } else if (key.indexOf('img_') === 0) {
+                applyImage(key.slice(4), value); // zdjęcie od drugiej osoby
             } else {
                 return; // inne klucze (np. kopie zapasowe) nie zmieniają widoku
             }
-            renderAll();
             setSyncStatus('synced');
         }
 
@@ -667,6 +670,13 @@
 
             inlineFields.baza_wifi = (serverData && serverData.baza_wifi !== undefined) ? serverData.baza_wifi : (localStorage.getItem('bariApp_baza_wifi') || '');
             inlineFields.awaria_ekuz = (serverData && serverData.awaria_ekuz !== undefined) ? serverData.awaria_ekuz : (localStorage.getItem('bariApp_awaria_ekuz') || '');
+
+            // Zdjęcia z serwera (klucze img_*)
+            if (serverData) {
+                Object.keys(serverData).forEach(k => {
+                    if (k.indexOf('img_') === 0) applyImage(k.slice(4), serverData[k]);
+                });
+            }
 
             renderAll();
         }
@@ -1099,32 +1109,80 @@
         }
 
         /* --- MAPY / ZDJĘCIA OFFLINE --- */
-        function handleImageUpload(event, imgId) {
-            const file = event.target.files[0];
-            if(file) {
+        // Mapowanie: id obrazka -> id przycisku "usuń"
+        const IMG_CLEAR_BTN = { 'saved-map': 'clear-map' };
+
+        function applyImage(imgId, dataUrl) {
+            const img = document.getElementById(imgId);
+            if (!img) return;
+            const clearBtn = document.getElementById(IMG_CLEAR_BTN[imgId] || ('clear-' + imgId));
+            if (dataUrl) {
+                img.src = dataUrl; img.classList.remove('hidden');
+                if (clearBtn) clearBtn.classList.remove('hidden');
+                try { localStorage.setItem('bariApp_' + imgId, dataUrl); } catch(e) {}
+            } else {
+                img.src = ''; img.classList.add('hidden');
+                if (clearBtn) clearBtn.classList.add('hidden');
+                try { localStorage.removeItem('bariApp_' + imgId); } catch(e) {}
+            }
+        }
+
+        // Zmniejsza i kompresuje zdjęcie (JPEG), żeby zmieściło się w limicie synchronizacji na żywo
+        function compressImage(file, maxDim, quality) {
+            return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    const base64 = e.target.result;
-                    localStorage.setItem('bariApp_' + imgId, base64);
-                    const img = document.getElementById(imgId);
-                    img.src = base64; img.classList.remove('hidden');
-                    document.getElementById('clear-map').classList.remove('hidden');
+                reader.onload = (e) => {
+                    const image = new Image();
+                    image.onload = () => {
+                        let w = image.width, h = image.height;
+                        if (w > maxDim || h > maxDim) {
+                            if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+                            else { w = Math.round(w * maxDim / h); h = maxDim; }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(image, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    image.onerror = reject;
+                    image.src = e.target.result;
                 };
+                reader.onerror = reject;
                 reader.readAsDataURL(file);
+            });
+        }
+
+        const IMG_MAX_BYTES = 700 * 1024; // bezpieczny limit dla synchronizacji na żywo
+        async function handleImageUpload(event, imgId) {
+            const file = event.target.files[0];
+            if (!file) return;
+            setSyncStatus('syncing');
+            try {
+                let dataUrl = await compressImage(file, 1280, 0.7);
+                if (dataUrl.length > IMG_MAX_BYTES) dataUrl = await compressImage(file, 1000, 0.6);
+                if (dataUrl.length > IMG_MAX_BYTES) dataUrl = await compressImage(file, 800, 0.5);
+                applyImage(imgId, dataUrl);
+                syncToServer('img_' + imgId, dataUrl);
+                showToast("Zdjęcie zapisane i wysłane");
+            } catch(e) {
+                console.warn('Błąd zdjęcia:', e);
+                setSyncStatus('offline');
+                showToast("Nie udało się wczytać zdjęcia");
+            } finally {
+                event.target.value = '';
             }
         }
         function clearImage(imgId) {
-            openConfirm("Usunąć ten zrzut ekranu?", () => {
-                localStorage.removeItem('bariApp_' + imgId);
-                const img = document.getElementById(imgId);
-                img.src = ''; img.classList.add('hidden');
-                document.getElementById('clear-map').classList.add('hidden');
+            openConfirm("Usunąć ten zrzut ekranu? Zniknie też u drugiej osoby.", () => {
+                applyImage(imgId, '');
+                syncToServer('img_' + imgId, '');
+                showToast("Usunięto zdjęcie");
             });
         }
 
         /* --- DANE: RESET FABRYCZNY + KOPIE ZAPASOWE --- */
         function resetToFactory() {
-            openConfirm("Przywrócić ustawienia fabryczne? Znikną wszystkie zaznaczenia, dodane pozycje i wpisane pola (Wi-Fi, EKUZ). Tej operacji nie można cofnąć.", () => {
+            openConfirm("Przywrócić ustawienia fabryczne? Znikną wszystkie zaznaczenia, dodane pozycje, wpisane pola (Wi-Fi, EKUZ) i zdjęcia. Tej operacji nie można cofnąć.", () => {
                 state = JSON.parse(JSON.stringify(FACTORY_STATE));
                 inlineFields = { baza_wifi: '', awaria_ekuz: '' };
                 try {
@@ -1136,19 +1194,30 @@
                 syncToServer('main', JSON.stringify(state));
                 syncToServer('baza_wifi', '');
                 syncToServer('awaria_ekuz', '');
+                // wyczyść zdjęcia (też u drugiej osoby)
+                Object.keys(IMG_CLEAR_BTN).forEach(imgId => {
+                    applyImage(imgId, '');
+                    syncToServer('img_' + imgId, '');
+                });
                 renderAll();
                 showToast("Przywrócono ustawienia fabryczne");
             });
         }
 
         function buildBackup() {
+            const images = {};
+            Object.keys(IMG_CLEAR_BTN).forEach(imgId => {
+                const data = localStorage.getItem('bariApp_' + imgId);
+                if (data) images[imgId] = data;
+            });
             return {
                 app: 'bari',
-                version: 1,
+                version: 2,
                 exportedAt: new Date().toISOString(),
                 main: JSON.stringify(state),
                 baza_wifi: inlineFields.baza_wifi || '',
-                awaria_ekuz: inlineFields.awaria_ekuz || ''
+                awaria_ekuz: inlineFields.awaria_ekuz || '',
+                images: images
             };
         }
 
@@ -1165,6 +1234,14 @@
             syncToServer('main', JSON.stringify(state));
             syncToServer('baza_wifi', inlineFields.baza_wifi);
             syncToServer('awaria_ekuz', inlineFields.awaria_ekuz);
+            // Zdjęcia z kopii (jeśli są)
+            if (backup.images) {
+                Object.keys(IMG_CLEAR_BTN).forEach(imgId => {
+                    const data = backup.images[imgId] || '';
+                    applyImage(imgId, data);
+                    syncToServer('img_' + imgId, data);
+                });
+            }
             renderAll();
             return true;
         }
@@ -1242,11 +1319,11 @@
             updateDynamicGreeting();
             setInterval(() => { updateCountdown(); updateDynamicGreeting(); }, 60000);
 
+            // Awaryjnie pokaż lokalnie zapisane zdjęcie, jeśli nie wczytano go z serwera
             const savedImg = localStorage.getItem('bariApp_saved-map');
-            if(savedImg) {
-                const img = document.getElementById('saved-map');
-                img.src = savedImg; img.classList.remove('hidden');
-                document.getElementById('clear-map').classList.remove('hidden');
+            const mapImg = document.getElementById('saved-map');
+            if (savedImg && mapImg && mapImg.classList.contains('hidden')) {
+                applyImage('saved-map', savedImg);
             }
         };
     </script>
