@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bari Autopilot</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { bari: { primary: '#2c3e50', accent: '#e74c3c', dark: '#1a252f', light: '#f4f7f6' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .cb-container { display: flex; align-items: center; position: relative; padding-left: 35px; cursor: pointer; font-size: 15px; user-select: none; }
+        .cb-container input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+        .checkmark { position: absolute; top: 0; left: 0; height: 22px; width: 22px; background-color: #eee; border-radius: 6px; transition: 0.2s; border: 1px solid #ddd; }
+        .cb-container:hover input ~ .checkmark { background-color: #ccc; }
+        .cb-container input:checked ~ .checkmark { background-color: #e74c3c; border-color: #e74c3c; }
+        .checkmark:after { content: ""; position: absolute; display: none; }
+        .cb-container input:checked ~ .checkmark:after { display: block; }
+        .cb-container .checkmark:after { left: 7px; top: 3px; width: 6px; height: 12px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+        .cb-container.crossed { color: #9ca3af; text-decoration: line-through; }
+
+        input[type="checkbox"].custom-cb { width: 1.25rem; height: 1.25rem; accent-color: #e74c3c; cursor: pointer; }
+        .slide-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #toast { transition: opacity 0.3s, transform 0.3s; z-index: 1000;}
+    </style>
+</head>
+<body class="bg-bari-light text-slate-800 antialiased pb-24">
+
+    <!-- HEADER -->
+    <header class="bg-gradient-to-br from-bari-dark to-bari-primary text-white p-5 sticky top-0 z-50 rounded-b-3xl shadow-lg">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 id="dynamic-greeting" class="text-xl font-bold tracking-tight">Bari Autopilot ✈️</h1>
+            </div>
+        </div>
+        <div class="mt-4 bg-white/10 rounded-xl p-3 flex items-center justify-between backdrop-blur-sm border border-white/20">
+            <div id="countdown" class="text-sm font-bold text-orange-200">⏳ Obliczanie...</div>
+            <div class="flex items-center gap-3">
+                <span id="sync-indicator" class="text-sm cursor-default" title="Synchronizacja z serwerem">⏳</span>
+                <button onclick="openDateModal()" class="text-white hover:text-orange-200 transition-colors p-1"><i class="fa-solid fa-gear"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- FLOATING RESTAURANT BUTTON -->
+    <button onclick="toggleRestaurantMode(true)" class="fixed bottom-24 right-4 bg-bari-accent text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-2xl z-[60] active:scale-90 transition-transform border-4 border-white">
+        <i class="fa-solid fa-pizza-slice"></i>
+    </button>
+
+    <!-- RESTAURANT BOTTOM SHEET -->
+    <div id="restaurant-panel" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-end transition-opacity opacity-0" onclick="if(event.target===this) toggleRestaurantMode(false)">
+        <div class="bg-white w-full rounded-t-3xl p-6 transform translate-y-full slide-panel shadow-[0_-10px_40px_rgba(0,0,0,0.3)]" id="restaurant-sheet">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-xl text-bari-dark"><i class="fa-solid fa-utensils text-bari-accent"></i> Włoska Uczta</h3>
+                <button onclick="toggleRestaurantMode(false)" class="text-slate-400 hover:text-slate-700 text-2xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="bg-orange-50 border border-orange-100 p-3 rounded-xl mb-4 text-xs text-orange-800">
+                <i class="fa-solid fa-circle-info"></i> <b>Coperto:</b> opłata za nakrycie (zazwyczaj 2-3€). We Włoszech NIE zostawiamy napiwków!
+            </div>
+            <div class="mb-4">
+                <p class="font-bold text-slate-700 mb-2 text-sm">Podział rachunku na szybko</p>
+                <div class="flex gap-2">
+                    <input type="number" id="bill-amount" placeholder="Kwota z paragonu €" class="w-1/2 p-3 border border-slate-200 rounded-xl outline-none focus:border-bari-primary bg-slate-50 font-bold" oninput="calculateBill()">
+                    <div class="w-1/2 bg-green-50 text-green-700 rounded-xl p-2 flex flex-col justify-center items-center border border-green-100">
+                        <span class="text-[10px] font-bold uppercase">Składka w PLN / os</span>
+                        <span class="text-lg font-bold" id="bill-split">0.00 zł</span>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-2 mt-4 max-h-[40vh] overflow-y-auto pb-4">
+                <p class="font-bold text-slate-700 mb-2 text-sm">Pokaż kelnerowi:</p>
+                <button onclick="copyAndToast('Il conto, per favore')" class="w-full bg-slate-50 text-slate-700 text-left px-4 py-3 rounded-xl font-bold active:scale-95 transition-transform flex justify-between items-center text-sm border border-slate-200 shadow-sm">
+                    <span>Rachunek proszę</span> <div class="flex items-center gap-2"><i class="text-[10px] text-slate-400 font-normal">Il conto...</i> <i class="fa-regular fa-copy text-bari-primary"></i></div>
+                </button>
+                <button onclick="copyAndToast('Acqua naturale, per favore')" class="w-full bg-slate-50 text-slate-700 text-left px-4 py-3 rounded-xl font-bold active:scale-95 transition-transform flex justify-between items-center text-sm border border-slate-200 shadow-sm">
+                    <span>Woda niegazowana</span> <div class="flex items-center gap-2"><i class="text-[10px] text-slate-400 font-normal">Acqua naturale</i> <i class="fa-regular fa-copy text-bari-primary"></i></div>
+                </button>
+                <button onclick="copyAndToast('Posso pagare con la carta?')" class="w-full bg-slate-50 text-slate-700 text-left px-4 py-3 rounded-xl font-bold active:scale-95 transition-transform flex justify-between items-center text-sm border border-slate-200 shadow-sm">
+                    <span>Mogę kartą?</span> <div class="flex items-center gap-2"><i class="text-[10px] text-slate-400 font-normal">Posso pagare...</i> <i class="fa-regular fa-copy text-bari-primary"></i></div>
+                </button>
+                <button onclick="copyAndToast('Senza cetrioli, per favore')" class="w-full bg-orange-50 text-slate-700 text-left px-4 py-3 rounded-xl font-bold active:scale-95 transition-transform flex justify-between items-center text-sm border border-orange-200 shadow-sm">
+                    <span>BEZ OGÓRKÓW (np. w Macu)</span> <div class="flex items-center gap-2"><i class="text-[10px] text-orange-400 font-normal">Senza cetrioli</i> <i class="fa-regular fa-copy text-orange-500"></i></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NATIVE CUSTOM MODAL -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[300] hidden flex items-center justify-center p-4 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-5 transform scale-95 transition-transform shadow-2xl" id="custom-modal-content">
+            <h3 id="modal-title" class="font-bold text-xl text-bari-dark mb-2">Tytuł</h3>
+            <p id="modal-desc" class="text-sm text-slate-500 mb-4 hidden">Opis</p>
+
+            <input type="text" id="modal-input-text" class="w-full p-3 border border-slate-300 rounded-xl mb-4 outline-none focus:border-bari-primary bg-slate-50 hidden" placeholder="Wpisz wartość...">
+            <input type="datetime-local" id="modal-input-date" class="w-full p-3 border border-slate-300 rounded-xl mb-4 outline-none focus:border-bari-primary bg-slate-50 hidden">
+
+            <label id="modal-sec-container" class="hidden flex items-center gap-3 mb-5 p-3 bg-red-50 rounded-xl border border-red-200 text-sm font-bold text-red-800 cursor-pointer">
+                <input type="checkbox" id="modal-sec-check" class="custom-cb">
+                <div class="flex-1">
+                    <span>Płyn / Elektronika</span>
+                    <p class="text-[10px] text-red-600 font-normal leading-tight">Zaznacz, jeśli rzecz musi trafić do Kuwety na kontroli bezpieczeństwa.</p>
+                </div>
+            </label>
+
+            <div class="flex gap-3 justify-end mt-2">
+                <button id="modal-btn-cancel" class="px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors">Anuluj</button>
+                <button id="modal-btn-confirm" class="px-5 py-2.5 bg-bari-primary text-white font-bold rounded-xl shadow-md active:scale-95 transition-transform">Zatwierdź</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="p-4 max-w-md mx-auto" id="app-container">
+
+        <!-- ZAKŁADKA 1: PROCEDURA STARTOWA -->
+        <section id="tab-start" class="tab-content">
+            <h2 class="text-2xl font-bold text-bari-primary mb-4 flex items-center gap-2"><i class="fa-solid fa-plane-departure text-bari-accent"></i> Start (10 Czerwca)</h2>
+            <div id="start-list-container" class="space-y-3"></div>
+            <button onclick="addCustomItem('startBari')" class="mt-4 w-full py-3 border-2 border-dashed border-slate-300 text-slate-500 rounded-xl font-bold hover:bg-slate-50 transition-colors"><i class="fa-solid fa-plus"></i> Dodaj własny krok</button>
+        </section>
+
+        <!-- ZAKŁADKA 2: WALIZKA & KUWETA -->
+        <section id="tab-walizka" class="tab-content active">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-bari-primary flex items-center gap-2"><i class="fa-solid fa-suitcase-rolling text-bari-accent"></i> Bagaże</h2>
+                <button id="toggle-return-btn" onclick="toggleReturnMode()" class="text-xs bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full font-bold shadow-inner transition-colors"><i class="fa-solid fa-rotate"></i> Pakowanie: KRK</button>
+            </div>
+
+            <!-- Przycisk Kuweta -->
+            <button onclick="toggleKuweta()" id="btn-kuweta" class="w-full bg-red-600 text-white font-bold py-4 rounded-xl mb-6 shadow-[0_4px_15px_rgba(220,38,38,0.4)] active:scale-95 transition-transform flex items-center justify-center gap-2 border-2 border-red-500">
+                <i class="fa-solid fa-temperature-empty text-xl"></i> KUWETA LOTNISKOWA (SECURITY)
+            </button>
+
+            <!-- Widok Kuwety -->
+            <div id="kuweta-view" class="hidden mb-6 bg-red-50 border-2 border-red-500 rounded-xl p-4 shadow-xl">
+                <div class="text-center mb-4">
+                    <h3 class="font-bold text-red-700 text-lg uppercase tracking-wider">WYCIĄGNIJ NA TAŚMĘ:</h3>
+                    <p class="text-xs text-red-600">Odhaczaj wyciągnięte rzeczy poniżej.</p>
+                </div>
+                <div id="kuweta-items" class="space-y-3"></div>
+                <button onclick="toggleKuweta()" class="mt-5 w-full bg-slate-800 text-white font-bold py-3 rounded-lg active:scale-95 transition-transform"><i class="fa-solid fa-check"></i> Kontrola zakończona</button>
+            </div>
+
+            <div id="normal-bags-view">
+                <!-- Check-out Via Trevisani -->
+                <div id="checkout-section" class="hidden mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-xl shadow-sm">
+                    <h3 class="font-bold text-orange-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-door-open"></i> Check-out Via Trevisani (Kaucja!)</h3>
+                    <div id="checkout-items" class="space-y-2"></div>
+                </div>
+
+                <div id="bags-container" class="space-y-6"></div>
+            </div>
+        </section>
+
+        <!-- ZAKŁADKA 3: PLAN WYCIECZEK -->
+        <section id="tab-plan" class="tab-content">
+            <h2 class="text-2xl font-bold text-bari-primary mb-4"><i class="fa-regular fa-calendar-check text-bari-accent"></i> Harmonogram</h2>
+
+            <div class="bg-orange-50 text-orange-800 p-3 rounded-xl mb-6 text-sm font-medium border border-orange-200">
+                <i class="fa-solid fa-clock text-orange-500"></i> Sjesta w Bari: <b>13:00 - 17:00</b>. Sklepy i restauracje mogą być zamknięte.
+            </div>
+
+            <div id="plan-container" class="space-y-4"></div>
+        </section>
+
+        <!-- ZAKŁADKA 4: BAZA -->
+        <section id="tab-baza" class="tab-content">
+            <h2 class="text-2xl font-bold text-bari-primary mb-4"><i class="fa-solid fa-house-flag text-bari-accent"></i> Via Trevisani 236</h2>
+
+            <!-- WhatsApp do Dario -->
+            <a href="https://wa.me/?text=Hi%20Dario,%20this%20is%20Dawid.%20Here%20are%20the%20photos%20of%20our%20IDs%20and%20email%20address:" target="_blank" class="w-full bg-[#25D366] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 mb-4 shadow-lg active:scale-95 transition-transform text-sm">
+                <i class="fa-brands fa-whatsapp text-2xl"></i> Wyślij zdjęcia dowodów do Dario
+            </a>
+
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 mb-4">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase tracking-wide">Twój Apartament</p>
+                        <p class="font-bold text-lg text-bari-dark">Via Trevisani 236, Bari</p>
+                    </div>
+                    <a href="https://maps.google.com/?q=Via+Trevisani+236,+Bari" target="_blank" class="bg-blue-100 text-blue-600 w-10 h-10 flex items-center justify-center rounded-full hover:bg-blue-200"><i class="fa-solid fa-location-arrow"></i></a>
+                </div>
+
+                <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg mb-3">
+                    <p class="text-xs font-bold text-blue-800 uppercase mb-1"><i class="fa-solid fa-key"></i> Instrukcja Wejścia (12:00)</p>
+                    <p class="text-sm text-blue-900">1. Domofon: <b>Liddi CUTRIGNELLI</b> lub <b>Art Nouveau</b>.</p>
+                    <p class="text-sm text-blue-900">2. Piętro: <b>2 (Second floor)</b>.</p>
+                    <p class="text-sm text-blue-900">3. Czeka Katia: Dać <b>21€ w gotówce</b>, zapytać jak włączyć prąd!</p>
+                </div>
+
+                <div class="mt-4 space-y-3">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex justify-between items-center cursor-pointer hover:bg-yellow-50" onclick="editInline('baza_wifi', 'Hasło Wi-Fi')">
+                        <div>
+                            <p class="text-[10px] uppercase text-slate-500 font-bold">Hasło Wi-Fi</p>
+                            <p class="font-mono font-bold text-lg" id="baza_wifi">_Wpisz Wi-Fi_</p>
+                        </div>
+                        <i class="fa-solid fa-pen text-slate-300"></i>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm font-bold flex items-center gap-3 border border-red-100">
+                    <i class="fa-solid fa-ban-smoking text-2xl"></i>
+                    <p>Zakaz palenia w środku! Relaksujemy się i palimy wyłącznie na balkonie.</p>
+                </div>
+            </div>
+
+            <!-- Alert FAL -->
+            <div class="bg-red-600 text-white p-4 rounded-xl shadow-md mb-4 flex items-start gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-2xl mt-1 text-yellow-300"></i>
+                <div>
+                    <p class="font-bold text-lg mb-1">PUŁAPKA: Pociągi do Matery!</p>
+                    <p class="text-sm">Pociągi <b>FAL</b> do Matery <b>NIE ODJEŻDŻAJĄ</b> z głównych peronów Trenitalii. Mają osobny budynek po lewej stronie placu Piazza Aldo Moro! Bilety kupujesz u nich w kasie.</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+                <h3 class="font-bold text-bari-primary mb-3">Zrzuty ekranu / Mapy</h3>
+                <input type="file" id="img-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'saved-map')">
+                <button onclick="document.getElementById('img-upload').click()" class="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-bold mb-3 border border-slate-200 active:scale-95 transition-transform"><i class="fa-solid fa-image text-bari-accent"></i> Dodaj zdjęcie / zrzut</button>
+                <div class="relative">
+                    <img id="saved-map" src="" class="w-full rounded-xl hidden border border-slate-200 shadow-sm">
+                    <button id="clear-map" onclick="clearImage('saved-map')" class="hidden absolute top-2 right-2 bg-slate-800/70 text-white w-8 h-8 rounded-full"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ZAKŁADKA 5: TRANSPORT -->
+        <section id="tab-transport" class="tab-content">
+            <h2 class="text-2xl font-bold text-bari-primary mb-4 flex items-center gap-2"><i class="fa-solid fa-bus-simple text-blue-500"></i> Transport & Bilety</h2>
+
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
+                <div class="grid grid-cols-1 gap-2 mb-4">
+                    <a href="https://www.trenitalia.com/" target="_blank" class="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3 rounded-lg hover:bg-slate-100 active:scale-95 transition-transform">
+                        <div class="bg-red-100 text-red-600 w-10 h-10 rounded-full flex items-center justify-center shrink-0"><i class="fa-solid fa-train"></i></div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-800">Trenitalia (Pociągi)</p>
+                            <p class="text-[10px] text-slate-500">Wycieczki: Polignano, Monopoli, Trani</p>
+                        </div>
+                    </a>
+                    <a href="https://www.amtab.it/it/muvt" target="_blank" class="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3 rounded-lg hover:bg-slate-100 active:scale-95 transition-transform">
+                        <div class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center shrink-0"><i class="fa-solid fa-bus"></i></div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-800">MUVT App</p>
+                            <p class="text-[10px] text-slate-500">Autobusy miejskie wewnątrz Bari</p>
+                        </div>
+                    </a>
+                    <a href="https://moovitapp.com/" target="_blank" class="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3 rounded-lg hover:bg-slate-100 active:scale-95 transition-transform">
+                        <div class="bg-orange-100 text-orange-600 w-10 h-10 rounded-full flex items-center justify-center shrink-0"><i class="fa-solid fa-map-location-dot"></i></div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-800">Moovit</p>
+                            <p class="text-[10px] text-slate-500">Wyszukiwarka tras i rozkładów</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-xl">
+                    <p class="text-xs font-bold text-yellow-800 uppercase mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Złote Zasady Kasowania</p>
+                    <ul class="text-[10px] text-yellow-900 space-y-2 ml-4 list-disc marker:text-yellow-500">
+                        <li><b>Bilet z Lotniska (Automat):</b> Skanujesz kod QR na bramkach żeby wejść. NIE trzeba kasować w maszynce.</li>
+                        <li><b>Trenitalia (Bilet Papierowy):</b> Zawsze kasuj w zielonej/żółtej maszynce PRZED wejściem na peron!</li>
+                        <li><b>Trenitalia (Aplikacja/WWW):</b> Musisz kliknąć przycisk "Check-in" w telefonie zanim pociąg ruszy!</li>
+                        <li><b>MUVT (Autobus):</b> Zarejestruj się i dodaj kartę ZANIM wsiądziesz!</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ZAKŁADKA 6: NARZĘDZIA (Rozliczenia, Słownik, Awaria) -->
+        <section id="tab-narzedzia" class="tab-content">
+            <h2 class="text-2xl font-bold text-bari-primary mb-4"><i class="fa-solid fa-toolbox text-bari-accent"></i> Narzędzia</h2>
+
+            <!-- ADVANCED SPLIT TRACKER -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
+                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-money-bill-transfer text-green-600"></i> Rozliczenia (Kto komu)</h3>
+                <div class="bg-green-50 p-3 rounded-xl border border-green-200 mb-4 text-center">
+                    <p class="text-[10px] uppercase font-bold text-green-700 mb-1">Obecny Bilans</p>
+                    <p id="split-balance" class="text-lg font-bold text-slate-800">Jesteście na zero</p>
+                    <p id="split-total" class="text-xs text-slate-500 mt-1">Łącznie wydano: 0.00 €</p>
+                </div>
+                <div class="space-y-2 mb-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div class="flex gap-2">
+                        <input type="number" id="split-amount" placeholder="Kwota (€)" class="w-1/3 p-2 bg-white border border-slate-300 rounded-lg text-sm font-bold outline-none focus:border-bari-primary">
+                        <input type="text" id="split-desc" placeholder="Za co? (np. Pizza)" class="w-2/3 p-2 bg-white border border-slate-300 rounded-lg text-sm outline-none focus:border-bari-primary">
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-500 uppercase">Kto płacił?</label>
+                            <select id="split-who" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs font-bold outline-none">
+                                <option value="Dawid">Dawid</option>
+                                <option value="Gosia">Gosia</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-500 uppercase">Czym?</label>
+                            <select id="split-method" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs font-bold outline-none">
+                                <option value="Karta">Karta</option>
+                                <option value="Gotówka">Gotówka</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-500 uppercase">Dla kogo?</label>
+                            <select id="split-for" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs font-bold outline-none">
+                                <option value="50/50">Oboje (50/50)</option>
+                                <option value="Dawid">Dla Dawida</option>
+                                <option value="Gosia">Dla Gosi</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="addSplitExpense()" class="w-full mt-2 bg-bari-primary text-white py-2 rounded-lg font-bold active:scale-95 transition-transform"><i class="fa-solid fa-plus"></i> Dodaj wydatek</button>
+                </div>
+                <div id="split-expenses-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+
+                <!-- NOWY PRZYCISK: RESET BILANSU -->
+                <button onclick="resetSplitExpenses()" class="w-full mt-3 bg-slate-100 text-slate-600 border border-slate-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-200">
+                    <i class="fa-solid fa-rotate-left"></i> Zresetuj bilans (Zapłacone/BLIK)
+                </button>
+            </div>
+
+            <!-- Słowniczek Ratunkowy -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
+                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-language text-blue-500"></i> Słowniczek Ratunkowy</h3>
+                <div class="space-y-3">
+                    <div class="border-b border-slate-100 pb-2">
+                        <p class="font-bold text-slate-800 text-sm">Dzień dobry</p>
+                        <p class="text-xs text-bari-primary">Buongiorno <span class="text-slate-400 italic">(buon-dżiorno)</span></p>
+                    </div>
+                    <div class="border-b border-slate-100 pb-2">
+                        <p class="font-bold text-slate-800 text-sm">Dziękuję</p>
+                        <p class="text-xs text-bari-primary">Grazie <span class="text-slate-400 italic">(grac-je)</span></p>
+                    </div>
+                    <div class="border-b border-slate-100 pb-2 bg-orange-50 p-2 rounded">
+                        <p class="font-bold text-slate-800 text-sm">Proszę bez ogórków!</p>
+                        <p class="text-xs text-orange-600 font-bold">Senza cetrioli, per favore <span class="text-orange-400 italic font-normal">(senca cze-tri-o-li)</span></p>
+                    </div>
+                    <div class="border-b border-slate-100 pb-2">
+                        <p class="font-bold text-slate-800 text-sm">Bilet na pociąg</p>
+                        <p class="text-xs text-bari-primary">Un biglietto per il treno <span class="text-slate-400 italic">(un bil-jetto per il treno)</span></p>
+                    </div>
+                    <div class="border-b border-slate-100 pb-2">
+                        <p class="font-bold text-slate-800 text-sm">Gdzie jest toaleta?</p>
+                        <p class="text-xs text-bari-primary">Dov'è il bagno? <span class="text-slate-400 italic">(dow-e il banjo)</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sklep -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
+                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-basket-shopping text-orange-500"></i> Lista Zakupów</h3>
+                <div id="shop-list-container" class="space-y-2 mb-3"></div>
+                <button onclick="addCustomItem('shopData')" class="w-full text-xs text-slate-500 font-bold py-3 border border-slate-200 rounded-lg active:bg-slate-50"><i class="fa-solid fa-plus"></i> Dodaj do listy</button>
+            </div>
+
+            <!-- Awaria -->
+            <div class="bg-red-50 rounded-xl p-4 border border-red-200">
+                <h3 class="font-bold text-red-800 mb-3"><i class="fa-solid fa-triangle-exclamation"></i> Szybka Awaria</h3>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <a href="tel:112" class="bg-red-600 text-white text-center py-3 rounded-lg font-bold shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2"><i class="fa-solid fa-phone"></i> 112</a>
+                    <a href="tel:+48618565292" class="bg-slate-800 text-white text-center py-2 rounded-lg font-bold shadow-md text-xs flex flex-col justify-center active:scale-95 transition-transform"><span>Blokada Karty</span><span class="font-normal text-[10px]">Erste Bank</span></a>
+                </div>
+                <div class="bg-white p-3 rounded-lg border border-red-100 flex justify-between items-center cursor-pointer hover:bg-yellow-50" onclick="editInline('awaria_ekuz', 'Numer EKUZ / Polisy')">
+                    <div>
+                        <p class="text-[10px] uppercase text-red-500 font-bold">Numer Polisy / EKUZ</p>
+                        <p class="font-mono font-bold text-slate-700" id="awaria_ekuz">_Wpisz tutaj_</p>
+                    </div>
+                    <i class="fa-solid fa-pen text-slate-300"></i>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION (6 elementów) -->
+    <nav class="fixed bottom-0 w-full bg-white border-t border-slate-200 pb-[env(safe-area-inset-bottom)] z-50">
+        <div class="flex justify-around items-center h-16">
+            <button class="nav-btn flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-bari-primary transition-colors" onclick="switchTab('start', this)">
+                <i class="fa-solid fa-plane-departure text-xl mb-1"></i>
+                <span class="text-[9px] font-bold">Start</span>
+            </button>
+            <button class="nav-btn flex flex-col items-center justify-center w-full h-full text-bari-primary transition-colors" onclick="switchTab('walizka', this)">
+                <i class="fa-solid fa-suitcase-rolling text-xl mb-1"></i>
+                <span class="text-[9px] font-bold">Bagaż</span>
+            </button>
+            <button class="nav-btn flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-bari-primary transition-colors" onclick="switchTab('plan', this)">
+                <i class="fa-regular fa-calendar-check text-xl mb-1"></i>
+                <span class="text-[9px] font-bold">Plan</span>
+            </button>
+            <button class="nav-btn flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-bari-primary transition-colors" onclick="switchTab('baza', this)">
+                <i class="fa-solid fa-house-flag text-xl mb-1"></i>
+                <span class="text-[9px] font-bold">Baza</span>
+            </button>
+            <button class="nav-btn flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-bari-primary transition-colors" onclick="switchTab('transport', this)">
+                <i class="fa-solid fa-bus text-xl mb-1"></i>
+                <span class="text-[9px] font-bold">Transp.</span>
+            </button>
+            <button class="nav-btn flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-bari-primary transition-colors" onclick="switchTab('narzedzia', this)">
+                <i class="fa-solid fa-toolbox text-xl mb-1"></i>
+                <span class="text-[9px] font-bold">Narz.</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full font-bold shadow-lg opacity-0 pointer-events-none flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-green-400"></i> <span id="toast-msg">Zapisano!</span>
+    </div>
+
+    <script>
+        /* --- STATE & DATA --- */
+        let state = {
+            targetDate: "2026-06-10T03:15",
+            isReturnMode: false,
+            splitExpenses: [],
+            startBari: [
+                {id: 's0', text: '<b>WAŻNE:</b> Wysłano zdjęcia dowodów i e-mail do Dario na WA!', checked: false},
+                {id: 's1', text: 'Uber na lotnisko (03:15)', checked: false},
+                {id: 's2', text: 'Bramki zamykają się 05:20!', checked: false},
+                {id: 's3', text: 'Lot FR2722 (Dawid 26E, Gosia 26F)', checked: false},
+                {id: 's4', text: 'Wejście: Tylne drzwi, Kolejka Pierwszeństwo', checked: false},
+                {id: 's5', text: 'Hala Przylotów: Skręć w LEWO i idź za <b>NIEBIESKĄ LINIĄ</b> do stacji.', checked: false},
+                {id: 's6', text: 'Biletomat (Lotnisko): Wybierz Quintino Sella, zapłać kartą (5.30€).', checked: false},
+                {id: 's7', text: 'Bramki na peron: <b>Zeskanuj KOD QR</b> z biletu, by otworzyć bramkę!', checked: false}
+            ],
+            shopData: [
+                {id: 'sh1', text: 'Zgrzewka wody mineralnej', checked: false},
+                {id: 'sh2', text: 'Lokalne wino Primitivo', checked: false},
+                {id: 'sh4', text: '<del>Ogórki konserwowe</del> (ZAKAZ!)', checked: true}
+            ],
+            checkoutData: [
+                {id: 'co1', text: 'Wyrzucone śmieci (Wymóg kaucji!)', checked: false},
+                {id: 'co2', text: 'Sejf sprawdzony (Paszporty!)', checked: false},
+                {id: 'co3', text: 'Ładowarki z gniazdek', checked: false},
+                {id: 'co5', text: '<b>NAGRAĆ WIDEO Z APARTAMENTU! (Kaucja)</b>', checked: false}
+            ],
+            bagsData: [
+                {
+                    id: 'bag1', name: 'Walizka 10kg (Główna)', icon: 'fa-suitcase', color: 'text-slate-600',
+                    items: [
+                        {id: 'b1i1', text: 'Ubrania (Koszule, T-shirty, Spodnie)', sec: false, checked: false},
+                        {id: 'b1i2', text: 'Kosmetyki w PRZEZROCZYSTYM WORKU 100ml', sec: true, checked: false},
+                        {id: 'b1i3', text: 'Wygodne buty na zwiedzanie', sec: false, checked: false}
+                    ]
+                },
+                {
+                    id: 'bag2', name: 'Plecak Dawida (Pod fotel)', icon: 'fa-backpack', color: 'text-blue-600',
+                    items: [
+                        {id: 'b2i1', text: 'Paszporty / Dowody', sec: true, checked: false},
+                        {id: 'b2i2', text: 'Portfel (Karta Erste, Karta EKUZ)', sec: true, checked: false},
+                        {id: 'b2i5', text: '<b class="text-green-700">Dokładnie 21€ dla Katii (Sprzątaczki)</b>', sec: false, checked: false},
+                        {id: 'b2i3', text: 'Powerbank (Musi być w podręcznym!)', sec: true, checked: false}
+                    ]
+                },
+                {
+                    id: 'bag3', name: 'Plecak Gosi (Pod fotel)', icon: 'fa-backpack', color: 'text-pink-600',
+                    items: [
+                        {id: 'b3i1', text: 'Okulary przeciwsłoneczne', sec: false, checked: false},
+                        {id: 'b3i4', text: 'Płyny/Błyszczyki Gosi (do worka 100ml!)', sec: true, checked: false}
+                    ]
+                }
+            ],
+            planBari: [
+                {
+                    id: 'pb1', date: 'Dzień 1 (10.06) - Przylot i McDonald\'s',
+                    items: [
+                        {id: 'pb1i0', text: '08:30 - Wysiadka z pociągu na stacji Quintino Sella.', checked: false},
+                        {id: 'pb1i1', text: '08:45-11:45: Kawa i chill z bagażami (np. Pasticceria Magda)', checked: false},
+                        {id: 'pb1i2', text: '11:55: Przejście pod apartament (Via Trevisani 236)', checked: false},
+                        {id: 'pb1i3', text: '12:00 CHECK-IN: Domofon Liddi CUTRIGNELLI. Drugie piętro.', checked: false},
+                        {id: 'pb1i4', text: 'Dać 21€ Katii i zapytać jak włączyć prąd!', checked: false},
+                        {id: 'pb1i5', text: 'Popołudnie: McDonald\'s! Cel: <b>Crispy McBacon (senza cetrioli)</b>', checked: false}
+                    ]
+                },
+                {
+                    id: 'pb2', date: 'Dzień 2 (11.06) - Alberobello',
+                    items: [
+                        {id: 'pb2i1', text: 'Pociąg/Bus z Bari Centrale. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow active:scale-95 transition-transform"><i class="fa-solid fa-train"></i> Trenitalia</a> <br><span class="text-[10px] text-red-500 font-bold uppercase"><i class="fa-solid fa-triangle-exclamation"></i> Check-in w apce lub skasuj bilet!</span>', checked: false},
+                        {id: 'pb2i2', text: 'Punkt widokowy przy Chiesa di Santa Lucia (na domki Trulli)', checked: false},
+                        {id: 'pb2i3', text: 'Spacer po Rione Monti i Rione Aia Piccola', checked: false}
+                    ]
+                },
+                {
+                    id: 'pb3', date: 'Dzień 3 (12.06) - Polignano & Monopoli',
+                    items: [
+                        {id: 'pb3i1', text: 'Pociąg do Polignano. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow active:scale-95 transition-transform"><i class="fa-solid fa-train"></i> Trenitalia</a> <br><span class="text-[10px] text-red-500 font-bold uppercase"><i class="fa-solid fa-triangle-exclamation"></i> Check-in w apce lub skasuj bilet!</span>', checked: false},
+                        {id: 'pb3i2', text: 'Zejście na słynną plażę Lama Monachile pod mostem', checked: false},
+                        {id: 'pb3i3', text: 'Pomnik Domenico Modugno (super klify do zdjęć)', checked: false},
+                        {id: 'pb3i4', text: 'Pociąg (5 min) do Monopoli <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow active:scale-95 transition-transform"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
+                        {id: 'pb3i5', text: 'Spacer na Stary Port (Porto Antico) po zachodzie', checked: false}
+                    ]
+                },
+                {
+                    id: 'pb4', date: 'Dzień 4 (13.06) - Bari Vecchia (Slow Day)',
+                    items: [
+                        {id: 'pb4i1', text: 'Wejście w Stare Miasto od strony Zamku', checked: false},
+                        {id: 'pb4i2', text: '"Ulica Makaronu" (Via dell\'Arco Basso) - panie lepią orecchiette', checked: false},
+                        {id: 'pb4i3', text: 'Bazylika Św. Mikołaja', checked: false},
+                        {id: 'pb4i4', text: 'Pizza, relaks i wino na balkonie (Zakaz palenia wewn.)', checked: false}
+                    ]
+                },
+                {
+                    id: 'pb5', date: 'Dzień 5 (14.06) - Wybór: Trani lub Matera',
+                    items: [
+                        {id: 'pb5i1', text: '<b>Opcja 1 (Trani):</b> Relaks nad morzem, niesamowita biała Katedra i port <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow"><i class="fa-solid fa-train"></i> Trenitalia</a><br><span class="text-[10px] text-red-500 font-bold uppercase"><i class="fa-solid fa-triangle-exclamation"></i> Pamiętaj o check-in / kasowniku!</span>', checked: false},
+                        {id: 'pb5i2', text: '<b>Opcja 2 (Matera):</b> Miasto w skałach. Uwaga na schody!', checked: false},
+                        {id: 'pb5i3', text: 'Do Matery jeździ stacja FAL (Osobny budynek po lewej na pl. Aldo Moro!)', checked: false}
+                    ]
+                },
+                {
+                    id: 'pb6', date: 'Dzień 6 (15.06) - Powrót do KRK',
+                    items: [
+                        {id: 'pb6i1', text: 'Film z Check-outu', checked: false},
+                        {id: 'pb6i2', text: 'Spacer na Quintino Sella -> Pociąg na Lotnisko (5.30€)', checked: false},
+                        {id: 'pb6i3', text: 'Wylot do Krakowa 23:05', checked: false}
+                    ]
+                }
+            ]
+        };
+
+        let inlineFields = {};
+        let saveTimer = null;
+
+        /* --- SERVER SYNC --- */
+        function setSyncStatus(status) {
+            const el = document.getElementById('sync-indicator');
+            if (!el) return;
+            if (status === 'syncing') { el.textContent = '🔄'; el.title = 'Synchronizowanie...'; }
+            else if (status === 'synced') { el.textContent = '☁️'; el.title = 'Zsynchronizowano z serwerem'; }
+            else { el.textContent = '⚠️'; el.title = 'Brak połączenia – dane lokalne'; }
+        }
+
+        async function syncToServer(key, value) {
+            setSyncStatus('syncing');
+            try {
+                const res = await fetch('/api/state', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, value })
+                });
+                if (res.ok) setSyncStatus('synced');
+                else setSyncStatus('offline');
+            } catch(e) {
+                setSyncStatus('offline');
+                console.warn('Błąd synchronizacji:', e);
+            }
+        }
+
+        async function initStorage() {
+            let serverData = null;
+            try {
+                const res = await fetch('/api/state');
+                if (res.ok) {
+                    serverData = await res.json();
+                    setSyncStatus('synced');
+                } else {
+                    setSyncStatus('offline');
+                }
+            } catch(e) {
+                setSyncStatus('offline');
+            }
+
+            const mainJson = (serverData && serverData.main) ? serverData.main : localStorage.getItem('bariApp_stateV6');
+            if (mainJson) {
+                try {
+                    const parsed = JSON.parse(mainJson);
+                    state.targetDate = parsed.targetDate || state.targetDate;
+                    state.isReturnMode = parsed.isReturnMode || false;
+                    state.splitExpenses = parsed.splitExpenses || [];
+                    if(parsed.startBari) state.startBari = parsed.startBari;
+                    if(parsed.shopData) state.shopData = parsed.shopData;
+                    if(parsed.checkoutData) state.checkoutData = parsed.checkoutData;
+                    if(parsed.bagsData) state.bagsData = parsed.bagsData;
+                    if(parsed.planBari) state.planBari = parsed.planBari;
+                } catch(e) {}
+            } else {
+                const oldState = localStorage.getItem('bariApp_stateV5');
+                if(oldState) {
+                    try {
+                        const parsedOld = JSON.parse(oldState);
+                        if(parsedOld.splitExpenses) state.splitExpenses = parsedOld.splitExpenses;
+                        if(parsedOld.targetDate) state.targetDate = parsedOld.targetDate;
+                        if(parsedOld.bagsData) state.bagsData = parsedOld.bagsData;
+                    } catch(e){}
+                }
+                saveState();
+            }
+
+            inlineFields.baza_wifi = (serverData && serverData.baza_wifi !== undefined) ? serverData.baza_wifi : (localStorage.getItem('bariApp_baza_wifi') || '');
+            inlineFields.awaria_ekuz = (serverData && serverData.awaria_ekuz !== undefined) ? serverData.awaria_ekuz : (localStorage.getItem('bariApp_awaria_ekuz') || '');
+
+            renderAll();
+        }
+
+        function saveState() {
+            localStorage.setItem('bariApp_stateV6', JSON.stringify(state));
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => syncToServer('main', JSON.stringify(state)), 800);
+        }
+
+        /* --- CUSTOM MODAL ENGINE --- */
+        let modalCallback = null;
+        const modal = document.getElementById('custom-modal');
+        const modalContent = document.getElementById('custom-modal-content');
+
+        function openModal({title, desc = '', inputType = 'text', defaultValue = '', showSecurity = false, confirmText = 'Zatwierdź', onConfirm}) {
+            document.getElementById('modal-title').innerText = title;
+            const descEl = document.getElementById('modal-desc');
+            if(desc) { descEl.innerText = desc; descEl.classList.remove('hidden'); } else { descEl.classList.add('hidden'); }
+
+            const inputText = document.getElementById('modal-input-text');
+            const inputDate = document.getElementById('modal-input-date');
+            inputText.classList.add('hidden'); inputDate.classList.add('hidden');
+
+            let activeInput = null;
+            if(inputType === 'text') {
+                activeInput = inputText;
+                inputText.value = defaultValue;
+                inputText.classList.remove('hidden');
+            } else if (inputType === 'date') {
+                activeInput = inputDate;
+                inputDate.value = defaultValue;
+                inputDate.classList.remove('hidden');
+            }
+
+            const secContainer = document.getElementById('modal-sec-container');
+            const secCheck = document.getElementById('modal-sec-check');
+            if(showSecurity) {
+                secContainer.classList.remove('hidden');
+                secCheck.checked = false;
+            } else {
+                secContainer.classList.add('hidden');
+            }
+
+            document.getElementById('modal-btn-confirm').innerText = confirmText;
+
+            modalCallback = () => {
+                const val = activeInput ? activeInput.value : null;
+                const isSec = showSecurity ? secCheck.checked : false;
+                if(onConfirm) onConfirm(val, isSec);
+                closeModal();
+            };
+
+            document.getElementById('modal-btn-confirm').onclick = modalCallback;
+            document.getElementById('modal-btn-cancel').onclick = closeModal;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+                if(inputType === 'text') inputText.focus();
+            }, 10);
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            modalCallback = null;
+        }
+
+        function openConfirm(title, onConfirm) {
+            openModal({ title: title, inputType: 'none', confirmText: 'Tak', onConfirm: () => onConfirm() });
+        }
+
+
+        /* --- RENDERING ENGINE --- */
+        function renderChecklist(containerId, listArray, stateKey, parentId = null) {
+            const container = document.getElementById(containerId);
+            if(!container) return;
+            container.innerHTML = '';
+
+            listArray.forEach((item) => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200 shadow-sm mb-2';
+
+                const onChangeStr = parentId ? `toggleNestedItem('${stateKey}', '${parentId}', '${item.id}')` : `toggleItem('${stateKey}', '${item.id}')`;
+                const editStr = parentId ? `editItemPrompt('${stateKey}', '${item.id}', '${parentId}')` : `editItemPrompt('${stateKey}', '${item.id}')`;
+                const deleteStr = parentId ? `deleteItem('${stateKey}', '${item.id}', '${parentId}')` : `deleteItem('${stateKey}', '${item.id}')`;
+
+                div.innerHTML = `
+                    <label class="cb-container ${item.checked ? 'crossed' : ''} flex-1 m-0">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="${onChangeStr}">
+                        <span class="checkmark mt-[-10px]"></span>
+                        <span class="ml-2 text-sm leading-tight pr-2 block">${item.text} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}</span>
+                    </label>
+                    <div class="flex gap-4 ml-2 text-slate-300 shrink-0">
+                        <button onclick="${editStr}" class="hover:text-bari-primary active:scale-90"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="${deleteStr}" class="hover:text-red-500 active:scale-90"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderAll() {
+            renderChecklist('start-list-container', state.startBari, 'startBari');
+            renderChecklist('shop-list-container', state.shopData, 'shopData');
+
+            const bagsContainer = document.getElementById('bags-container');
+            bagsContainer.innerHTML = '';
+            state.bagsData.forEach(bag => {
+                const bagDiv = document.createElement('div');
+                bagDiv.className = 'bg-white rounded-xl p-4 shadow-sm border border-slate-100';
+                bagDiv.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold ${bag.color} flex items-center gap-2"><i class="fa-solid ${bag.icon}"></i> ${bag.name}</h3>
+                    </div>
+                    <div id="bag-items-${bag.id}" class="space-y-1"></div>
+                    <button onclick="addCustomNestedItem('bagsData', '${bag.id}')" class="mt-2 text-xs text-slate-500 font-bold hover:text-slate-700 py-2 px-3 border border-slate-200 rounded-lg"><i class="fa-solid fa-plus"></i> Dodaj rzecz</button>
+                `;
+                bagsContainer.appendChild(bagDiv);
+                renderChecklist(`bag-items-${bag.id}`, bag.items, 'bagsData', bag.id);
+            });
+
+            const planContainer = document.getElementById('plan-container');
+            planContainer.innerHTML = '';
+            state.planBari.forEach(day => {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'bg-white rounded-xl p-4 shadow-sm border border-slate-100';
+                dayDiv.innerHTML = `
+                    <h3 class="font-bold text-bari-dark mb-3">${day.date}</h3>
+                    <div id="plan-items-${day.id}" class="space-y-1"></div>
+                    <button onclick="addCustomNestedItem('planBari', '${day.id}')" class="mt-2 text-xs text-slate-500 font-bold py-2 px-3 border border-slate-200 rounded-lg hover:bg-slate-50"><i class="fa-solid fa-plus"></i> Dodaj punkt</button>
+                `;
+                planContainer.appendChild(dayDiv);
+                renderChecklist(`plan-items-${day.id}`, day.items, 'planBari', day.id);
+            });
+
+            const checkoutSec = document.getElementById('checkout-section');
+            const returnBtn = document.getElementById('toggle-return-btn');
+            if (state.isReturnMode) {
+                checkoutSec.classList.remove('hidden');
+                returnBtn.innerHTML = '<i class="fa-solid fa-house"></i> Tryb Pakowania: Powrót';
+                returnBtn.classList.replace('bg-slate-200', 'bg-orange-200');
+                returnBtn.classList.replace('text-slate-700', 'text-orange-800');
+                renderChecklist('checkout-items', state.checkoutData, 'checkoutData');
+            } else {
+                checkoutSec.classList.add('hidden');
+                returnBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Tryb Pakowania: Kraków';
+                returnBtn.classList.replace('bg-orange-200', 'bg-slate-200');
+                returnBtn.classList.replace('text-orange-800', 'text-slate-700');
+            }
+
+            renderSplitExpenses();
+            if(kuwetaActive) renderKuwetaItems();
+
+            const wifiEl = document.getElementById('baza_wifi');
+            if(wifiEl) wifiEl.innerText = inlineFields.baza_wifi || '_Wpisz Wi-Fi_';
+            const ekuzEl = document.getElementById('awaria_ekuz');
+            if(ekuzEl) ekuzEl.innerText = inlineFields.awaria_ekuz || '_Wpisz tutaj_';
+        }
+
+        /* --- INTERAKCJE --- */
+        function toggleItem(stateKey, itemId) {
+            const item = state[stateKey].find(i => i.id === itemId);
+            if(item) { item.checked = !item.checked; saveState(); renderAll(); }
+        }
+        function toggleNestedItem(stateKey, parentId, itemId) {
+            const parent = state[stateKey].find(p => p.id === parentId);
+            if(parent) { const item = parent.items.find(i => i.id === itemId); if(item) { item.checked = !item.checked; saveState(); renderAll(); } }
+        }
+        function generateId() { return Math.random().toString(36).substr(2, 9); }
+        function addCustomItem(stateKey) {
+            openModal({
+                title: "Dodaj element", onConfirm: (val) => {
+                    if(val && val.trim() !== '') {
+                        state[stateKey].push({ id: generateId(), text: val.trim(), checked: false });
+                        saveState(); renderAll(); showToast("Dodano!");
+                    }
+                }
+            });
+        }
+        function addCustomNestedItem(stateKey, parentId) {
+            const parent = state[stateKey].find(p => p.id === parentId);
+            if(parent) {
+                const isBag = (stateKey === 'bagsData');
+                openModal({
+                    title: "Dodaj nowy element", showSecurity: isBag,
+                    onConfirm: (val, isSec) => {
+                        if(val && val.trim() !== '') {
+                            parent.items.push({ id: generateId(), text: val.trim(), checked: false, sec: isSec });
+                            saveState(); renderAll(); showToast("Dodano!");
+                        }
+                    }
+                });
+            }
+        }
+        function editItemPrompt(stateKey, itemId, parentId = null) {
+            let item = parentId ? state[stateKey].find(p => p.id === parentId).items.find(i => i.id === itemId) : state[stateKey].find(i => i.id === itemId);
+            if(item) {
+                openModal({
+                    title: "Edytuj element", defaultValue: item.text.replace(/<[^>]*>?/gm, ''),
+                    onConfirm: (val) => { if(val && val.trim() !== '') { item.text = val.trim(); saveState(); renderAll(); showToast("Zaktualizowano!"); } }
+                });
+            }
+        }
+        function deleteItem(stateKey, itemId, parentId = null) {
+            openConfirm("Na pewno usunąć?", () => {
+                if(parentId) {
+                    const parent = state[stateKey].find(p => p.id === parentId);
+                    parent.items = parent.items.filter(i => i.id !== itemId);
+                } else { state[stateKey] = state[stateKey].filter(i => i.id !== itemId); }
+                saveState(); renderAll(); showToast("Usunięto!");
+            });
+        }
+        function editInline(elId, title) {
+            const el = document.getElementById(elId);
+            const current = inlineFields[elId] || '';
+            openModal({
+                title: "Edycja: " + title, defaultValue: current,
+                onConfirm: (val) => {
+                    if(val !== null) {
+                        inlineFields[elId] = val;
+                        el.innerText = val || (elId === 'baza_wifi' ? '_Wpisz Wi-Fi_' : '_Wpisz tutaj_');
+                        localStorage.setItem('bariApp_' + elId, val);
+                        syncToServer(elId, val);
+                        showToast("Zapisano!");
+                    }
+                }
+            });
+        }
+
+        /* --- KUWETA LOTNISKOWA --- */
+        let kuwetaActive = false;
+        function toggleKuweta() {
+            kuwetaActive = !kuwetaActive;
+            const btn = document.getElementById('btn-kuweta');
+            const view = document.getElementById('kuweta-view');
+            const normalView = document.getElementById('normal-bags-view');
+
+            if(kuwetaActive) {
+                btn.classList.add('hidden'); normalView.classList.add('hidden'); view.classList.remove('hidden'); renderKuwetaItems();
+            } else {
+                btn.classList.remove('hidden'); normalView.classList.remove('hidden'); view.classList.add('hidden');
+            }
+        }
+
+        function renderKuwetaItems() {
+            const container = document.getElementById('kuweta-items');
+            container.innerHTML = '';
+            let foundAny = false;
+            state.bagsData.forEach(bag => {
+                bag.items.forEach(item => {
+                    if(item.sec) {
+                        foundAny = true;
+                        const div = document.createElement('div');
+                        div.className = `flex justify-between items-center p-3 rounded-lg border shadow-sm mb-2 transition-colors ${item.checked ? 'bg-red-100 border-red-300' : 'bg-white border-red-200'}`;
+                        div.innerHTML = `
+                            <label class="cb-container ${item.checked ? 'crossed' : ''} flex-1 m-0 text-red-900">
+                                <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleNestedItem('bagsData', '${bag.id}', '${item.id}')">
+                                <span class="checkmark mt-[-10px] border-red-300"></span>
+                                <span class="ml-2 text-sm font-bold leading-tight">${item.text} <br><span class="text-[10px] text-red-600 font-normal uppercase tracking-wider">📦 Bagaż: ${bag.name}</span></span>
+                            </label>
+                        `;
+                        container.appendChild(div);
+                    }
+                });
+            });
+            if(!foundAny) container.innerHTML = '<p class="text-sm text-center text-red-500 font-bold p-4">Wszystko puste! Nie masz oznaczonych rzeczy do wyciągnięcia.</p>';
+        }
+
+        function toggleReturnMode() {
+            openConfirm("Przełączyć tryb pakowania? Checkboxy ubrań zresetują się do zera.", () => {
+                state.isReturnMode = !state.isReturnMode;
+                state.bagsData.forEach(bag => bag.items.forEach(i => i.checked = false));
+                state.checkoutData.forEach(i => i.checked = false);
+                saveState(); renderAll(); showToast(state.isReturnMode ? "Tryb Powrotu" : "Tryb Kraków");
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none'); toast.classList.add('translate-y-2');
+            setTimeout(() => { toast.classList.add('opacity-0', 'pointer-events-none'); toast.classList.remove('translate-y-2'); }, 2500);
+        }
+        function copyAndToast(text) { navigator.clipboard.writeText(text).then(() => showToast('Skopiowano!')); }
+
+        /* --- ADVANCED SPLIT TRACKER --- */
+        const EURO_RATE = 4.30;
+
+        function addSplitExpense() {
+            const amount = parseFloat(document.getElementById('split-amount').value);
+            const desc = document.getElementById('split-desc').value.trim() || 'Inne';
+            const who = document.getElementById('split-who').value;
+            const method = document.getElementById('split-method').value;
+            const splitFor = document.getElementById('split-for').value;
+
+            if(amount > 0) {
+                state.splitExpenses.unshift({ id: generateId(), amount, desc, who, method, splitFor });
+                saveState(); renderSplitExpenses();
+                document.getElementById('split-amount').value = '';
+                document.getElementById('split-desc').value = '';
+                showToast("Zapisano wydatek!");
+            }
+        }
+
+        function deleteSplitExpense(id) {
+            state.splitExpenses = state.splitExpenses.filter(e => e.id !== id);
+            saveState(); renderSplitExpenses();
+        }
+
+        // RESET BILANSU DŁUGÓW
+        function resetSplitExpenses() {
+            openConfirm("Czy na pewno chcesz wyzerować cały bilans i historię rozliczeń (np. po przelewie)?", () => {
+                state.splitExpenses = [];
+                saveState();
+                renderSplitExpenses();
+                showToast("Bilans zresetowany!");
+            });
+        }
+
+        function renderSplitExpenses() {
+            const container = document.getElementById('split-expenses-list');
+            const totalEl = document.getElementById('split-total');
+            const balanceEl = document.getElementById('split-balance');
+            container.innerHTML = '';
+
+            let totalEur = 0; let dawidOwesGosia = 0; let gosiaOwesDawid = 0;
+
+            state.splitExpenses.forEach(ex => {
+                totalEur += ex.amount;
+                if (ex.who === 'Dawid') {
+                    if (ex.splitFor === '50/50') gosiaOwesDawid += (ex.amount / 2);
+                    if (ex.splitFor === 'Gosia') gosiaOwesDawid += ex.amount;
+                } else if (ex.who === 'Gosia') {
+                    if (ex.splitFor === '50/50') dawidOwesGosia += (ex.amount / 2);
+                    if (ex.splitFor === 'Dawid') dawidOwesGosia += ex.amount;
+                }
+
+                const icon = ex.method === 'Karta' ? '<i class="fa-regular fa-credit-card"></i>' : '<i class="fa-solid fa-coins"></i>';
+                const avatar = ex.who === 'Dawid' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700';
+
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${avatar}">${ex.who[0]}</span>
+                                <span class="font-bold text-slate-700 text-sm">${ex.desc}</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-1 ml-8">${icon} ${ex.method} • Dla: ${ex.splitFor}</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-bari-accent font-bold">${ex.amount.toFixed(2)} €</span>
+                            <button onclick="deleteSplitExpense('${ex.id}')" class="text-slate-300 hover:text-red-500 active:scale-90"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            totalEl.innerText = `Łącznie wydano: ${totalEur.toFixed(2)} €`;
+            let balanceEur = dawidOwesGosia - gosiaOwesDawid;
+            let balancePln = Math.abs(balanceEur) * EURO_RATE;
+
+            if (balanceEur > 0.01) {
+                balanceEl.innerHTML = `<span class="text-blue-700">Dawid wisi Gosi:</span> <br>${balancePln.toFixed(2)} PLN`;
+            } else if (balanceEur < -0.01) {
+                balanceEl.innerHTML = `<span class="text-pink-700">Gosia wisi Dawidowi:</span> <br>${balancePln.toFixed(2)} PLN`;
+            } else {
+                balanceEl.innerHTML = `Jesteście na zero! <i class="fa-solid fa-handshake"></i>`;
+            }
+        }
+
+        /* --- NAWIGACJA --- */
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-bari-primary'); btn.classList.add('text-slate-400');
+            });
+            btnElement.classList.remove('text-slate-400'); btnElement.classList.add('text-bari-primary');
+            window.scrollTo(0,0);
+        }
+
+        /* --- CZAS I POWITANIA --- */
+        function updateDynamicGreeting() {
+            const hour = new Date().getHours();
+            let greeting = "Bari Autopilot ✈️";
+            if (hour >= 5 && hour < 12) greeting = "Buongiorno Dawid! ☕";
+            else if (hour >= 12 && hour < 18) greeting = "Buon pomeriggio! Uwaga na sjestę 🌞";
+            else greeting = "Buonasera! Czas na winko 🍷";
+            document.getElementById('dynamic-greeting').innerText = greeting;
+        }
+
+        function updateCountdown() {
+            const el = document.getElementById('countdown');
+            if(!el) return;
+            const target = new Date(state.targetDate).getTime();
+            const now = new Date().getTime();
+            const diff = target - now;
+
+            if (diff < 0) { el.innerHTML = "Włochy Was witają! 🍕"; return; }
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            el.innerHTML = `⏳ Za ${d} dni i ${h} godz. wyjazd!`;
+        }
+
+        function openDateModal() {
+            openModal({
+                title: "Ustaw czas Ubera", inputType: "datetime-local", defaultValue: state.targetDate,
+                onConfirm: (val) => { if(val) { state.targetDate = val; saveState(); updateCountdown(); showToast("Zaktualizowano!"); } }
+            })
+        }
+
+        function toggleRestaurantMode(show) {
+            const panel = document.getElementById('restaurant-panel');
+            const sheet = document.getElementById('restaurant-sheet');
+            if (show) {
+                panel.classList.remove('hidden');
+                setTimeout(() => { panel.classList.remove('opacity-0'); sheet.classList.remove('translate-y-full'); }, 10);
+            } else {
+                sheet.classList.add('translate-y-full'); panel.classList.add('opacity-0');
+                setTimeout(() => panel.classList.add('hidden'), 300);
+            }
+        }
+        function calculateBill() {
+            const eur = parseFloat(document.getElementById('bill-amount').value) || 0;
+            document.getElementById('bill-split').innerText = ((eur * EURO_RATE) / 2).toFixed(2) + ' zł';
+        }
+
+        /* --- MAPY / ZDJĘCIA OFFLINE --- */
+        function handleImageUpload(event, imgId) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64 = e.target.result;
+                    localStorage.setItem('bariApp_' + imgId, base64);
+                    const img = document.getElementById(imgId);
+                    img.src = base64; img.classList.remove('hidden');
+                    document.getElementById('clear-map').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        function clearImage(imgId) {
+            openConfirm("Usunąć ten zrzut ekranu?", () => {
+                localStorage.removeItem('bariApp_' + imgId);
+                const img = document.getElementById(imgId);
+                img.src = ''; img.classList.add('hidden');
+                document.getElementById('clear-map').classList.add('hidden');
+            });
+        }
+
+        window.onload = async () => {
+            await initStorage();
+            updateCountdown();
+            updateDynamicGreeting();
+            setInterval(() => { updateCountdown(); updateDynamicGreeting(); }, 60000);
+
+            const savedImg = localStorage.getItem('bariApp_saved-map');
+            if(savedImg) {
+                const img = document.getElementById('saved-map');
+                img.src = savedImg; img.classList.remove('hidden');
+                document.getElementById('clear-map').classList.remove('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
