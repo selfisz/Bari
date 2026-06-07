@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bari Autopilot</title>
+    <meta name="theme-color" content="#009246">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Bari">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -78,6 +85,12 @@
         </div>
     </header>
 
+    <!-- Przypomnienie przed sjestą (12:00) -->
+    <div id="siesta-alert" class="hidden fixed top-[7.5rem] left-4 right-4 z-[55] bg-orange-500 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-bold flex items-center gap-2 border-2 border-orange-300">
+        <i class="fa-solid fa-utensils text-lg"></i>
+        <span>Za chwilę sjesta (13:00)! Zjedz i zrób zakupy <b>teraz</b>.</span>
+    </div>
+
     <!-- FLOATING PHRASEBOOK BUTTON -->
     <button onclick="togglePhrasebook(true)" class="fixed bottom-24 right-4 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-2xl z-[60] active:scale-90 transition-transform border-4 border-white" title="Słownik & Tłumacz">
         <i class="fa-solid fa-book"></i>
@@ -93,15 +106,17 @@
 
             <!-- Tłumacz -->
             <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 mb-3 shrink-0">
-                <p class="text-[10px] font-bold text-indigo-700 uppercase mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Tłumacz na polski</p>
+                <p id="translate-dir-label" class="text-[10px] font-bold text-indigo-700 uppercase mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Tłumacz</p>
                 <div class="flex gap-2 mb-2">
-                    <select id="translate-lang" class="p-2 bg-white border border-indigo-200 rounded-lg text-xs font-bold outline-none">
-                        <option value="it">🇮🇹 Włoski → PL</option>
-                        <option value="en">🇬🇧 Angielski → PL</option>
+                    <select id="translate-pair" onchange="updateTranslatePlaceholder()" class="flex-1 p-2 bg-white border border-indigo-200 rounded-lg text-xs font-bold outline-none">
+                        <option value="it|pl">🇮🇹 → 🇵🇱 Włoski → Polski</option>
+                        <option value="en|pl">🇬🇧 → 🇵🇱 Angielski → Polski</option>
+                        <option value="pl|it">🇵🇱 → 🇮🇹 Polski → Włoski</option>
+                        <option value="pl|en">🇵🇱 → 🇬🇧 Polski → Angielski</option>
                     </select>
-                    <button onclick="translatePhrase()" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-bold text-xs active:scale-95">Tłumacz</button>
+                    <button onclick="translatePhrase()" class="shrink-0 bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-xs active:scale-95">Tłumacz</button>
                 </div>
-                <textarea id="translate-input" rows="2" placeholder="Wpisz po włosku lub angielsku..." class="w-full p-2.5 bg-white border border-indigo-200 rounded-lg text-sm outline-none focus:border-indigo-500 resize-none mb-2"></textarea>
+                <textarea id="translate-input" rows="2" placeholder="Wpisz tekst..." class="w-full p-2.5 bg-white border border-indigo-200 rounded-lg text-sm outline-none focus:border-indigo-500 resize-none mb-2"></textarea>
                 <div id="translate-result" class="hidden bg-white border border-indigo-200 rounded-lg p-2.5 text-sm text-slate-800 min-h-[2.5rem]"></div>
                 <button id="translate-copy-btn" onclick="copyTranslateResult()" class="hidden w-full mt-2 bg-white text-indigo-700 border border-indigo-200 py-2 rounded-lg font-bold text-xs active:scale-95">
                     <i class="fa-regular fa-copy"></i> Kopiuj tłumaczenie
@@ -222,8 +237,13 @@
         <section id="tab-plan" class="tab-content">
             <h2 class="text-2xl font-bold text-bari-primary mb-4"><i class="fa-regular fa-calendar-check text-bari-accent"></i> Harmonogram</h2>
 
-            <div class="bg-orange-50 text-orange-800 p-3 rounded-xl mb-6 text-sm font-medium border border-orange-200">
+            <div class="bg-orange-50 text-orange-800 p-3 rounded-xl mb-4 text-sm font-medium border border-orange-200">
                 <i class="fa-solid fa-clock text-orange-500"></i> Sjesta w Bari: <b>13:00 - 17:00</b>. Sklepy i restauracje mogą być zamknięte.
+            </div>
+
+            <div id="checkout-video-alert" class="hidden bg-red-50 border-2 border-red-400 text-red-800 p-3 rounded-xl mb-4 text-sm font-bold flex items-start gap-2">
+                <i class="fa-solid fa-video text-red-500 text-lg mt-0.5"></i>
+                <span><b>KAUCJA!</b> Nagraj wideo apartamentu przy check-outcie (dzień 6). Bez tego strata kaucji!</span>
             </div>
 
             <div id="plan-container" class="space-y-4"></div>
@@ -356,9 +376,32 @@
                     <i id="transport-panel-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
                 </button>
                 <div id="transport-panel-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                    <div class="mt-4 bg-blue-50 border border-blue-100 rounded-xl p-3 cursor-pointer hover:bg-blue-100" onclick="editInline('transport_bus', 'Linie autobusowe')">
+                        <p class="text-[10px] uppercase text-blue-600 font-bold mb-1"><i class="fa-solid fa-bus"></i> Linie autobusowe (MUVT)</p>
+                        <p class="text-sm text-blue-900" id="transport_bus">Via Trevisani ↔ Centrum — wpisz numery linii</p>
+                    </div>
                     <div class="mt-4">
                         <label for="transport-notes" class="text-[10px] uppercase text-slate-500 font-bold mb-2 block"><i class="fa-solid fa-note-sticky"></i> Notatki</label>
-                        <textarea id="transport-notes" rows="4" placeholder="Numery linii, nazwy przystanków, godziny odjazdów..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-bari-primary resize-none" oninput="saveTransportNotes(this.value)"></textarea>
+                        <textarea id="transport-notes" rows="3" placeholder="Godziny odjazdów, nazwy przystanków..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-bari-primary resize-none" oninput="saveTransportNotes(this.value)"></textarea>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-[10px] uppercase text-slate-500 font-bold mb-2"><i class="fa-solid fa-qrcode"></i> Bilety QR (pociąg / lot)</p>
+                        <input type="file" id="ticket-upload" class="hidden" accept="image/*" onchange="handleTicketPhotoUpload(event)">
+                        <button type="button" onclick="document.getElementById('ticket-upload').click()" class="w-full bg-green-50 text-green-800 py-3 rounded-xl font-bold mb-3 border border-green-200 active:scale-95 transition-transform text-sm">
+                            <i class="fa-solid fa-plus"></i> Dodaj bilet (zrzut QR)
+                        </button>
+                        <div id="tickets-gallery" class="grid grid-cols-2 gap-3 mb-4"></div>
+                    </div>
+                    <div class="mt-2 mb-4">
+                        <p class="text-[10px] uppercase text-slate-500 font-bold mb-2"><i class="fa-solid fa-ticket"></i> Zdjęcie kasownika / bramki</p>
+                        <input type="file" id="kasownik-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'kasownik-photo')">
+                        <button type="button" onclick="document.getElementById('kasownik-upload').click()" class="w-full bg-slate-100 text-slate-700 py-2.5 rounded-xl font-bold mb-2 border border-slate-200 active:scale-95 text-sm">
+                            <i class="fa-solid fa-camera"></i> Dodaj zdjęcie kasownika
+                        </button>
+                        <div class="relative">
+                            <img id="kasownik-photo" src="" class="w-full rounded-xl hidden border border-slate-200">
+                            <button id="clear-kasownik" onclick="clearImage('kasownik-photo')" class="hidden absolute top-2 right-2 bg-slate-800/70 text-white w-8 h-8 rounded-full"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
                     </div>
                     <div class="mt-4">
                         <p class="text-[10px] uppercase text-slate-500 font-bold mb-2"><i class="fa-solid fa-camera"></i> Zdjęcia przystanków</p>
@@ -423,6 +466,27 @@
                 </button>
             </div>
 
+            <!-- Portfel gotówki -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
+                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-wallet text-emerald-600"></i> Portfel gotówki (€)</h3>
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center mb-3">
+                    <p class="text-[10px] uppercase font-bold text-emerald-700 mb-1">Pozostało w portfelu</p>
+                    <p id="cash-remaining" class="text-2xl font-bold text-slate-800">— €</p>
+                    <p id="cash-spent-info" class="text-[10px] text-slate-500 mt-1">Wydano gotówką: 0.00 €</p>
+                </div>
+                <label class="text-[9px] uppercase font-bold text-slate-500">Ile € wzięliście na start?</label>
+                <input type="number" id="cash-start" step="0.01" min="0" placeholder="np. 80" class="w-full mt-1 p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold outline-none focus:border-bari-primary" oninput="saveCashStart()">
+                <p class="text-[9px] text-slate-400 mt-2">Odejmuje wydatki oznaczone jako „Gotówka” z rozliczeń. Pamiętaj: 21€ na Katię!</p>
+            </div>
+
+            <!-- Jedzenie & miejsca -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
+                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-utensils text-orange-500"></i> Restauracje & Gelato</h3>
+                <div id="food-spots-list" class="space-y-2 mb-3"></div>
+                <button onclick="addFoodSpot()" class="w-full text-xs text-slate-500 font-bold py-3 border border-slate-200 rounded-lg active:bg-slate-50"><i class="fa-solid fa-plus"></i> Dodaj miejsce</button>
+                <p class="text-[9px] text-slate-400 mt-2">Dodaj pinezkę na mapie w zakładce Baza → „Dodaj własną pinezkę”.</p>
+            </div>
+
             <!-- Kalkulator EUR/PLN na żywo -->
             <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
                 <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-coins text-yellow-500"></i> Kalkulator EUR ↔ PLN</h3>
@@ -439,6 +503,46 @@
                         </div>
                     </div>
                     <p class="text-[10px] text-slate-400 text-center" id="calc-rate-info">Kurs: ładowanie...</p>
+                </div>
+            </div>
+
+            <!-- Awaria & kontakty -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
+                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-kit-medical text-red-500"></i> Awaria & Kontakty</h3>
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <a href="tel:112" class="bg-red-600 text-white py-3 rounded-xl font-bold text-center text-sm active:scale-95 shadow-sm">
+                        <i class="fa-solid fa-phone"></i> 112<br><span class="text-[9px] font-normal opacity-90">Alarmowe EU</span>
+                    </a>
+                    <a href="tel:118" class="bg-red-50 text-red-700 border border-red-200 py-3 rounded-xl font-bold text-center text-sm active:scale-95">
+                        <i class="fa-solid fa-truck-medical"></i> 118<br><span class="text-[9px] font-normal">Pogotowie IT</span>
+                    </a>
+                </div>
+                <a href="tel:+390636204200" class="block w-full bg-slate-50 border border-slate-200 py-2.5 rounded-xl text-sm font-bold text-slate-700 text-center mb-3 active:scale-95">
+                    <i class="fa-solid fa-landmark"></i> Ambasada RP (Rzym): +39 06 36204200
+                </a>
+                <div class="space-y-2 mb-3">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex justify-between items-center cursor-pointer hover:bg-yellow-50" onclick="editInline('awaria_ekuz', 'EKUZ / ubezpieczyciel')">
+                        <div>
+                            <p class="text-[10px] uppercase text-slate-500 font-bold">Numer EKUZ / ubezpieczyciel</p>
+                            <p class="font-mono font-bold text-sm" id="awaria_ekuz">_Wpisz numer_</p>
+                        </div>
+                        <i class="fa-solid fa-pen text-slate-300"></i>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex justify-between items-center cursor-pointer hover:bg-yellow-50" onclick="editInline('awaria_polisa', 'Numer polisy turystycznej')">
+                        <div>
+                            <p class="text-[10px] uppercase text-slate-500 font-bold">Polisa turystyczna</p>
+                            <p class="font-mono font-bold text-sm" id="awaria_polisa">_Wpisz numer polisy_</p>
+                        </div>
+                        <i class="fa-solid fa-pen text-slate-300"></i>
+                    </div>
+                </div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">Zablokuj kartę (w razie kradzieży)</p>
+                <div class="grid grid-cols-1 gap-2">
+                    <a href="tel:+48123456789" class="bg-slate-50 border border-slate-200 py-2.5 px-3 rounded-xl text-xs font-bold text-slate-700 active:scale-95 flex justify-between items-center">
+                        <span><i class="fa-solid fa-credit-card text-red-500"></i> Erste Bank — zablokuj w apce lub zadzwoń</span>
+                        <i class="fa-solid fa-phone text-slate-400"></i>
+                    </a>
+                    <p class="text-[9px] text-slate-400 px-1">Numer na karcie / w apce banku. Zapisz go w kontaktach przed wyjazdem!</p>
                 </div>
             </div>
 
@@ -569,7 +673,8 @@
                 {
                     id: 'pb2', date: 'Dzień 2 (11.06) - Alberobello',
                     items: [
-                        {id: 'pb2i1', text: 'Pociąg/Bus z Bari Centrale. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow active:scale-95 transition-transform"><i class="fa-solid fa-train"></i> Trenitalia</a> <br><span class="text-[10px] text-red-500 font-bold uppercase"><i class="fa-solid fa-triangle-exclamation"></i> Check-in w apce lub skasuj bilet!</span>', checked: false},
+                        {id: 'pb2i1', text: 'Pociąg/Bus z Bari Centrale. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow active:scale-95 transition-transform"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
+                        {id: 'pb2checkin', text: '⚠️ <b>CHECK-IN Trenitalia</b> w apce przed odjazdem! <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-mobile-screen"></i> Otwórz apę</a>', checked: false, checkin: true},
                         {id: 'pb2siesta', text: '13:00–17:00 — <b>SIESTA</b>: W Alberobello część sklepów zamknięta. Lunch przed 13:00 lub po 17:00.', checked: false, siesta: true},
                         {id: 'pb2i2', text: 'Punkt widokowy przy Chiesa di Santa Lucia (na domki Trulli)', checked: false},
                         {id: 'pb2i3', text: 'Spacer po Rione Monti i Rione Aia Piccola', checked: false}
@@ -578,7 +683,8 @@
                 {
                     id: 'pb3', date: 'Dzień 3 (12.06) - Polignano & Monopoli',
                     items: [
-                        {id: 'pb3i1', text: 'Pociąg do Polignano. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow active:scale-95 transition-transform"><i class="fa-solid fa-train"></i> Trenitalia</a> <br><span class="text-[10px] text-red-500 font-bold uppercase"><i class="fa-solid fa-triangle-exclamation"></i> Check-in w apce lub skasuj bilet!</span>', checked: false},
+                        {id: 'pb3i1', text: 'Pociąg do Polignano. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow active:scale-95 transition-transform"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
+                        {id: 'pb3checkin', text: '⚠️ <b>CHECK-IN Trenitalia</b> w apce przed odjazdem! <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-mobile-screen"></i> Otwórz apę</a>', checked: false, checkin: true},
                         {id: 'pb3i2', text: 'Zejście na słynną plażę Lama Monachile pod mostem', checked: false},
                         {id: 'pb3i3', text: 'Pomnik Domenico Modugno (super klify do zdjęć)', checked: false},
                         {id: 'pb3siesta', text: '13:00–17:00 — <b>SIESTA</b>: Nad morzem plaże OK, ale sklepy mogą być zamknięte. Lunch rano lub wieczorem.', checked: false, siesta: true},
@@ -599,7 +705,8 @@
                 {
                     id: 'pb5', date: 'Dzień 5 (14.06) - Wybór: Trani lub Matera',
                     items: [
-                        {id: 'pb5i1', text: '<b>Opcja 1 (Trani):</b> Relaks nad morzem, niesamowita biała Katedra i port <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow"><i class="fa-solid fa-train"></i> Trenitalia</a><br><span class="text-[10px] text-red-500 font-bold uppercase"><i class="fa-solid fa-triangle-exclamation"></i> Pamiętaj o check-in / kasowniku!</span>', checked: false},
+                        {id: 'pb5i1', text: '<b>Opcja 1 (Trani):</b> Relaks nad morzem, niesamowita biała Katedra i port <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
+                        {id: 'pb5checkin', text: '⚠️ <b>CHECK-IN Trenitalia</b> (Trani) lub bilet w kasie FAL (Matera)! <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-mobile-screen"></i> Trenitalia</a>', checked: false, checkin: true},
                         {id: 'pb5i2', text: '<b>Opcja 2 (Matera):</b> Miasto w skałach. Uwaga na schody!', checked: false},
                         {id: 'pb5i3', text: 'Do Matery jeździ stacja FAL (Osobny budynek po lewej na pl. Aldo Moro!)', checked: false},
                         {id: 'pb5siesta', text: '13:00–17:00 — <b>SIESTA</b>: W Trani/Materze restauracje mogą przerwać. Zaplanuj lunch wcześniej.', checked: false, siesta: true}
@@ -610,13 +717,25 @@
                     items: [
                         {id: 'pb6i1', text: 'Film z Check-outu', checked: false},
                         {id: 'pb6siesta', text: '13:00–17:00 — <b>SIESTA</b>: Ostatni dzień — zrób zakupy i lunch przed południem (wylot wieczorem).', checked: false, siesta: true},
+                        {id: 'pb6checkin', text: '⚠️ <b>Bilet lotniskowy 5.30€</b> — QR na bramce (bez kasowania) lub kasownik przy papierowym. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Info</a>', checked: false, checkin: true},
                         {id: 'pb6i2', text: 'Spacer na Quintino Sella -> Pociąg na Lotnisko (5.30€)', checked: false},
                         {id: 'pb6i3', text: 'Wylot do Krakowa 23:05', checked: false}
                     ]
                 }
             ],
             transportStopPhotos: [],
-            customMapPins: []
+            ticketPhotos: [],
+            customMapPins: [],
+            foodSpots: [],
+            cashStart: 80,
+            planDayMeta: {
+                pb1: { outbound: '08:30 przylot', return: '' },
+                pb2: { outbound: '08:00', return: '19:00' },
+                pb3: { outbound: '09:00', return: '20:00' },
+                pb4: { outbound: '', return: '' },
+                pb5: { outbound: '08:30', return: '18:30' },
+                pb6: { outbound: '16:00 lotnisko', return: '23:05 wylot' }
+            }
         };
 
         // Migawka stanu "fabrycznego" – kopia domyślnych danych zanim cokolwiek wczytamy
@@ -664,12 +783,55 @@
                 if(parsed.planBari) state.planBari = parsed.planBari;
                 if(parsed.transportStopPhotos) state.transportStopPhotos = parsed.transportStopPhotos;
                 if(parsed.customMapPins) state.customMapPins = parsed.customMapPins;
+                if(parsed.ticketPhotos) state.ticketPhotos = parsed.ticketPhotos;
+                if(parsed.foodSpots) state.foodSpots = parsed.foodSpots;
+                if(parsed.cashStart !== undefined) state.cashStart = parsed.cashStart;
+                if(parsed.planDayMeta) state.planDayMeta = parsed.planDayMeta;
                 ensureSiestaItems();
+                ensureCheckinItems();
+                ensurePlanDayMeta();
             } catch(e) {}
         }
 
         const SIESTA_TEXT = '13:00–17:00 — <b>SIESTA</b>: Sklepy i większość lokali zamknięta. Jedz i rób zakupy rano lub po 17:00.';
-        const SIESTA_AFTER = { pb1: 'pb1i4', pb2: 'pb2i1', pb3: 'pb3i3', pb4: 'pb4i3', pb5: 'pb5i3', pb6: 'pb6i1' };
+        const SIESTA_AFTER = { pb1: 'pb1i4', pb2: 'pb2checkin', pb3: 'pb3checkin', pb4: 'pb4i3', pb5: 'pb5checkin', pb6: 'pb6checkin' };
+        const CHECKIN_ITEMS = {
+            pb2: { id: 'pb2checkin', after: 'pb2i1' },
+            pb3: { id: 'pb3checkin', after: 'pb3i1' },
+            pb5: { id: 'pb5checkin', after: 'pb5i1' },
+            pb6: { id: 'pb6checkin', after: 'pb6i1' }
+        };
+        const DEFAULT_PLAN_META = {
+            pb1: { outbound: '08:30 przylot', return: '' },
+            pb2: { outbound: '08:00', return: '19:00' },
+            pb3: { outbound: '09:00', return: '20:00' },
+            pb4: { outbound: '', return: '' },
+            pb5: { outbound: '08:30', return: '18:30' },
+            pb6: { outbound: '16:00 lotnisko', return: '23:05 wylot' }
+        };
+
+        function ensureCheckinItems() {
+            if (!state.planBari) return false;
+            let changed = false;
+            const checkinHtml = '⚠️ <b>CHECK-IN Trenitalia</b> w apce przed odjazdem! <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-mobile-screen"></i> Otwórz apę</a>';
+            Object.entries(CHECKIN_ITEMS).forEach(([dayId, cfg]) => {
+                const day = state.planBari.find(d => d.id === dayId);
+                if (!day || day.items.some(i => i.id === cfg.id || i.checkin)) return;
+                const idx = day.items.findIndex(i => i.id === cfg.after) + 1;
+                day.items.splice(idx < 1 ? day.items.length : idx, 0, { id: cfg.id, text: checkinHtml, checked: false, checkin: true });
+                changed = true;
+            });
+            return changed;
+        }
+
+        function ensurePlanDayMeta() {
+            if (!state.planDayMeta) state.planDayMeta = JSON.parse(JSON.stringify(DEFAULT_PLAN_META));
+            let changed = false;
+            Object.keys(DEFAULT_PLAN_META).forEach(k => {
+                if (!state.planDayMeta[k]) { state.planDayMeta[k] = { ...DEFAULT_PLAN_META[k] }; changed = true; }
+            });
+            return changed;
+        }
 
         function ensureSiestaItems() {
             if (!state.planBari) return false;
@@ -692,7 +854,7 @@
                 applyMain(value);
                 try { localStorage.setItem('bariApp_stateV6', value); } catch(e) {}
                 renderAll();
-            } else if (key === 'baza_wifi' || key === 'awaria_ekuz') {
+            } else if (key === 'baza_wifi' || key === 'awaria_ekuz' || key === 'awaria_polisa' || key === 'transport_bus') {
                 inlineFields[key] = value;
                 try { localStorage.setItem('bariApp_' + key, value); } catch(e) {}
                 renderAll();
@@ -704,6 +866,7 @@
             } else if (key.indexOf('img_') === 0) {
                 const imgId = key.slice(4);
                 if (imgId.indexOf('stop-') === 0) applyStopPhoto(imgId, value);
+                else if (imgId.indexOf('ticket-') === 0) applyTicketPhoto(imgId, value);
                 else applyImage(imgId, value);
             } else {
                 return; // inne klucze (np. kopie zapasowe) nie zmieniają widoku
@@ -761,15 +924,24 @@
             inlineFields.baza_wifi = (serverData && serverData.baza_wifi !== undefined) ? serverData.baza_wifi : (localStorage.getItem('bariApp_baza_wifi') || '');
             inlineFields.awaria_ekuz = (serverData && serverData.awaria_ekuz !== undefined) ? serverData.awaria_ekuz : (localStorage.getItem('bariApp_awaria_ekuz') || '');
             inlineFields.transport_notes = (serverData && serverData.transport_notes !== undefined) ? serverData.transport_notes : (localStorage.getItem('bariApp_transport_notes') || '');
+            inlineFields.transport_bus = (serverData && serverData.transport_bus !== undefined) ? serverData.transport_bus : (localStorage.getItem('bariApp_transport_bus') || 'Via Trevisani ↔ Centrum — wpisz numery linii');
+            inlineFields.awaria_polisa = (serverData && serverData.awaria_polisa !== undefined) ? serverData.awaria_polisa : (localStorage.getItem('bariApp_awaria_polisa') || '');
 
             // Zdjęcia z serwera (klucze img_*)
             if (serverData) {
                 Object.keys(serverData).forEach(k => {
-                    if (k.indexOf('img_') === 0) applyImage(k.slice(4), serverData[k]);
+                    if (k.indexOf('img_') === 0) {
+                        const imgId = k.slice(4);
+                        if (imgId.indexOf('stop-') === 0) applyStopPhoto(imgId, serverData[k]);
+                        else if (imgId.indexOf('ticket-') === 0) applyTicketPhoto(imgId, serverData[k]);
+                        else applyImage(imgId, serverData[k]);
+                    }
                 });
             }
 
-            if (ensureSiestaItems()) saveState();
+            if (!state.planDayMeta) ensurePlanDayMeta();
+            let migrated = ensureSiestaItems() || ensureCheckinItems() || ensurePlanDayMeta();
+            if (migrated) saveState();
             renderAll();
         }
 
@@ -865,7 +1037,8 @@
 
             listArray.forEach((item) => {
                 const div = document.createElement('div');
-                div.className = 'flex justify-between items-center p-3 rounded-lg border shadow-sm mb-2 ' + (item.siesta ? 'bg-orange-50 border-orange-200' : 'bg-white border-slate-200');
+                const itemStyle = item.siesta ? 'bg-orange-50 border-orange-200' : (item.checkin ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200');
+                div.className = 'flex justify-between items-center p-3 rounded-lg border shadow-sm mb-2 ' + itemStyle;
 
                 const onChangeStr = parentId ? `toggleNestedItem('${stateKey}', '${parentId}', '${item.id}')` : `toggleItem('${stateKey}', '${item.id}')`;
                 const editStr = parentId ? `editItemPrompt('${stateKey}', '${item.id}', '${parentId}')` : `editItemPrompt('${stateKey}', '${item.id}')`;
@@ -875,7 +1048,7 @@
                     <label class="cb-container ${item.checked ? 'crossed' : ''} flex-1 m-0">
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="${onChangeStr}">
                         <span class="checkmark mt-[-10px]"></span>
-                        <span class="ml-2 text-sm leading-tight pr-2 block">${item.text} ${item.siesta ? '<i class="fa-solid fa-sun text-orange-500 ml-1 text-xs"></i>' : ''} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}</span>
+                        <span class="ml-2 text-sm leading-tight pr-2 block">${item.text} ${item.siesta ? '<i class="fa-solid fa-sun text-orange-500 ml-1 text-xs"></i>' : ''} ${item.checkin ? '<i class="fa-solid fa-ticket text-red-500 ml-1 text-xs"></i>' : ''} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}</span>
                     </label>
                     <div class="flex gap-4 ml-2 text-slate-300 shrink-0">
                         <button onclick="${editStr}" class="hover:text-bari-primary active:scale-90"><i class="fa-solid fa-pen"></i></button>
@@ -918,11 +1091,28 @@
                         <span class="text-xs text-slate-400">⏳</span>
                     </div>
                 ` : '';
+                const meta = (state.planDayMeta && state.planDayMeta[day.id]) || { outbound: '', return: '' };
+                const timesHtml = (meta.outbound || meta.return) ? `
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <button type="button" onclick="editPlanTime('${day.id}','outbound')" class="text-[10px] font-bold bg-slate-100 border border-slate-200 px-2.5 py-1.5 rounded-lg active:scale-95">
+                            <i class="fa-solid fa-train text-blue-500"></i> Odjazd: ${meta.outbound || '—'}
+                        </button>
+                        <button type="button" onclick="editPlanTime('${day.id}','return')" class="text-[10px] font-bold bg-slate-100 border border-slate-200 px-2.5 py-1.5 rounded-lg active:scale-95">
+                            <i class="fa-solid fa-arrow-rotate-left text-green-600"></i> Powrót: ${meta.return || '—'}
+                        </button>
+                    </div>
+                ` : `
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <button type="button" onclick="editPlanTime('${day.id}','outbound')" class="text-[10px] font-bold bg-slate-50 border border-dashed border-slate-300 px-2.5 py-1.5 rounded-lg text-slate-500">+ Odjazd</button>
+                        <button type="button" onclick="editPlanTime('${day.id}','return')" class="text-[10px] font-bold bg-slate-50 border border-dashed border-slate-300 px-2.5 py-1.5 rounded-lg text-slate-500">+ Powrót</button>
+                    </div>
+                `;
                 dayDiv.innerHTML = `
-                    <div class="flex justify-between items-start gap-3 mb-3">
+                    <div class="flex justify-between items-start gap-3 mb-2">
                         <h3 class="font-bold text-bari-dark flex-1 leading-snug">${day.date}</h3>
                         ${weatherBlock}
                     </div>
+                    ${timesHtml}
                     <div id="plan-items-${day.id}" class="space-y-1"></div>
                     <button onclick="addCustomNestedItem('planBari', '${day.id}')" class="mt-2 text-xs text-slate-500 font-bold py-2 px-3 border border-slate-200 rounded-lg hover:bg-slate-50"><i class="fa-solid fa-plus"></i> Dodaj punkt</button>
                 `;
@@ -957,8 +1147,20 @@
             const notesEl = document.getElementById('transport-notes');
             if (notesEl && document.activeElement !== notesEl) notesEl.value = inlineFields.transport_notes || '';
             renderTransportStops();
+            renderTicketPhotos();
             renderCustomMapPins();
             renderBariMapLegend();
+            renderCashWallet();
+            renderFoodSpots();
+            updateSiestaAlert();
+            updateCheckoutVideoAlert();
+
+            const busEl = document.getElementById('transport_bus');
+            if (busEl) busEl.textContent = inlineFields.transport_bus || 'Via Trevisani ↔ Centrum — wpisz numery linii';
+            const polisaEl = document.getElementById('awaria_polisa');
+            if (polisaEl) polisaEl.textContent = inlineFields.awaria_polisa || '_Wpisz numer polisy_';
+            const cashStartEl = document.getElementById('cash-start');
+            if (cashStartEl && document.activeElement !== cashStartEl) cashStartEl.value = state.cashStart ?? '';
         }
 
         /* --- INTERAKCJE --- */
@@ -1129,6 +1331,189 @@
             renderTransportStops();
         }
 
+        /* --- BILETY QR --- */
+        function getTicketPhotoData(imgId) {
+            try { return localStorage.getItem('bariApp_' + imgId) || ''; } catch(e) { return ''; }
+        }
+
+        function renderTicketPhotos() {
+            const gallery = document.getElementById('tickets-gallery');
+            if (!gallery) return;
+            gallery.innerHTML = '';
+            const photos = state.ticketPhotos || [];
+            if (photos.length === 0) {
+                gallery.innerHTML = '<p class="col-span-2 text-xs text-slate-400 text-center py-3">Brak biletów — dodaj zrzut QR</p>';
+                return;
+            }
+            photos.forEach((photo) => {
+                const imgId = 'ticket-' + photo.id;
+                const dataUrl = getTicketPhotoData(imgId);
+                const div = document.createElement('div');
+                div.className = 'relative';
+                div.innerHTML = dataUrl
+                    ? `<img src="${dataUrl}" class="w-full aspect-[3/4] object-cover rounded-xl border border-green-200 shadow-sm" alt="Bilet">`
+                    : `<div class="w-full aspect-[3/4] bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 text-xs">Ładowanie...</div>`;
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'absolute top-2 right-2 bg-slate-800/70 text-white w-7 h-7 rounded-full text-xs';
+                removeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                removeBtn.onclick = () => removeTicketPhoto(photo.id);
+                div.appendChild(removeBtn);
+                gallery.appendChild(div);
+            });
+        }
+
+        function applyTicketPhoto(imgId, dataUrl) {
+            try {
+                if (dataUrl) localStorage.setItem('bariApp_' + imgId, dataUrl);
+                else localStorage.removeItem('bariApp_' + imgId);
+            } catch(e) {}
+            renderTicketPhotos();
+        }
+
+        async function handleTicketPhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            setSyncStatus('syncing');
+            try {
+                let dataUrl = await compressImage(file, 1280, 0.7);
+                if (dataUrl.length > IMG_MAX_BYTES) dataUrl = await compressImage(file, 1000, 0.6);
+                if (dataUrl.length > IMG_MAX_BYTES) dataUrl = await compressImage(file, 800, 0.5);
+                const id = generateId();
+                const imgId = 'ticket-' + id;
+                if (!state.ticketPhotos) state.ticketPhotos = [];
+                state.ticketPhotos.push({ id });
+                applyTicketPhoto(imgId, dataUrl);
+                syncToServer('img_' + imgId, dataUrl);
+                saveState();
+                showToast('Bilet zapisany');
+            } catch(e) {
+                showToast('Nie udało się wczytać biletu');
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        function removeTicketPhoto(id) {
+            openConfirm('Usunąć ten bilet? Zniknie też u drugiej osoby.', () => {
+                state.ticketPhotos = (state.ticketPhotos || []).filter(p => p.id !== id);
+                const imgId = 'ticket-' + id;
+                applyTicketPhoto(imgId, '');
+                syncToServer('img_' + imgId, '');
+                saveState();
+                showToast('Usunięto bilet');
+            });
+        }
+
+        function clearAllTicketPhotos() {
+            (state.ticketPhotos || []).forEach(p => {
+                const imgId = 'ticket-' + p.id;
+                try { localStorage.removeItem('bariApp_' + imgId); } catch(e) {}
+                syncToServer('img_' + imgId, '');
+            });
+            state.ticketPhotos = [];
+            renderTicketPhotos();
+        }
+
+        /* --- PORTFEL GOTÓWKI --- */
+        function saveCashStart() {
+            const val = parseFloat(document.getElementById('cash-start').value);
+            state.cashStart = isNaN(val) ? 0 : val;
+            saveState();
+            renderCashWallet();
+        }
+
+        function renderCashWallet() {
+            const remEl = document.getElementById('cash-remaining');
+            const spentEl = document.getElementById('cash-spent-info');
+            if (!remEl) return;
+            const start = parseFloat(state.cashStart) || 0;
+            const cashSpent = (state.splitExpenses || []).filter(e => e.method === 'Gotówka').reduce((s, e) => s + e.amount, 0);
+            const left = start - cashSpent;
+            remEl.textContent = left.toFixed(2) + ' €';
+            remEl.className = 'text-2xl font-bold ' + (left < 25 ? 'text-red-600' : 'text-slate-800');
+            if (spentEl) spentEl.textContent = 'Wydano gotówką: ' + cashSpent.toFixed(2) + ' €';
+        }
+
+        /* --- RESTAURACJE --- */
+        function renderFoodSpots() {
+            const list = document.getElementById('food-spots-list');
+            if (!list) return;
+            const spots = state.foodSpots || [];
+            if (!spots.length) {
+                list.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">Brak — dodaj pizzerię, gelato...</p>';
+                return;
+            }
+            list.innerHTML = spots.map(s => `
+                <div class="flex items-center gap-2 bg-orange-50 border border-orange-100 p-2.5 rounded-lg">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-sm text-slate-800 truncate">${escapeHtml(s.name)}</p>
+                        ${s.note ? `<p class="text-[10px] text-slate-500 truncate">${escapeHtml(s.note)}</p>` : ''}
+                    </div>
+                    <button type="button" onclick="deleteFoodSpot('${s.id}')" class="text-slate-300 hover:text-red-500 p-2"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function addFoodSpot() {
+            openModal({
+                title: 'Dodaj miejsce', inputType: 'pin', defaultValue: '', defaultNote: '',
+                confirmText: 'Dodaj',
+                onConfirm: (name, note) => {
+                    if (!name || !name.trim()) return;
+                    if (!state.foodSpots) state.foodSpots = [];
+                    state.foodSpots.push({ id: generateId(), name: name.trim(), note: (note || '').trim() });
+                    saveState();
+                    renderFoodSpots();
+                    showToast('Dodano miejsce');
+                }
+            });
+        }
+
+        function deleteFoodSpot(id) {
+            openConfirm('Usunąć to miejsce?', () => {
+                state.foodSpots = (state.foodSpots || []).filter(s => s.id !== id);
+                saveState();
+                renderFoodSpots();
+            });
+        }
+
+        /* --- PLAN: GODZINY --- */
+        function editPlanTime(dayId, field) {
+            if (!state.planDayMeta) state.planDayMeta = {};
+            if (!state.planDayMeta[dayId]) state.planDayMeta[dayId] = { outbound: '', return: '' };
+            const labels = { outbound: 'Godzina odjazdu', return: 'Godzina powrotu' };
+            openModal({
+                title: labels[field] || 'Godzina',
+                defaultValue: state.planDayMeta[dayId][field] || '',
+                onConfirm: (val) => {
+                    if (val === null) return;
+                    state.planDayMeta[dayId][field] = val.trim();
+                    saveState();
+                    renderAll();
+                    showToast('Zapisano godzinę');
+                }
+            });
+        }
+
+        /* --- PRZYPOMNIENIA --- */
+        function updateSiestaAlert() {
+            const el = document.getElementById('siesta-alert');
+            if (!el) return;
+            const h = new Date().getHours();
+            const show = h >= 12 && h < 13;
+            el.classList.toggle('hidden', !show);
+        }
+
+        function updateCheckoutVideoAlert() {
+            const el = document.getElementById('checkout-video-alert');
+            if (!el) return;
+            const today = new Date();
+            const isDay6 = today.getMonth() === 5 && today.getDate() === 15;
+            const isReturn = state.isReturnMode;
+            el.classList.toggle('hidden', !(isDay6 || isReturn));
+        }
+
         function editInline(elId, title) {
             const el = document.getElementById(elId);
             const current = inlineFields[elId] || '';
@@ -1137,7 +1522,8 @@
                 onConfirm: (val) => {
                     if(val !== null) {
                         inlineFields[elId] = val;
-                        el.innerText = val || (elId === 'baza_wifi' ? '_Wpisz Wi-Fi_' : '_Wpisz tutaj_');
+                        const placeholders = { baza_wifi: '_Wpisz Wi-Fi_', awaria_ekuz: '_Wpisz numer_', awaria_polisa: '_Wpisz numer polisy_', transport_bus: 'Via Trevisani ↔ Centrum — wpisz numery linii' };
+                        el.innerText = val || placeholders[elId] || '_Wpisz tutaj_';
                         localStorage.setItem('bariApp_' + elId, val);
                         syncToServer(elId, val);
                         showToast("Zapisano!");
@@ -1285,6 +1671,7 @@
             } else {
                 balanceEl.innerHTML = `Jesteście na zero! <i class="fa-solid fa-handshake"></i>`;
             }
+            renderCashWallet();
         }
 
         /* --- NAWIGACJA --- */
@@ -1783,6 +2170,7 @@
             const sheet = document.getElementById('phrasebook-sheet');
             if (show) {
                 panel.classList.remove('hidden');
+                updateTranslatePlaceholder();
                 renderPhraseList();
                 setTimeout(() => { panel.classList.remove('opacity-0'); sheet.classList.remove('translate-y-full'); }, 10);
             } else {
@@ -1815,23 +2203,49 @@
             }
             list.innerHTML = filtered.map(p => `
                 <div class="rounded-xl border ${p.highlight ? 'border-orange-200 bg-orange-50' : 'border-slate-200 bg-slate-50'} p-3">
-                    <p class="font-bold text-sm text-slate-800 mb-2">${p.pl}</p>
+                    <p class="font-bold text-sm text-slate-800 mb-2">${escapeHtml(p.pl)}</p>
                     <div class="flex gap-2">
-                        <button type="button" onclick="copyAndToast(${JSON.stringify(p.it)})" class="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-2 text-left active:scale-[0.98] min-w-0">
+                        <button type="button" data-copy="${escAttr(p.it)}" onclick="copyPhraseBtn(this)" class="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-2 text-left active:scale-[0.98] min-w-0">
                             <span class="text-[9px] font-bold text-green-700 uppercase">🇮🇹 IT</span>
-                            <span class="block text-xs text-slate-700 truncate">${p.it}</span>
+                            <span class="block text-xs text-slate-700 truncate">${escapeHtml(p.it)}</span>
                         </button>
-                        <button type="button" onclick="copyAndToast(${JSON.stringify(p.en)})" class="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-2 text-left active:scale-[0.98] min-w-0">
+                        <button type="button" data-copy="${escAttr(p.en)}" onclick="copyPhraseBtn(this)" class="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-2 text-left active:scale-[0.98] min-w-0">
                             <span class="text-[9px] font-bold text-blue-700 uppercase">🇬🇧 EN</span>
-                            <span class="block text-xs text-slate-700 truncate">${p.en}</span>
+                            <span class="block text-xs text-slate-700 truncate">${escapeHtml(p.en)}</span>
                         </button>
                     </div>
                 </div>
             `).join('');
         }
 
+        function escAttr(str) {
+            return String(str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function copyPhraseBtn(btn) {
+            if (btn.dataset.copy) copyAndToast(btn.dataset.copy);
+        }
+
+        const TRANSLATE_META = {
+            'it|pl': { label: 'Tłumacz na polski', placeholder: 'Wpisz po włosku...', copyHint: 'Kopiuj tłumaczenie' },
+            'en|pl': { label: 'Tłumacz na polski', placeholder: 'Wpisz po angielsku...', copyHint: 'Kopiuj tłumaczenie' },
+            'pl|it': { label: 'Tłumacz na włoski', placeholder: 'Wpisz po polsku (pokażesz Włochom)...', copyHint: 'Kopiuj po włosku' },
+            'pl|en': { label: 'Tłumacz na angielski', placeholder: 'Wpisz po polsku...', copyHint: 'Kopiuj po angielsku' }
+        };
+
+        function updateTranslatePlaceholder() {
+            const pair = document.getElementById('translate-pair')?.value || 'it|pl';
+            const meta = TRANSLATE_META[pair] || TRANSLATE_META['it|pl'];
+            const input = document.getElementById('translate-input');
+            const label = document.getElementById('translate-dir-label');
+            const copyBtn = document.getElementById('translate-copy-btn');
+            if (input) input.placeholder = meta.placeholder;
+            if (label) label.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> ' + meta.label;
+            if (copyBtn) copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> ' + meta.copyHint;
+        }
+
         async function translatePhrase() {
-            const lang = document.getElementById('translate-lang').value;
+            const pair = document.getElementById('translate-pair').value;
             const text = document.getElementById('translate-input').value.trim();
             const resultEl = document.getElementById('translate-result');
             const copyBtn = document.getElementById('translate-copy-btn');
@@ -1843,7 +2257,7 @@
             lastTranslation = '';
 
             try {
-                const res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=' + lang + '|pl');
+                const res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=' + pair);
                 const data = await res.json();
                 if (data.responseStatus === 200 && data.responseData?.translatedText) {
                     lastTranslation = data.responseData.translatedText;
@@ -1863,7 +2277,7 @@
 
         /* --- MAPY / ZDJĘCIA OFFLINE --- */
         // Mapowanie: id obrazka -> id przycisku "usuń"
-        const IMG_CLEAR_BTN = { 'saved-map': 'clear-map' };
+        const IMG_CLEAR_BTN = { 'saved-map': 'clear-map', 'kasownik-photo': 'clear-kasownik' };
 
         function applyImage(imgId, dataUrl) {
             const img = document.getElementById(imgId);
@@ -1935,21 +2349,25 @@
 
         /* --- DANE: RESET FABRYCZNY + KOPIE ZAPASOWE --- */
         function resetToFactory() {
-            openConfirm("Przywrócić ustawienia fabryczne? Znikną wszystkie zaznaczenia, dodane pozycje, wpisane pola (Wi-Fi, EKUZ, notatki transportu) i zdjęcia. Tej operacji nie można cofnąć.", () => {
+            openConfirm("Przywrócić ustawienia fabryczne? Znikną wszystkie zaznaczenia, dodane pozycje, wpisane pola i zdjęcia. Tej operacji nie można cofnąć.", () => {
                 clearAllStopPhotos();
+                clearAllTicketPhotos();
                 state = JSON.parse(JSON.stringify(FACTORY_STATE));
-                inlineFields = { baza_wifi: '', awaria_ekuz: '', transport_notes: '' };
+                inlineFields = { baza_wifi: '', awaria_ekuz: '', awaria_polisa: '', transport_notes: '', transport_bus: 'Via Trevisani ↔ Centrum — wpisz numery linii' };
                 try {
                     localStorage.setItem('bariApp_stateV6', JSON.stringify(state));
                     localStorage.setItem('bariApp_baza_wifi', '');
                     localStorage.setItem('bariApp_awaria_ekuz', '');
+                    localStorage.setItem('bariApp_awaria_polisa', '');
                     localStorage.setItem('bariApp_transport_notes', '');
+                    localStorage.setItem('bariApp_transport_bus', inlineFields.transport_bus);
                 } catch(e) {}
-                // zapis na serwerze => zsynchronizuje też drugi telefon
                 syncToServer('main', JSON.stringify(state));
                 syncToServer('baza_wifi', '');
                 syncToServer('awaria_ekuz', '');
+                syncToServer('awaria_polisa', '');
                 syncToServer('transport_notes', '');
+                syncToServer('transport_bus', inlineFields.transport_bus);
                 // wyczyść zdjęcia (też u drugiej osoby)
                 Object.keys(IMG_CLEAR_BTN).forEach(imgId => {
                     applyImage(imgId, '');
@@ -1971,14 +2389,21 @@
                 const data = localStorage.getItem('bariApp_' + imgId);
                 if (data) images[imgId] = data;
             });
+            (state.ticketPhotos || []).forEach(p => {
+                const imgId = 'ticket-' + p.id;
+                const data = localStorage.getItem('bariApp_' + imgId);
+                if (data) images[imgId] = data;
+            });
             return {
                 app: 'bari',
-                version: 2,
+                version: 3,
                 exportedAt: new Date().toISOString(),
                 main: JSON.stringify(state),
                 baza_wifi: inlineFields.baza_wifi || '',
                 awaria_ekuz: inlineFields.awaria_ekuz || '',
+                awaria_polisa: inlineFields.awaria_polisa || '',
                 transport_notes: inlineFields.transport_notes || '',
+                transport_bus: inlineFields.transport_bus || '',
                 images: images
             };
         }
@@ -1988,18 +2413,23 @@
             applyMain(backup.main);
             inlineFields.baza_wifi = backup.baza_wifi || '';
             inlineFields.awaria_ekuz = backup.awaria_ekuz || '';
+            inlineFields.awaria_polisa = backup.awaria_polisa || '';
             inlineFields.transport_notes = backup.transport_notes || '';
+            inlineFields.transport_bus = backup.transport_bus || 'Via Trevisani ↔ Centrum — wpisz numery linii';
             try {
                 localStorage.setItem('bariApp_stateV6', JSON.stringify(state));
                 localStorage.setItem('bariApp_baza_wifi', inlineFields.baza_wifi);
                 localStorage.setItem('bariApp_awaria_ekuz', inlineFields.awaria_ekuz);
+                localStorage.setItem('bariApp_awaria_polisa', inlineFields.awaria_polisa);
                 localStorage.setItem('bariApp_transport_notes', inlineFields.transport_notes);
+                localStorage.setItem('bariApp_transport_bus', inlineFields.transport_bus);
             } catch(e) {}
             syncToServer('main', JSON.stringify(state));
             syncToServer('baza_wifi', inlineFields.baza_wifi);
             syncToServer('awaria_ekuz', inlineFields.awaria_ekuz);
+            syncToServer('awaria_polisa', inlineFields.awaria_polisa);
             syncToServer('transport_notes', inlineFields.transport_notes);
-            // Zdjęcia z kopii (jeśli są)
+            syncToServer('transport_bus', inlineFields.transport_bus);
             if (backup.images) {
                 Object.keys(IMG_CLEAR_BTN).forEach(imgId => {
                     const data = backup.images[imgId] || '';
@@ -2007,10 +2437,13 @@
                     syncToServer('img_' + imgId, data);
                 });
                 Object.keys(backup.images).forEach(imgId => {
-                    if (imgId.indexOf('stop-') !== 0) return;
-                    const data = backup.images[imgId] || '';
-                    applyStopPhoto(imgId, data);
-                    syncToServer('img_' + imgId, data);
+                    if (imgId.indexOf('stop-') === 0) {
+                        applyStopPhoto(imgId, backup.images[imgId] || '');
+                        syncToServer('img_' + imgId, backup.images[imgId] || '');
+                    } else if (imgId.indexOf('ticket-') === 0) {
+                        applyTicketPhoto(imgId, backup.images[imgId] || '');
+                        syncToServer('img_' + imgId, backup.images[imgId] || '');
+                    }
                 });
             }
             renderAll();
@@ -2089,13 +2522,22 @@
             updateCountdown();
             updateDynamicGreeting();
             fetchEuroRate();
-            setInterval(() => { updateCountdown(); updateDynamicGreeting(); }, 60000);
+            setInterval(() => { updateCountdown(); updateDynamicGreeting(); updateSiestaAlert(); }, 60000);
+            updateSiestaAlert();
 
-            // Awaryjnie pokaż lokalnie zapisane zdjęcie, jeśli nie wczytano go z serwera
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            }
+
             const savedImg = localStorage.getItem('bariApp_saved-map');
             const mapImg = document.getElementById('saved-map');
             if (savedImg && mapImg && mapImg.classList.contains('hidden')) {
                 applyImage('saved-map', savedImg);
+            }
+            const kasImg = localStorage.getItem('bariApp_kasownik-photo');
+            const kasEl = document.getElementById('kasownik-photo');
+            if (kasImg && kasEl && kasEl.classList.contains('hidden')) {
+                applyImage('kasownik-photo', kasImg);
             }
 
             updateTransportPanelUI();
