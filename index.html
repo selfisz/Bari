@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase (synchronizacja na żywo między urządzeniami) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -419,6 +421,15 @@
     </div>
 
     <script>
+        /* --- SUPABASE (KONFIGURACJA) --- */
+        const SUPABASE_URL = 'https://ygjqkxtbchoinixwamip.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_rHv90qDmFYzmTJUKlKwlew_g49KAFZW';
+        const ROOM_ID = 'bari'; // wspólny "pokój" – oba telefony używają tego samego, więc widzą te same dane
+        const supabaseClient = (window.supabase && SUPABASE_URL && SUPABASE_KEY)
+            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+            : null;
+        let lastWritten = {};
+
         /* --- STATE & DATA --- */
         let state = {
             targetDate: "2026-06-10T03:15",
@@ -542,48 +553,84 @@
         }
 
         async function syncToServer(key, value) {
+            lastWritten[key] = value;
+            if (!supabaseClient) { setSyncStatus('offline'); return; }
             setSyncStatus('syncing');
             try {
-                const res = await fetch('/api/state', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key, value })
-                });
-                if (res.ok) setSyncStatus('synced');
-                else setSyncStatus('offline');
+                const { error } = await supabaseClient
+                    .from('app_state')
+                    .upsert({ room_id: ROOM_ID, key, value, updated_at: new Date().toISOString() }, { onConflict: 'room_id,key' });
+                if (error) { setSyncStatus('offline'); console.warn('Błąd synchronizacji:', error); }
+                else setSyncStatus('synced');
             } catch(e) {
                 setSyncStatus('offline');
                 console.warn('Błąd synchronizacji:', e);
             }
         }
 
+        function applyMain(mainJson) {
+            if (!mainJson) return;
+            try {
+                const parsed = JSON.parse(mainJson);
+                state.targetDate = parsed.targetDate || state.targetDate;
+                state.isReturnMode = parsed.isReturnMode || false;
+                state.splitExpenses = parsed.splitExpenses || [];
+                if(parsed.startBari) state.startBari = parsed.startBari;
+                if(parsed.shopData) state.shopData = parsed.shopData;
+                if(parsed.checkoutData) state.checkoutData = parsed.checkoutData;
+                if(parsed.bagsData) state.bagsData = parsed.bagsData;
+                if(parsed.planBari) state.planBari = parsed.planBari;
+            } catch(e) {}
+        }
+
+        function handleRemoteChange(key, value) {
+            if (value === undefined || value === null) return;
+            if (lastWritten[key] === value) return; // echo własnej zmiany – pomiń
+            if (key === 'main') {
+                applyMain(value);
+                try { localStorage.setItem('bariApp_stateV6', value); } catch(e) {}
+            } else {
+                inlineFields[key] = value;
+                try { localStorage.setItem('bariApp_' + key, value); } catch(e) {}
+            }
+            renderAll();
+            setSyncStatus('synced');
+        }
+
+        function subscribeRealtime() {
+            if (!supabaseClient) return;
+            supabaseClient
+                .channel('app_state_live')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state', filter: 'room_id=eq.' + ROOM_ID }, (payload) => {
+                    const row = payload.new || {};
+                    if (row.key) handleRemoteChange(row.key, row.value);
+                })
+                .subscribe();
+        }
+
         async function initStorage() {
             let serverData = null;
-            try {
-                const res = await fetch('/api/state');
-                if (res.ok) {
-                    serverData = await res.json();
-                    setSyncStatus('synced');
-                } else {
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient.from('app_state').select('key,value').eq('room_id', ROOM_ID);
+                    if (!error && data) {
+                        serverData = {};
+                        data.forEach(row => { serverData[row.key] = row.value; });
+                        setSyncStatus('synced');
+                    } else {
+                        setSyncStatus('offline');
+                        if (error) console.warn('Błąd odczytu:', error);
+                    }
+                } catch(e) {
                     setSyncStatus('offline');
                 }
-            } catch(e) {
+            } else {
                 setSyncStatus('offline');
             }
 
             const mainJson = (serverData && serverData.main) ? serverData.main : localStorage.getItem('bariApp_stateV6');
             if (mainJson) {
-                try {
-                    const parsed = JSON.parse(mainJson);
-                    state.targetDate = parsed.targetDate || state.targetDate;
-                    state.isReturnMode = parsed.isReturnMode || false;
-                    state.splitExpenses = parsed.splitExpenses || [];
-                    if(parsed.startBari) state.startBari = parsed.startBari;
-                    if(parsed.shopData) state.shopData = parsed.shopData;
-                    if(parsed.checkoutData) state.checkoutData = parsed.checkoutData;
-                    if(parsed.bagsData) state.bagsData = parsed.bagsData;
-                    if(parsed.planBari) state.planBari = parsed.planBari;
-                } catch(e) {}
+                applyMain(mainJson);
             } else {
                 const oldState = localStorage.getItem('bariApp_stateV5');
                 if(oldState) {
@@ -1056,6 +1103,7 @@
 
         window.onload = async () => {
             await initStorage();
+            subscribeRealtime();
             updateCountdown();
             updateDynamicGreeting();
             setInterval(() => { updateCountdown(); updateDynamicGreeting(); }, 60000);
