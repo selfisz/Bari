@@ -50,6 +50,37 @@
         #toast { transition: opacity 0.3s, transform 0.3s; z-index: 1000;}
 
         #bari-map { height: 320px; z-index: 0; }
+        #bari-map-wrapper { position: relative; }
+        #bari-map-wrapper.map-fs-active {
+            position: fixed;
+            inset: 0;
+            z-index: 280;
+            background: #fff;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            border: none !important;
+            display: flex;
+            flex-direction: column;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        #bari-map-wrapper.map-fs-active #bari-map {
+            flex: 1;
+            height: auto !important;
+            min-height: 0;
+            border-radius: 0;
+        }
+        #bari-map-wrapper .map-fs-toolbar {
+            display: none;
+            flex-shrink: 0;
+            padding: 10px 14px;
+            background: linear-gradient(to right, #1a252f, #2c3e50);
+            color: #fff;
+            align-items: center;
+            justify-content: space-between;
+        }
+        #bari-map-wrapper.map-fs-active .map-fs-toolbar { display: flex; }
+        body.map-fs-lock { overflow: hidden; }
         .bari-map-marker {
             background: #fff;
             border: 2px solid;
@@ -82,7 +113,8 @@
             <div id="countdown" class="text-sm font-bold text-orange-200">⏳ Obliczanie...</div>
             <div class="flex items-center gap-3">
                 <span id="sync-indicator" class="text-sm cursor-default" title="Synchronizacja z serwerem">⏳</span>
-                <button onclick="openSettings()" class="text-white hover:text-orange-200 transition-colors p-1"><i class="fa-solid fa-gear"></i></button>
+                <button type="button" onclick="openJournalTab()" class="text-white hover:text-amber-200 transition-colors p-1" title="Dziennik podróży"><i class="fa-solid fa-book-open"></i></button>
+                <button type="button" onclick="openSettings()" class="text-white hover:text-orange-200 transition-colors p-1" title="Ustawienia"><i class="fa-solid fa-gear"></i></button>
             </div>
         </div>
     </header>
@@ -342,7 +374,18 @@
                     </button>
                     <p id="map-add-pin-hint" class="hidden text-[10px] text-indigo-600 font-bold mb-2 text-center"><i class="fa-solid fa-hand-pointer"></i> Kliknij mapę w wybranym miejscu</p>
                     <p id="map-food-pick-hint" class="hidden text-[10px] text-orange-600 font-bold mb-2 text-center"><i class="fa-solid fa-utensils"></i> Kliknij mapę — tu jest restauracja / gelato</p>
-                    <div id="bari-map" class="w-full rounded-xl border border-slate-200 shadow-inner overflow-hidden mb-3"></div>
+                    <div id="bari-map-wrapper" class="relative mb-3 rounded-xl overflow-hidden border border-slate-200 shadow-inner">
+                        <div class="map-fs-toolbar">
+                            <span class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-blue-300"></i> Mapa Bari — pełny ekran</span>
+                            <button type="button" onclick="toggleMapFullscreen(false)" class="bg-white/15 hover:bg-white/25 w-10 h-10 rounded-xl flex items-center justify-center active:scale-95" title="Zmniejsz mapę">
+                                <i class="fa-solid fa-compress"></i>
+                            </button>
+                        </div>
+                        <div id="bari-map" class="w-full"></div>
+                        <button type="button" id="map-fs-expand-btn" onclick="toggleMapFullscreen(true)" class="absolute top-2 right-2 z-[400] bg-white/95 text-blue-700 w-10 h-10 rounded-xl shadow-md border border-slate-200 flex items-center justify-center active:scale-95" title="Pełny ekran">
+                            <i class="fa-solid fa-expand"></i>
+                        </button>
+                    </div>
                     <div id="bari-map-legend" class="space-y-2"></div>
                 </div>
             </div>
@@ -597,6 +640,28 @@
 
         </section>
 
+        <!-- ZAKŁADKA: DZIENNIK (dostęp z ikony w nagłówku) -->
+        <section id="tab-dziennik" class="tab-content">
+            <h2 class="text-2xl font-bold text-bari-primary mb-2 flex items-center gap-2"><i class="fa-solid fa-book-open text-amber-600"></i> Dziennik</h2>
+            <p class="text-sm text-slate-500 mb-4">Przemyślenia, wrażenia i notatki z podróży — widoczne na obu telefonach.</p>
+
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
+                <label for="journal-author" class="text-[10px] uppercase font-bold text-slate-500">Podpis (opcjonalnie)</label>
+                <select id="journal-author" class="w-full mt-1 mb-3 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-amber-500">
+                    <option value="">— bez podpisu —</option>
+                    <option value="Dawid">Dawid</option>
+                    <option value="Gosia">Gosia</option>
+                </select>
+                <label for="journal-input" class="text-[10px] uppercase font-bold text-slate-500">Wpis</label>
+                <textarea id="journal-input" rows="5" placeholder="Co się dziś wydarzyło? Smak gelato, widok z klifu, ciekawostka z pociągu..." class="w-full mt-1 p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-amber-500 resize-none leading-relaxed"></textarea>
+                <button type="button" onclick="addJournalEntry()" class="w-full mt-3 bg-amber-600 text-white py-3 rounded-xl font-bold active:scale-95 shadow-sm">
+                    <i class="fa-solid fa-pen-fancy"></i> Zapisz wpis
+                </button>
+            </div>
+
+            <div id="journal-list" class="space-y-3"></div>
+        </section>
+
     </main>
 
     <!-- BOTTOM NAVIGATION (6 elementów) -->
@@ -770,6 +835,7 @@
             ticketPhotos: [],
             customMapPins: [],
             foodSpots: [],
+            journalEntries: [],
             cashStart: 80,
             planDayMeta: {
                 pb1: { outbound: '08:30 przylot', return: '' },
@@ -828,6 +894,7 @@
                 if(parsed.customMapPins) state.customMapPins = parsed.customMapPins;
                 if(parsed.ticketPhotos) state.ticketPhotos = parsed.ticketPhotos;
                 if(parsed.foodSpots) state.foodSpots = parsed.foodSpots;
+                if(parsed.journalEntries) state.journalEntries = parsed.journalEntries;
                 if(parsed.cashStart !== undefined) state.cashStart = parsed.cashStart;
                 if(parsed.planDayMeta) state.planDayMeta = parsed.planDayMeta;
                 ensureSiestaItems();
@@ -1290,6 +1357,7 @@
             renderFoodSpots();
             renderFoodMapMarkers();
             renderLiveLocationMarkers();
+            renderJournal();
             updateLiveShareUI();
             updateSiestaAlert();
             updateMagnetAlert();
@@ -1965,14 +2033,87 @@
             renderCashWallet();
         }
 
+        /* --- DZIENNIK --- */
+        function formatJournalDate(iso) {
+            try {
+                return new Date(iso).toLocaleString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            } catch(e) { return ''; }
+        }
+
+        function renderJournal() {
+            const list = document.getElementById('journal-list');
+            if (!list) return;
+            const entries = state.journalEntries || [];
+            if (!entries.length) {
+                list.innerHTML = '<p class="text-center text-slate-400 text-sm py-10 bg-white rounded-xl border border-dashed border-slate-200">Brak wpisów — napisz pierwszy!</p>';
+                return;
+            }
+            const sorted = [...entries].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            list.innerHTML = sorted.map(e => `
+                <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 shadow-sm">
+                    <div class="flex justify-between items-start gap-2 mb-2">
+                        <div>
+                            <p class="text-[10px] font-bold text-amber-800 uppercase">${formatJournalDate(e.createdAt)}</p>
+                            ${e.author ? `<p class="text-xs font-bold text-slate-600 mt-0.5">${escapeHtml(e.author)}</p>` : ''}
+                        </div>
+                        <button type="button" onclick="deleteJournalEntry('${e.id}')" class="text-slate-300 hover:text-red-500 p-2 shrink-0"><i class="fa-solid fa-trash text-xs"></i></button>
+                    </div>
+                    <p class="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">${escapeHtml(e.text)}</p>
+                </div>
+            `).join('');
+        }
+
+        function addJournalEntry() {
+            const input = document.getElementById('journal-input');
+            const authorEl = document.getElementById('journal-author');
+            const text = (input?.value || '').trim();
+            if (!text) { showToast('Wpisz coś do dziennika'); return; }
+            if (!state.journalEntries) state.journalEntries = [];
+            state.journalEntries.push({
+                id: generateId(),
+                text,
+                author: (authorEl?.value || '').trim(),
+                createdAt: new Date().toISOString()
+            });
+            if (input) input.value = '';
+            saveState();
+            renderJournal();
+            showToast('Zapisano wpis');
+        }
+
+        function deleteJournalEntry(id) {
+            openConfirm('Usunąć ten wpis z dziennika?', () => {
+                state.journalEntries = (state.journalEntries || []).filter(e => e.id !== id);
+                saveState();
+                renderJournal();
+                showToast('Usunięto wpis');
+            });
+        }
+
+        function openJournalTab() {
+            if (mapFullscreen) toggleMapFullscreen(false);
+            document.querySelectorAll('.tab-content').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('tab-dziennik').classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-bari-primary');
+                btn.classList.add('text-slate-400');
+            });
+            window.scrollTo(0, 0);
+            renderJournal();
+        }
+
         /* --- NAWIGACJA --- */
         function switchTab(tabId, btnElement) {
+            if (mapFullscreen) toggleMapFullscreen(false);
             document.querySelectorAll('.tab-content').forEach(sec => sec.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('text-bari-primary'); btn.classList.add('text-slate-400');
             });
-            btnElement.classList.remove('text-slate-400'); btnElement.classList.add('text-bari-primary');
+            if (btnElement) {
+                btnElement.classList.remove('text-slate-400');
+                btnElement.classList.add('text-bari-primary');
+            }
             window.scrollTo(0,0);
             if (tabId === 'baza') setTimeout(invalidateBariMap, 150);
             if (tabId === 'plan') {
@@ -2555,6 +2696,40 @@
             if (!bariMap) return;
             bariMap.invalidateSize();
         }
+
+        let mapFullscreen = false;
+
+        function toggleMapFullscreen(force) {
+            if (typeof force === 'boolean') mapFullscreen = force;
+            else mapFullscreen = !mapFullscreen;
+
+            const wrapper = document.getElementById('bari-map-wrapper');
+            if (!wrapper) return;
+
+            if (mapFullscreen) {
+                if (!bazaMapPanelOpen) {
+                    bazaMapPanelOpen = true;
+                    try { localStorage.setItem('bariApp_baza_map_panel_open', '1'); } catch(e) {}
+                    updateBazaMapPanelUI();
+                }
+                initBariMap();
+                document.body.classList.add('map-fs-lock');
+                wrapper.classList.add('map-fs-active');
+            } else {
+                document.body.classList.remove('map-fs-lock');
+                wrapper.classList.remove('map-fs-active');
+            }
+
+            const expandBtn = document.getElementById('map-fs-expand-btn');
+            if (expandBtn) expandBtn.classList.toggle('hidden', mapFullscreen);
+
+            setTimeout(invalidateBariMap, 80);
+            setTimeout(invalidateBariMap, 350);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mapFullscreen) toggleMapFullscreen(false);
+        });
 
         function updateBazaMapPanelUI() {
             const body = document.getElementById('baza-map-panel-body');
