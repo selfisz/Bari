@@ -892,6 +892,7 @@
                 ensureMagnetItems();
                 ensureMagnetShopItems();
                 ensureDay6ReturnPlan();
+                ensureDay6PlanRefresh();
                 ensurePlanDayMeta();
             } catch(e) {}
         }
@@ -928,26 +929,41 @@
         function getDay6ReturnItems() {
             const ryanairBtn = '<a href="https://www.ryanair.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-yellow-400 text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-plane"></i> Ryanair</a>';
             const trainBtn = '<a href="https://www.ferrotramviaria.it/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> FR2</a>';
-            const navQ = '<a href="https://maps.google.com/?q=Bari+Quintino+Sella+station" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Stacja</a>';
-            const navAir = '<a href="https://maps.google.com/?q=Bari+Karol+Wojtyla+Airport+terminal" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-plane-departure"></i> Lotnisko</a>';
+            const navQ = '<a href="https://maps.google.com/?q=Stazione+Via+Quintino+Sella+Bari" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Stacja start</a>';
+            const navAir = '<a href="https://maps.google.com/?q=Bari+Airport+train+station+Ferrotramviaria" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train-subway"></i> Stacja lotnisko</a>';
             return [
                 { id: 'pb6checkout', text: '<b>11:00 CHECK-OUT</b> apartamentu Via Trevisani 236. <b>NAGRAĆ WIDEO</b> całego mieszkania (kaucja!). Wyrzucić śmieci. Klucze według instrukcji Dario.', checked: false, sec: true },
                 { id: 'pb6magnet', text: '🧲 <b>Magnesy na pamiątkę</b> — kup rano w centrum / Starym Mieście (przed sjestą).', checked: false, magnet: true },
                 { id: 'pb6siesta', text: DAY6_SIESTA, checked: false, siesta: true },
                 { id: 'pb6ryanair', text: '⚠️ <b>CHECK-IN Ryanair</b> w apce (od 24h przed lotem)! Boarding pass na telefon. Sprawdź miejsca i bagaż. ' + ryanairBtn, checked: false, checkin: true },
-                { id: 'pb6pack', text: '<b>18:30</b> — Ostateczne pakowanie. <b>Kuweta:</b> powerbank i płyny tylko w podręcznym (work 100ml)! Paszporty przy sobie.', checked: false, sec: true },
+                { id: 'pb6pack', text: '<b>18:30</b> — Ostateczne pakowanie. <b>Kuweta:</b> powerbank i płyny tylko w podręcznym (work 100ml)! Dowody/paszporty w podręcznym.', checked: false, sec: true },
                 { id: 'pb6leave', text: '<b>20:00</b> — Wyjście z apartamentu z bagażami. Zamknij drzwi / domofon.', checked: false },
-                { id: 'pb6walk', text: '<b>20:00–20:20</b> — Spacer z bagażami na stację <b>Quintino Sella</b> (~15–20 min) lub krótki taxi. ' + navQ, checked: false },
-                { id: 'pb6train_buy', text: '⚠️ <b>Bilet FR2 → Aeroporto (5.30€)</b> — automat na stacji. <b>QR skanuj na bramce PRZED peronem</b> (jak przy przylocie — bez kasownika w pociągu!). ' + trainBtn, checked: false, checkin: true },
-                { id: 'pb6train', text: '<b>~20:30</b> — Pociąg <b>Ferrotramviaria FR2</b> do stacji <b>Aeroporto</b> (~15 min). Sprawdź tablicę — kursy co ok. 20–60 min. <b>Ostatnie pociągi ~22:30</b> — nie spóźnij się!', checked: false },
-                { id: 'pb6station', text: 'Po wysiadce: idź <b>tunelami / oznakowaniem „Terminal”</b> do budynku lotniska (~5–10 min pieszo od peronu). ' + navAir, checked: false },
-                { id: 'pb6terminal', text: '<b>Piętro 1 — Partenze (Odloty)</b>. Bari ma <b>jeden terminal</b> — Ryanair odlatuje stąd. Szukaj tablic <b>“Partenze / Departures”</b>.', checked: false },
-                { id: 'pb6bagdrop', text: 'Walizka 10kg do lada? <b>Stanowisko Ryanair / Bag Drop</b> na parterze lub 1. piętrze (patrz ekrany). <b>Zamyka się 60 min przed lotem (22:05)</b>. Tylko plecaki? Pomijasz — idź na security.', checked: false },
+                { id: 'pb6walk', text: '<b>20:00–20:20</b> — Idź na stację <b>Via Quintino Sella</b> (Ferrotramviaria) — przy ul. Quintino Sella, ~1 km od apartamentu (~15 min pieszo z bagażami) lub taxi. Stacja półpodziemna, peron z poziomu ulicy. ' + navQ, checked: false },
+                { id: 'pb6train_buy', text: '⚠️ <b>Bilet FR2 → Aeroporto (5.30€)</b> — automat na stacji Quintino Sella. Kierunek: <b>Aeroporto</b> lub <b>Aeroporto K.W.</b> na tablicy. <b>QR skanuj na bramce PRZED peronem</b> (jak przy przylocie!). ' + trainBtn, checked: false, checkin: true },
+                { id: 'pb6train', text: '<b>~20:30</b> — Wsiądź w <b>Ferrotramviaria FR2</b> na Quintino Sella → wysiądź na <b>Bari Aeroporto</b> (koncowa stacja lotniskowa, ~14–15 min). To NIE Trenitalia! Kursy co ~20–60 min — sprawdź tablicę. <b>Ostatnie pociągi ~22:30!</b>', checked: false },
+                { id: 'pb6station', text: 'Na stacji <b>Bari Aeroporto</b>: przejdź <b>~300 m tunelem</b> (pod ziemią) do budynku terminala — jak przy przylocie, tylko w drugą stronę. Potem <b>w górę na Partenze (odloty)</b>. ' + navAir, checked: false },
+                { id: 'pb6terminal', text: '<b>Piętro 1 — Partenze (Odloty)</b>. Jeden terminal — Ryanair odlatuje stąd. Szukaj tablic <b>“Partenze / Departures”</b>.', checked: false },
+                { id: 'pb6bagdrop', text: 'Walizka 10kg do lada? <b>Stanowisko Ryanair / Bag Drop</b> (patrz ekrany). <b>Zamyka się 60 min przed lotem (22:05)</b>. Tylko plecaki? Od razu na security.', checked: false },
                 { id: 'pb6security', text: '<b>KONTROLA BEZPIECZEŃSTWA</b>: płyny max 100ml w przezroczystym worku, laptop i powerbank osobno, pasy i buty do kubła. Tu wyciągasz rzeczy z <b>kuwety</b>!', checked: false, sec: true },
-                { id: 'pb6passport', text: '<b>KONTROLA PASZPORTOWA</b> (Polska = poza Schengen) — za security. Paszport gotowy, boarding pass w telefonie. eGate lub kontrola graniczna.', checked: false, sec: true },
-                { id: 'pb6gate', text: 'Sprawdź <b>tablicę odlotów (monitori)</b> — numer <b>bramki (Gate)</b> pojawi się ~40–60 min przed odlotem. Idź w stronę wskazanej bramki (A / B).', checked: false },
-                { id: 'pb6board', text: '<b>BOARDING ~22:35</b> — Lot <b>Ryanair do Krakowa 23:05</b> (numer lotu w apce Ryanair). Kolejka Priority jeśli macie. <b>Bramka zamyka się kilka min przed!</b>', checked: false }
+                { id: 'pb6schengen', text: '🇪🇺 <b>Włochy → Polska = Schengen</b> — <b>bez kontroli granicznej</b> za security. Miej dowód/paszport do Ryanair i przy bramce. Od razu szukaj gate na tablicy.', checked: false },
+                { id: 'pb6gate', text: 'Sprawdź <b>tablicę odlotów</b> — numer <b>bramki (Gate)</b> pojawi się ~40–60 min przed odlotem. Idź w stronę wskazanej bramki.', checked: false },
+                { id: 'pb6board', text: '<b>BOARDING ~22:35</b> — Lot <b>Ryanair do Krakowa 23:05</b> (numer w apce Ryanair). Kolejka Priority jeśli macie. <b>Bramka zamyka się kilka min przed!</b>', checked: false }
             ];
+        }
+
+        function ensureDay6PlanRefresh() {
+            if (!state.planBari) return false;
+            const day = state.planBari.find(d => d.id === 'pb6');
+            if (!day || day.items.some(i => i.id === 'pb6schengen')) return false;
+            if (!day.items.some(i => i.id === 'pb6terminal' || i.id === 'pb6passport' || i.id === 'pb6train')) return false;
+
+            const checked = {};
+            day.items.forEach(i => {
+                checked[i.id] = i.checked;
+                if (i.id === 'pb6passport') checked.pb6schengen = i.checked;
+            });
+            day.items = getDay6ReturnItems().map(item => ({ ...item, checked: !!checked[item.id] }));
+            return true;
         }
 
         function ensureDay6ReturnPlan() {
@@ -1174,7 +1190,7 @@
             }
 
             if (!state.planDayMeta) ensurePlanDayMeta();
-            let migrated = ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureMagnetShopItems() || ensureDay6ReturnPlan() || ensurePlanDayMeta();
+            let migrated = ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureMagnetShopItems() || ensureDay6ReturnPlan() || ensureDay6PlanRefresh() || ensurePlanDayMeta();
             if (migrated) saveState();
             renderAll();
         }
@@ -2279,10 +2295,10 @@
         /* --- INTERAKTYWNA MAPA BARI (Leaflet + OpenStreetMap) --- */
         const BARI_MAP_POIS = [
             { id: 'home', lat: 41.11987, lng: 16.86204, title: 'Apartament', desc: 'Via Trevisani 236 — check-in 12:00', icon: 'fa-house', color: '#e74c3c' },
-            { id: 'quintino', lat: 41.11056, lng: 16.87222, title: 'Quintino Sella', desc: 'Stacja pociągu lotniskowego (5.30€)', icon: 'fa-train-subway', color: '#2563eb' },
+            { id: 'quintino', lat: 41.11056, lng: 16.87222, title: 'Via Quintino Sella', desc: 'Wyjazd FR2 → Aeroporto (5.30€). ~15 min pieszo z apartamentu.', icon: 'fa-train-subway', color: '#2563eb' },
             { id: 'centrale', lat: 41.1176, lng: 16.8698, title: 'Bari Centrale', desc: 'Główny dworzec — pociągi nad morze', icon: 'fa-train', color: '#dc2626' },
             { id: 'fal', lat: 41.1175, lng: 16.8678, title: 'Stacja FAL (Matera)', desc: 'Osobny budynek po lewej od pl. Aldo Moro', icon: 'fa-train-tram', color: '#7c3aed' },
-            { id: 'airport', lat: 41.1386, lng: 16.7606, title: 'Lotnisko BRI', desc: 'Karol Wojtyła — przylot / wylot', icon: 'fa-plane', color: '#0ea5e9' },
+            { id: 'airport', lat: 41.1386, lng: 16.7606, title: 'Bari Aeroporto (stacja)', desc: 'Koniec FR2. Tunel ~300 m do terminala. Piętro 1 = odloty.', icon: 'fa-plane', color: '#0ea5e9' },
             { id: 'vecchia', lat: 41.1278, lng: 16.8717, title: 'Bari Vecchia', desc: 'Stare Miasto — wejście od Zamku', icon: 'fa-landmark', color: '#d97706' },
             { id: 'nicola', lat: 41.1308, lng: 16.8711, title: 'Basilica San Nicola', desc: 'Dzień 4 — spacer po Starym Mieście', icon: 'fa-church', color: '#059669' },
             { id: 'pasta', lat: 41.1289, lng: 16.8720, title: 'Via dell\'Arco Basso', desc: '"Ulica Makaronu" — orecchiette', icon: 'fa-utensils', color: '#ea580c' }
