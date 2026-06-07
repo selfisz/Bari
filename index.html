@@ -53,7 +53,7 @@
             <div id="countdown" class="text-sm font-bold text-orange-200">⏳ Obliczanie...</div>
             <div class="flex items-center gap-3">
                 <span id="sync-indicator" class="text-sm cursor-default" title="Synchronizacja z serwerem">⏳</span>
-                <button onclick="openDateModal()" class="text-white hover:text-orange-200 transition-colors p-1"><i class="fa-solid fa-gear"></i></button>
+                <button onclick="openSettings()" class="text-white hover:text-orange-200 transition-colors p-1"><i class="fa-solid fa-gear"></i></button>
             </div>
         </div>
     </header>
@@ -97,6 +97,32 @@
                 <button onclick="copyAndToast('Senza cetrioli, per favore')" class="w-full bg-orange-50 text-slate-700 text-left px-4 py-3 rounded-xl font-bold active:scale-95 transition-transform flex justify-between items-center text-sm border border-orange-200 shadow-sm">
                     <span>BEZ OGÓRKÓW (np. w Macu)</span> <div class="flex items-center gap-2"><i class="text-[10px] text-orange-400 font-normal">Senza cetrioli</i> <i class="fa-regular fa-copy text-orange-500"></i></div>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS OVERLAY -->
+    <div id="settings-panel" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-end transition-opacity opacity-0" onclick="if(event.target===this) closeSettings()">
+        <div class="bg-white w-full rounded-t-3xl p-6 transform translate-y-full slide-panel shadow-[0_-10px_40px_rgba(0,0,0,0.3)] max-h-[85vh] overflow-y-auto" id="settings-sheet">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-xl text-bari-dark"><i class="fa-solid fa-gear text-slate-500"></i> Ustawienia</h3>
+                <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-700 text-2xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Dane i kopia zapasowa -->
+            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 mb-4">
+                <h4 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-database text-slate-500"></i> Dane i kopia zapasowa</h4>
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <button onclick="backupToCloud()" class="bg-bari-primary text-white py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform"><i class="fa-solid fa-cloud-arrow-up"></i> Wyślij kopię (chmura)</button>
+                    <button onclick="restoreFromCloud()" class="bg-slate-100 text-slate-700 border border-slate-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-200"><i class="fa-solid fa-cloud-arrow-down"></i> Przywróć z chmury</button>
+                    <button onclick="exportBackupFile()" class="bg-slate-100 text-slate-700 border border-slate-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-200"><i class="fa-solid fa-file-arrow-down"></i> Pobierz plik kopii</button>
+                    <button onclick="document.getElementById('backup-file-input').click()" class="bg-slate-100 text-slate-700 border border-slate-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-200"><i class="fa-solid fa-file-arrow-up"></i> Wczytaj plik kopii</button>
+                </div>
+                <input type="file" id="backup-file-input" class="hidden" accept="application/json,.json" onchange="importBackupFile(event)">
+                <button onclick="resetToFactory()" class="w-full mt-2 bg-red-50 text-red-700 border border-red-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-red-100">
+                    <i class="fa-solid fa-arrow-rotate-left"></i> Przywróć ustawienia fabryczne
+                </button>
+                <p class="text-[10px] text-slate-400 mt-2 leading-snug">Kopia obejmuje listy, plan, rozliczenia, pola tekstowe i zdjęcia. Zdjęcia synchronizują się na żywo z drugim telefonem (są zmniejszane przed wysłaniem).</p>
             </div>
         </div>
     </div>
@@ -214,20 +240,9 @@
                     </div>
                 </div>
 
-                <div class="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm font-bold flex items-center gap-3 border border-red-100">
-                    <i class="fa-solid fa-ban-smoking text-2xl"></i>
-                    <p>Zakaz palenia w środku! Relaksujemy się i palimy wyłącznie na balkonie.</p>
                 </div>
-            </div>
 
-            <!-- Alert FAL -->
-            <div class="bg-red-600 text-white p-4 rounded-xl shadow-md mb-4 flex items-start gap-3">
-                <i class="fa-solid fa-triangle-exclamation text-2xl mt-1 text-yellow-300"></i>
-                <div>
-                    <p class="font-bold text-lg mb-1">PUŁAPKA: Pociągi do Matery!</p>
-                    <p class="text-sm">Pociągi <b>FAL</b> do Matery <b>NIE ODJEŻDŻAJĄ</b> z głównych peronów Trenitalii. Mają osobny budynek po lewej stronie placu Piazza Aldo Moro! Bilety kupujesz u nich w kasie.</p>
-                </div>
-            </div>
+
 
             <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100">
                 <h3 class="font-bold text-bari-primary mb-3">Zrzuty ekranu / Mapy</h3>
@@ -243,6 +258,15 @@
         <!-- ZAKŁADKA 5: TRANSPORT -->
         <section id="tab-transport" class="tab-content">
             <h2 class="text-2xl font-bold text-bari-primary mb-4 flex items-center gap-2"><i class="fa-solid fa-bus-simple text-blue-500"></i> Transport & Bilety</h2>
+
+            <!-- Alert FAL (przeniesiony z Bazy) -->
+            <div class="bg-red-600 text-white p-4 rounded-xl shadow-md mb-4 flex items-start gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-2xl mt-1 text-yellow-300"></i>
+                <div>
+                    <p class="font-bold text-lg mb-1">PUŁAPKA: Pociągi do Matery!</p>
+                    <p class="text-sm">Pociągi <b>FAL</b> do Matery <b>NIE ODJEŻDŻAJĄ</b> z głównych peronów Trenitalii. Mają osobny budynek po lewej stronie placu Piazza Aldo Moro! Bilety kupujesz u nich w kasie.</p>
+                </div>
+            </div>
 
             <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
                 <div class="grid grid-cols-1 gap-2 mb-4">
@@ -332,30 +356,22 @@
                 </button>
             </div>
 
-            <!-- Słowniczek Ratunkowy -->
+            <!-- Kalkulator EUR/PLN na żywo -->
             <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
-                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-language text-blue-500"></i> Słowniczek Ratunkowy</h3>
-                <div class="space-y-3">
-                    <div class="border-b border-slate-100 pb-2">
-                        <p class="font-bold text-slate-800 text-sm">Dzień dobry</p>
-                        <p class="text-xs text-bari-primary">Buongiorno <span class="text-slate-400 italic">(buon-dżiorno)</span></p>
+                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-coins text-yellow-500"></i> Kalkulator EUR ↔ PLN</h3>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3">
+                    <div class="flex gap-2 mb-2">
+                        <div class="flex-1">
+                            <label class="text-[9px] uppercase font-bold text-slate-500">EUR</label>
+                            <input type="number" id="calc-eur" placeholder="0.00" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm font-bold outline-none focus:border-bari-primary" oninput="calcFromEur()">
+                        </div>
+                        <div class="flex items-end pb-2 text-slate-400"><i class="fa-solid fa-arrows-left-right"></i></div>
+                        <div class="flex-1">
+                            <label class="text-[9px] uppercase font-bold text-slate-500">PLN</label>
+                            <input type="number" id="calc-pln" placeholder="0.00" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm font-bold outline-none focus:border-bari-primary" oninput="calcFromPln()">
+                        </div>
                     </div>
-                    <div class="border-b border-slate-100 pb-2">
-                        <p class="font-bold text-slate-800 text-sm">Dziękuję</p>
-                        <p class="text-xs text-bari-primary">Grazie <span class="text-slate-400 italic">(grac-je)</span></p>
-                    </div>
-                    <div class="border-b border-slate-100 pb-2 bg-orange-50 p-2 rounded">
-                        <p class="font-bold text-slate-800 text-sm">Proszę bez ogórków!</p>
-                        <p class="text-xs text-orange-600 font-bold">Senza cetrioli, per favore <span class="text-orange-400 italic font-normal">(senca cze-tri-o-li)</span></p>
-                    </div>
-                    <div class="border-b border-slate-100 pb-2">
-                        <p class="font-bold text-slate-800 text-sm">Bilet na pociąg</p>
-                        <p class="text-xs text-bari-primary">Un biglietto per il treno <span class="text-slate-400 italic">(un bil-jetto per il treno)</span></p>
-                    </div>
-                    <div class="border-b border-slate-100 pb-2">
-                        <p class="font-bold text-slate-800 text-sm">Gdzie jest toaleta?</p>
-                        <p class="text-xs text-bari-primary">Dov'è il bagno? <span class="text-slate-400 italic">(dow-e il banjo)</span></p>
-                    </div>
+                    <p class="text-[10px] text-slate-400 text-center" id="calc-rate-info">Kurs: ładowanie...</p>
                 </div>
             </div>
 
@@ -366,37 +382,9 @@
                 <button onclick="addCustomItem('shopData')" class="w-full text-xs text-slate-500 font-bold py-3 border border-slate-200 rounded-lg active:bg-slate-50"><i class="fa-solid fa-plus"></i> Dodaj do listy</button>
             </div>
 
-            <!-- Awaria -->
-            <div class="bg-red-50 rounded-xl p-4 border border-red-200">
-                <h3 class="font-bold text-red-800 mb-3"><i class="fa-solid fa-triangle-exclamation"></i> Szybka Awaria</h3>
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <a href="tel:112" class="bg-red-600 text-white text-center py-3 rounded-lg font-bold shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2"><i class="fa-solid fa-phone"></i> 112</a>
-                    <a href="tel:+48618565292" class="bg-slate-800 text-white text-center py-2 rounded-lg font-bold shadow-md text-xs flex flex-col justify-center active:scale-95 transition-transform"><span>Blokada Karty</span><span class="font-normal text-[10px]">Erste Bank</span></a>
-                </div>
-                <div class="bg-white p-3 rounded-lg border border-red-100 flex justify-between items-center cursor-pointer hover:bg-yellow-50" onclick="editInline('awaria_ekuz', 'Numer EKUZ / Polisy')">
-                    <div>
-                        <p class="text-[10px] uppercase text-red-500 font-bold">Numer Polisy / EKUZ</p>
-                        <p class="font-mono font-bold text-slate-700" id="awaria_ekuz">_Wpisz tutaj_</p>
-                    </div>
-                    <i class="fa-solid fa-pen text-slate-300"></i>
-                </div>
-            </div>
 
-            <!-- Dane, kopia zapasowa, reset -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mt-4">
-                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-database text-slate-500"></i> Dane i kopia zapasowa</h3>
-                <div class="grid grid-cols-2 gap-2 mb-2">
-                    <button onclick="backupToCloud()" class="bg-bari-primary text-white py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform"><i class="fa-solid fa-cloud-arrow-up"></i> Wyślij kopię (chmura)</button>
-                    <button onclick="restoreFromCloud()" class="bg-slate-100 text-slate-700 border border-slate-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-200"><i class="fa-solid fa-cloud-arrow-down"></i> Przywróć z chmury</button>
-                    <button onclick="exportBackupFile()" class="bg-slate-100 text-slate-700 border border-slate-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-200"><i class="fa-solid fa-file-arrow-down"></i> Pobierz plik kopii</button>
-                    <button onclick="document.getElementById('backup-file-input').click()" class="bg-slate-100 text-slate-700 border border-slate-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-200"><i class="fa-solid fa-file-arrow-up"></i> Wczytaj plik kopii</button>
-                </div>
-                <input type="file" id="backup-file-input" class="hidden" accept="application/json,.json" onchange="importBackupFile(event)">
-                <button onclick="resetToFactory()" class="w-full mt-2 bg-red-50 text-red-700 border border-red-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-red-100">
-                    <i class="fa-solid fa-arrow-rotate-left"></i> Przywróć ustawienia fabryczne
-                </button>
-                <p class="text-[10px] text-slate-400 mt-2 leading-snug">Kopia obejmuje listy, plan, rozliczenia, pola tekstowe i zdjęcia. Zdjęcia synchronizują się na żywo z drugim telefonem (są zmniejszane przed wysłaniem).</p>
-            </div>
+
+
         </section>
 
     </main>
@@ -967,7 +955,7 @@
         function copyAndToast(text) { navigator.clipboard.writeText(text).then(() => showToast('Skopiowano!')); }
 
         /* --- ADVANCED SPLIT TRACKER --- */
-        const EURO_RATE = 4.30;
+        let EURO_RATE = 4.30; // fallback offline, aktualizowany na żywo
 
         function addSplitExpense() {
             const amount = parseFloat(document.getElementById('split-amount').value);
@@ -1085,11 +1073,47 @@
             el.innerHTML = `⏳ Za ${d} dni i ${h} godz. wyjazd!`;
         }
 
-        function openDateModal() {
-            openModal({
-                title: "Ustaw czas Ubera", inputType: "datetime-local", defaultValue: state.targetDate,
-                onConfirm: (val) => { if(val) { state.targetDate = val; saveState(); updateCountdown(); showToast("Zaktualizowano!"); } }
-            })
+        function openSettings() {
+            const panel = document.getElementById('settings-panel');
+            const sheet = document.getElementById('settings-sheet');
+            panel.classList.remove('hidden');
+            setTimeout(() => { panel.classList.remove('opacity-0'); sheet.classList.remove('translate-y-full'); }, 10);
+        }
+        function closeSettings() {
+            const panel = document.getElementById('settings-panel');
+            const sheet = document.getElementById('settings-sheet');
+            sheet.classList.add('translate-y-full'); panel.classList.add('opacity-0');
+            setTimeout(() => panel.classList.add('hidden'), 300);
+        }
+
+        /* --- KALKULATOR EUR/PLN --- */
+        function fetchEuroRate() {
+            fetch('https://api.frankfurter.dev/v1/latest?base=EUR&symbols=PLN')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.rates && data.rates.PLN) {
+                        EURO_RATE = data.rates.PLN;
+                        try { localStorage.setItem('bariApp_euroRate', EURO_RATE); } catch(e) {}
+                        updateRateInfo();
+                    }
+                })
+                .catch(() => {
+                    const cached = localStorage.getItem('bariApp_euroRate');
+                    if (cached) EURO_RATE = parseFloat(cached);
+                    updateRateInfo();
+                });
+        }
+        function updateRateInfo() {
+            const el = document.getElementById('calc-rate-info');
+            if (el) el.textContent = '1 EUR = ' + EURO_RATE.toFixed(4) + ' PLN (ECB)';
+        }
+        function calcFromEur() {
+            const eur = parseFloat(document.getElementById('calc-eur').value);
+            document.getElementById('calc-pln').value = isNaN(eur) ? '' : (eur * EURO_RATE).toFixed(2);
+        }
+        function calcFromPln() {
+            const pln = parseFloat(document.getElementById('calc-pln').value);
+            document.getElementById('calc-eur').value = isNaN(pln) ? '' : (pln / EURO_RATE).toFixed(2);
         }
 
         function toggleRestaurantMode(show) {
@@ -1317,6 +1341,7 @@
             subscribeRealtime();
             updateCountdown();
             updateDynamicGreeting();
+            fetchEuroRate();
             setInterval(() => { updateCountdown(); updateDynamicGreeting(); }, 60000);
 
             // Awaryjnie pokaż lokalnie zapisane zdjęcie, jeśli nie wczytano go z serwera
