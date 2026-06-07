@@ -820,15 +820,8 @@
                     ]
                 },
                 {
-                    id: 'pb6', date: 'Dzień 6 (15.06) - Powrót do KRK',
-                    items: [
-                        {id: 'pb6i1', text: 'Film z Check-outu', checked: false},
-                        {id: 'pb6siesta', text: '13:00–17:00 — <b>SIESTA</b>: Ostatni dzień — zrób zakupy i lunch przed południem (wylot wieczorem).', checked: false, siesta: true},
-                        {id: 'pb6checkin', text: '⚠️ <b>Bilet lotniskowy 5.30€</b> — QR na bramce (bez kasowania) lub kasownik przy papierowym. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Info</a>', checked: false, checkin: true},
-                        {id: 'pb6magnet', text: '🧲 <b>Ostatnia szansa na magnesy!</b> Kup w Bari zanim pojedziecie na lotnisko.', checked: false, magnet: true},
-                        {id: 'pb6i2', text: 'Spacer na Quintino Sella -> Pociąg na Lotnisko (5.30€)', checked: false},
-                        {id: 'pb6i3', text: 'Wylot do Krakowa 23:05', checked: false}
-                    ]
+                    id: 'pb6', date: 'Dzień 6 (15.06) - Powrót do KRK ✈️',
+                    items: []
                 }
             ],
             transportStopPhotos: [],
@@ -843,12 +836,9 @@
                 pb3: { outbound: '09:00', return: '20:00' },
                 pb4: { outbound: '', return: '' },
                 pb5: { outbound: '08:30', return: '18:30' },
-                pb6: { outbound: '16:00 lotnisko', return: '23:05 wylot' }
+                pb6: { outbound: '20:00 wyjście', return: '23:05 wylot' }
             }
         };
-
-        // Migawka stanu "fabrycznego" – kopia domyślnych danych zanim cokolwiek wczytamy
-        const FACTORY_STATE = JSON.parse(JSON.stringify(state));
 
         let inlineFields = {};
         let saveTimer = null;
@@ -901,11 +891,13 @@
                 ensureCheckinItems();
                 ensureMagnetItems();
                 ensureMagnetShopItems();
+                ensureDay6ReturnPlan();
                 ensurePlanDayMeta();
             } catch(e) {}
         }
 
         const SIESTA_TEXT = '13:00–17:00 — <b>SIESTA</b>: Sklepy i większość lokali zamknięta. Jedz i rób zakupy rano lub po 17:00.';
+        const DAY6_SIESTA = '13:00–17:00 — <b>SIESTA</b>: Ostatni dzień — lunch i zakupy <b>przed 13:00</b> (wylot wieczorem).';
         const MAGNET_SHOP_ITEMS = [
             { id: 'sh_magnet1', text: '🧲 Magnesy na pamiątkę (Polignano/Monopoli — dzień 3)', checked: false },
             { id: 'sh_magnet2', text: '🧲 Magnesy — ostatnia szansa (Bari — dzień 6)', checked: false }
@@ -915,15 +907,14 @@
         };
         const MAGNET_ITEMS = {
             pb3: { id: 'pb3magnet', after: 'pb3siesta', text: '🧲 <b>Magnesy na pamiątkę!</b> Polignano i Monopoli — stragany przy plaży i w starym mieście.' },
-            pb6: { id: 'pb6magnet', after: 'pb6checkin', text: '🧲 <b>Ostatnia szansa na magnesy!</b> Kup w Bari zanim pojedziecie na lotnisko.' }
+            pb6: { id: 'pb6magnet', after: 'pb6checkout', text: '🧲 <b>Ostatnia szansa na magnesy!</b> Kup w Bari rano — przed wyjazdem na lotnisko.' }
         };
         const TRIP_YEAR = 2026;
-        const SIESTA_AFTER = { pb1: 'pb1i4', pb2: 'pb2checkin', pb3: 'pb3checkin', pb4: 'pb4i3', pb5: 'pb5checkin', pb6: 'pb6checkin' };
+        const SIESTA_AFTER = { pb1: 'pb1i4', pb2: 'pb2checkin', pb3: 'pb3checkin', pb4: 'pb4i3', pb5: 'pb5checkin', pb6: 'pb6magnet' };
         const CHECKIN_ITEMS = {
             pb2: { id: 'pb2checkin', after: 'pb2i1' },
             pb3: { id: 'pb3checkin', after: 'pb3i1' },
-            pb5: { id: 'pb5checkin', after: 'pb5i1' },
-            pb6: { id: 'pb6checkin', after: 'pb6i1' }
+            pb5: { id: 'pb5checkin', after: 'pb5i1' }
         };
         const DEFAULT_PLAN_META = {
             pb1: { outbound: '08:30 przylot', return: '' },
@@ -931,8 +922,59 @@
             pb3: { outbound: '09:00', return: '20:00' },
             pb4: { outbound: '', return: '' },
             pb5: { outbound: '08:30', return: '18:30' },
-            pb6: { outbound: '16:00 lotnisko', return: '23:05 wylot' }
+            pb6: { outbound: '20:00 wyjście', return: '23:05 wylot' }
         };
+
+        function getDay6ReturnItems() {
+            const ryanairBtn = '<a href="https://www.ryanair.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-yellow-400 text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-plane"></i> Ryanair</a>';
+            const trainBtn = '<a href="https://www.ferrotramviaria.it/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> FR2</a>';
+            const navQ = '<a href="https://maps.google.com/?q=Bari+Quintino+Sella+station" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Stacja</a>';
+            const navAir = '<a href="https://maps.google.com/?q=Bari+Karol+Wojtyla+Airport+terminal" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-plane-departure"></i> Lotnisko</a>';
+            return [
+                { id: 'pb6checkout', text: '<b>11:00 CHECK-OUT</b> apartamentu Via Trevisani 236. <b>NAGRAĆ WIDEO</b> całego mieszkania (kaucja!). Wyrzucić śmieci. Klucze według instrukcji Dario.', checked: false, sec: true },
+                { id: 'pb6magnet', text: '🧲 <b>Magnesy na pamiątkę</b> — kup rano w centrum / Starym Mieście (przed sjestą).', checked: false, magnet: true },
+                { id: 'pb6siesta', text: DAY6_SIESTA, checked: false, siesta: true },
+                { id: 'pb6ryanair', text: '⚠️ <b>CHECK-IN Ryanair</b> w apce (od 24h przed lotem)! Boarding pass na telefon. Sprawdź miejsca i bagaż. ' + ryanairBtn, checked: false, checkin: true },
+                { id: 'pb6pack', text: '<b>18:30</b> — Ostateczne pakowanie. <b>Kuweta:</b> powerbank i płyny tylko w podręcznym (work 100ml)! Paszporty przy sobie.', checked: false, sec: true },
+                { id: 'pb6leave', text: '<b>20:00</b> — Wyjście z apartamentu z bagażami. Zamknij drzwi / domofon.', checked: false },
+                { id: 'pb6walk', text: '<b>20:00–20:20</b> — Spacer z bagażami na stację <b>Quintino Sella</b> (~15–20 min) lub krótki taxi. ' + navQ, checked: false },
+                { id: 'pb6train_buy', text: '⚠️ <b>Bilet FR2 → Aeroporto (5.30€)</b> — automat na stacji. <b>QR skanuj na bramce PRZED peronem</b> (jak przy przylocie — bez kasownika w pociągu!). ' + trainBtn, checked: false, checkin: true },
+                { id: 'pb6train', text: '<b>~20:30</b> — Pociąg <b>Ferrotramviaria FR2</b> do stacji <b>Aeroporto</b> (~15 min). Sprawdź tablicę — kursy co ok. 20–60 min. <b>Ostatnie pociągi ~22:30</b> — nie spóźnij się!', checked: false },
+                { id: 'pb6station', text: 'Po wysiadce: idź <b>tunelami / oznakowaniem „Terminal”</b> do budynku lotniska (~5–10 min pieszo od peronu). ' + navAir, checked: false },
+                { id: 'pb6terminal', text: '<b>Piętro 1 — Partenze (Odloty)</b>. Bari ma <b>jeden terminal</b> — Ryanair odlatuje stąd. Szukaj tablic <b>“Partenze / Departures”</b>.', checked: false },
+                { id: 'pb6bagdrop', text: 'Walizka 10kg do lada? <b>Stanowisko Ryanair / Bag Drop</b> na parterze lub 1. piętrze (patrz ekrany). <b>Zamyka się 60 min przed lotem (22:05)</b>. Tylko plecaki? Pomijasz — idź na security.', checked: false },
+                { id: 'pb6security', text: '<b>KONTROLA BEZPIECZEŃSTWA</b>: płyny max 100ml w przezroczystym worku, laptop i powerbank osobno, pasy i buty do kubła. Tu wyciągasz rzeczy z <b>kuwety</b>!', checked: false, sec: true },
+                { id: 'pb6passport', text: '<b>KONTROLA PASZPORTOWA</b> (Polska = poza Schengen) — za security. Paszport gotowy, boarding pass w telefonie. eGate lub kontrola graniczna.', checked: false, sec: true },
+                { id: 'pb6gate', text: 'Sprawdź <b>tablicę odlotów (monitori)</b> — numer <b>bramki (Gate)</b> pojawi się ~40–60 min przed odlotem. Idź w stronę wskazanej bramki (A / B).', checked: false },
+                { id: 'pb6board', text: '<b>BOARDING ~22:35</b> — Lot <b>Ryanair do Krakowa 23:05</b> (numer lotu w apce Ryanair). Kolejka Priority jeśli macie. <b>Bramka zamyka się kilka min przed!</b>', checked: false }
+            ];
+        }
+
+        function ensureDay6ReturnPlan() {
+            if (!state.planBari) return false;
+            const day = state.planBari.find(d => d.id === 'pb6');
+            if (!day || day.items.some(i => i.id === 'pb6terminal')) return false;
+
+            const checked = {};
+            const oldToNew = { pb6i1: 'pb6checkout', pb6i2: 'pb6walk', pb6i3: 'pb6board', pb6checkin: 'pb6train_buy', pb6magnet: 'pb6magnet' };
+            day.items.forEach(i => {
+                checked[i.id] = i.checked;
+                if (oldToNew[i.id]) checked[oldToNew[i.id]] = i.checked;
+            });
+
+            day.date = 'Dzień 6 (15.06) - Powrót do KRK ✈️';
+            day.items = getDay6ReturnItems().map(item => ({ ...item, checked: !!checked[item.id] }));
+            if (!state.planDayMeta) state.planDayMeta = {};
+            state.planDayMeta.pb6 = { ...DEFAULT_PLAN_META.pb6, ...(state.planDayMeta.pb6 || {}) };
+            if (!state.planDayMeta.pb6.outbound || state.planDayMeta.pb6.outbound.indexOf('16:00') === 0) {
+                state.planDayMeta.pb6.outbound = '20:00 wyjście';
+            }
+            return true;
+        }
+
+        // Migawka stanu "fabrycznego" – kopia domyślnych danych zanim cokolwiek wczytamy
+        state.planBari.find(d => d.id === 'pb6').items = getDay6ReturnItems();
+        const FACTORY_STATE = JSON.parse(JSON.stringify(state));
 
         function ensureCheckinItems() {
             if (!state.planBari) return false;
@@ -1132,7 +1174,7 @@
             }
 
             if (!state.planDayMeta) ensurePlanDayMeta();
-            let migrated = ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureMagnetShopItems() || ensurePlanDayMeta();
+            let migrated = ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureMagnetShopItems() || ensureDay6ReturnPlan() || ensurePlanDayMeta();
             if (migrated) saveState();
             renderAll();
         }
