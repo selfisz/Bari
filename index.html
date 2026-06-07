@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Supabase (synchronizacja na żywo między urządzeniami) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Leaflet (interaktywna mapa) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
         tailwind.config = {
             theme: {
@@ -38,6 +41,23 @@
         input[type="checkbox"].custom-cb { width: 1.25rem; height: 1.25rem; accent-color: #e74c3c; cursor: pointer; }
         .slide-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         #toast { transition: opacity 0.3s, transform 0.3s; z-index: 1000;}
+
+        #bari-map { height: 320px; z-index: 0; }
+        .bari-map-marker {
+            background: #fff;
+            border: 2px solid;
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+            font-size: 14px;
+        }
+        .bari-map-marker::before { content: none; }
+        .leaflet-popup-content { margin: 10px 12px; font-size: 13px; line-height: 1.35; }
+        .leaflet-popup-content-wrapper { border-radius: 12px; }
     </style>
 </head>
 <body class="bg-bari-light text-slate-800 antialiased pb-24">
@@ -58,46 +78,49 @@
         </div>
     </header>
 
-    <!-- FLOATING RESTAURANT BUTTON -->
-    <button onclick="toggleRestaurantMode(true)" class="fixed bottom-24 right-4 bg-bari-accent text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-2xl z-[60] active:scale-90 transition-transform border-4 border-white">
-        <i class="fa-solid fa-pizza-slice"></i>
+    <!-- FLOATING PHRASEBOOK BUTTON -->
+    <button onclick="togglePhrasebook(true)" class="fixed bottom-24 right-4 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-2xl z-[60] active:scale-90 transition-transform border-4 border-white" title="Słownik & Tłumacz">
+        <i class="fa-solid fa-book"></i>
     </button>
 
-    <!-- RESTAURANT BOTTOM SHEET -->
-    <div id="restaurant-panel" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-end transition-opacity opacity-0" onclick="if(event.target===this) toggleRestaurantMode(false)">
-        <div class="bg-white w-full rounded-t-3xl p-6 transform translate-y-full slide-panel shadow-[0_-10px_40px_rgba(0,0,0,0.3)]" id="restaurant-sheet">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-xl text-bari-dark"><i class="fa-solid fa-utensils text-bari-accent"></i> Włoska Uczta</h3>
-                <button onclick="toggleRestaurantMode(false)" class="text-slate-400 hover:text-slate-700 text-2xl"><i class="fa-solid fa-xmark"></i></button>
+    <!-- PHRASEBOOK BOTTOM SHEET -->
+    <div id="phrasebook-panel" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-end transition-opacity opacity-0" onclick="if(event.target===this) togglePhrasebook(false)">
+        <div class="bg-white w-full rounded-t-3xl p-5 transform translate-y-full slide-panel shadow-[0_-10px_40px_rgba(0,0,0,0.3)] max-h-[88vh] flex flex-col" id="phrasebook-sheet">
+            <div class="flex justify-between items-center mb-3 shrink-0">
+                <h3 class="font-bold text-xl text-bari-dark"><i class="fa-solid fa-language text-indigo-600"></i> Słownik & Tłumacz</h3>
+                <button onclick="togglePhrasebook(false)" class="text-slate-400 hover:text-slate-700 text-2xl"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="bg-orange-50 border border-orange-100 p-3 rounded-xl mb-4 text-xs text-orange-800">
-                <i class="fa-solid fa-circle-info"></i> <b>Coperto:</b> opłata za nakrycie (zazwyczaj 2-3€). We Włoszech NIE zostawiamy napiwków!
-            </div>
-            <div class="mb-4">
-                <p class="font-bold text-slate-700 mb-2 text-sm">Podział rachunku na szybko</p>
-                <div class="flex gap-2">
-                    <input type="number" id="bill-amount" placeholder="Kwota z paragonu €" class="w-1/2 p-3 border border-slate-200 rounded-xl outline-none focus:border-bari-primary bg-slate-50 font-bold" oninput="calculateBill()">
-                    <div class="w-1/2 bg-green-50 text-green-700 rounded-xl p-2 flex flex-col justify-center items-center border border-green-100">
-                        <span class="text-[10px] font-bold uppercase">Składka w PLN / os</span>
-                        <span class="text-lg font-bold" id="bill-split">0.00 zł</span>
-                    </div>
+
+            <!-- Tłumacz -->
+            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 mb-3 shrink-0">
+                <p class="text-[10px] font-bold text-indigo-700 uppercase mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Tłumacz na polski</p>
+                <div class="flex gap-2 mb-2">
+                    <select id="translate-lang" class="p-2 bg-white border border-indigo-200 rounded-lg text-xs font-bold outline-none">
+                        <option value="it">🇮🇹 Włoski → PL</option>
+                        <option value="en">🇬🇧 Angielski → PL</option>
+                    </select>
+                    <button onclick="translatePhrase()" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-bold text-xs active:scale-95">Tłumacz</button>
                 </div>
+                <textarea id="translate-input" rows="2" placeholder="Wpisz po włosku lub angielsku..." class="w-full p-2.5 bg-white border border-indigo-200 rounded-lg text-sm outline-none focus:border-indigo-500 resize-none mb-2"></textarea>
+                <div id="translate-result" class="hidden bg-white border border-indigo-200 rounded-lg p-2.5 text-sm text-slate-800 min-h-[2.5rem]"></div>
+                <button id="translate-copy-btn" onclick="copyTranslateResult()" class="hidden w-full mt-2 bg-white text-indigo-700 border border-indigo-200 py-2 rounded-lg font-bold text-xs active:scale-95">
+                    <i class="fa-regular fa-copy"></i> Kopiuj tłumaczenie
+                </button>
+                <p class="text-[9px] text-indigo-400 mt-1.5">Wymaga internetu. Przy braku sieci użyj fraz poniżej.</p>
             </div>
-            <div class="space-y-2 mt-4 max-h-[40vh] overflow-y-auto pb-4">
-                <p class="font-bold text-slate-700 mb-2 text-sm">Pokaż kelnerowi:</p>
-                <button onclick="copyAndToast('Il conto, per favore')" class="w-full bg-slate-50 text-slate-700 text-left px-4 py-3 rounded-xl font-bold active:scale-95 transition-transform flex justify-between items-center text-sm border border-slate-200 shadow-sm">
-                    <span>Rachunek proszę</span> <div class="flex items-center gap-2"><i class="text-[10px] text-slate-400 font-normal">Il conto...</i> <i class="fa-regular fa-copy text-bari-primary"></i></div>
-                </button>
-                <button onclick="copyAndToast('Acqua naturale, per favore')" class="w-full bg-slate-50 text-slate-700 text-left px-4 py-3 rounded-xl font-bold active:scale-95 transition-transform flex justify-between items-center text-sm border border-slate-200 shadow-sm">
-                    <span>Woda niegazowana</span> <div class="flex items-center gap-2"><i class="text-[10px] text-slate-400 font-normal">Acqua naturale</i> <i class="fa-regular fa-copy text-bari-primary"></i></div>
-                </button>
-                <button onclick="copyAndToast('Posso pagare con la carta?')" class="w-full bg-slate-50 text-slate-700 text-left px-4 py-3 rounded-xl font-bold active:scale-95 transition-transform flex justify-between items-center text-sm border border-slate-200 shadow-sm">
-                    <span>Mogę kartą?</span> <div class="flex items-center gap-2"><i class="text-[10px] text-slate-400 font-normal">Posso pagare...</i> <i class="fa-regular fa-copy text-bari-primary"></i></div>
-                </button>
-                <button onclick="copyAndToast('Senza cetrioli, per favore')" class="w-full bg-orange-50 text-slate-700 text-left px-4 py-3 rounded-xl font-bold active:scale-95 transition-transform flex justify-between items-center text-sm border border-orange-200 shadow-sm">
-                    <span>BEZ OGÓRKÓW (np. w Macu)</span> <div class="flex items-center gap-2"><i class="text-[10px] text-orange-400 font-normal">Senza cetrioli</i> <i class="fa-regular fa-copy text-orange-500"></i></div>
-                </button>
+
+            <!-- Kategorie -->
+            <div class="flex gap-1.5 overflow-x-auto pb-2 shrink-0 scrollbar-hide" id="phrase-categories">
+                <button type="button" data-cat="all" onclick="filterPhrases('all', this)" class="phrase-cat-btn shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white">Wszystkie</button>
+                <button type="button" data-cat="restaurant" onclick="filterPhrases('restaurant', this)" class="phrase-cat-btn shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">🍽 Restauracja</button>
+                <button type="button" data-cat="train" onclick="filterPhrases('train', this)" class="phrase-cat-btn shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">🚆 Pociąg</button>
+                <button type="button" data-cat="city" onclick="filterPhrases('city', this)" class="phrase-cat-btn shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">🏙 Miasto</button>
+                <button type="button" data-cat="emergency" onclick="filterPhrases('emergency', this)" class="phrase-cat-btn shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">🆘 Awaria</button>
             </div>
+
+            <input type="search" id="phrase-search" placeholder="Szukaj frazy..." oninput="renderPhraseList()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-400 mb-2 shrink-0">
+
+            <div id="phrase-list" class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-2"></div>
         </div>
     </div>
 
@@ -134,6 +157,7 @@
             <p id="modal-desc" class="text-sm text-slate-500 mb-4 hidden">Opis</p>
 
             <input type="text" id="modal-input-text" class="w-full p-3 border border-slate-300 rounded-xl mb-4 outline-none focus:border-bari-primary bg-slate-50 hidden" placeholder="Wpisz wartość...">
+            <textarea id="modal-input-note" rows="3" class="w-full p-3 border border-slate-300 rounded-xl mb-4 outline-none focus:border-bari-primary bg-slate-50 hidden resize-none" placeholder="Adnotacja (opcjonalnie)..."></textarea>
             <input type="datetime-local" id="modal-input-date" class="w-full p-3 border border-slate-300 rounded-xl mb-4 outline-none focus:border-bari-primary bg-slate-50 hidden">
 
             <label id="modal-sec-container" class="hidden flex items-center gap-3 mb-5 p-3 bg-red-50 rounded-xl border border-red-200 text-sm font-bold text-red-800 cursor-pointer">
@@ -243,6 +267,25 @@
                 </div>
 
 
+
+            <!-- Interaktywna mapa Bari -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+                <button type="button" onclick="toggleBazaMapPanel()" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
+                    <h3 class="font-bold text-bari-primary flex items-center gap-2">
+                        <i class="fa-solid fa-map-location-dot text-blue-500"></i> Mapa Bari
+                    </h3>
+                    <i id="baza-map-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+                </button>
+                <div id="baza-map-panel-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                    <p class="text-[10px] text-slate-500 mt-3 mb-2">Przesuwaj i przybliżaj. Kliknij pinezkę albo punkt z listy.</p>
+                    <button type="button" id="map-add-pin-btn" onclick="toggleMapAddPinMode()" class="w-full bg-slate-100 text-slate-700 py-2.5 rounded-xl font-bold mb-2 border border-slate-200 active:scale-95 transition-all text-sm">
+                        <i class="fa-solid fa-map-pin text-indigo-500"></i> Dodaj własną pinezkę
+                    </button>
+                    <p id="map-add-pin-hint" class="hidden text-[10px] text-indigo-600 font-bold mb-2 text-center"><i class="fa-solid fa-hand-pointer"></i> Kliknij mapę w wybranym miejscu</p>
+                    <div id="bari-map" class="w-full rounded-xl border border-slate-200 shadow-inner overflow-hidden mb-3"></div>
+                    <div id="bari-map-legend" class="space-y-2"></div>
+                </div>
+            </div>
 
             <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100">
                 <h3 class="font-bold text-bari-primary mb-3">Zrzuty ekranu / Mapy</h3>
@@ -519,6 +562,7 @@
                         {id: 'pb1i2', text: '11:55: Przejście pod apartament (Via Trevisani 236)', checked: false},
                         {id: 'pb1i3', text: '12:00 CHECK-IN: Domofon Liddi CUTRIGNELLI. Drugie piętro.', checked: false},
                         {id: 'pb1i4', text: 'Dać 21€ Katii i zapytać jak włączyć prąd!', checked: false},
+                        {id: 'pb1siesta', text: '13:00–17:00 — <b>SIESTA</b>: Sklepy zamknięte. McDonald\'s i większość lokali — po 17:00 lub przed 13:00.', checked: false, siesta: true},
                         {id: 'pb1i5', text: 'Popołudnie: McDonald\'s! Cel: <b>Crispy McBacon (senza cetrioli)</b>', checked: false}
                     ]
                 },
@@ -526,6 +570,7 @@
                     id: 'pb2', date: 'Dzień 2 (11.06) - Alberobello',
                     items: [
                         {id: 'pb2i1', text: 'Pociąg/Bus z Bari Centrale. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow active:scale-95 transition-transform"><i class="fa-solid fa-train"></i> Trenitalia</a> <br><span class="text-[10px] text-red-500 font-bold uppercase"><i class="fa-solid fa-triangle-exclamation"></i> Check-in w apce lub skasuj bilet!</span>', checked: false},
+                        {id: 'pb2siesta', text: '13:00–17:00 — <b>SIESTA</b>: W Alberobello część sklepów zamknięta. Lunch przed 13:00 lub po 17:00.', checked: false, siesta: true},
                         {id: 'pb2i2', text: 'Punkt widokowy przy Chiesa di Santa Lucia (na domki Trulli)', checked: false},
                         {id: 'pb2i3', text: 'Spacer po Rione Monti i Rione Aia Piccola', checked: false}
                     ]
@@ -536,6 +581,7 @@
                         {id: 'pb3i1', text: 'Pociąg do Polignano. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow active:scale-95 transition-transform"><i class="fa-solid fa-train"></i> Trenitalia</a> <br><span class="text-[10px] text-red-500 font-bold uppercase"><i class="fa-solid fa-triangle-exclamation"></i> Check-in w apce lub skasuj bilet!</span>', checked: false},
                         {id: 'pb3i2', text: 'Zejście na słynną plażę Lama Monachile pod mostem', checked: false},
                         {id: 'pb3i3', text: 'Pomnik Domenico Modugno (super klify do zdjęć)', checked: false},
+                        {id: 'pb3siesta', text: '13:00–17:00 — <b>SIESTA</b>: Nad morzem plaże OK, ale sklepy mogą być zamknięte. Lunch rano lub wieczorem.', checked: false, siesta: true},
                         {id: 'pb3i4', text: 'Pociąg (5 min) do Monopoli <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow active:scale-95 transition-transform"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
                         {id: 'pb3i5', text: 'Spacer na Stary Port (Porto Antico) po zachodzie', checked: false}
                     ]
@@ -546,6 +592,7 @@
                         {id: 'pb4i1', text: 'Wejście w Stare Miasto od strony Zamku', checked: false},
                         {id: 'pb4i2', text: '"Ulica Makaronu" (Via dell\'Arco Basso) - panie lepią orecchiette', checked: false},
                         {id: 'pb4i3', text: 'Bazylika Św. Mikołaja', checked: false},
+                        {id: 'pb4siesta', text: '13:00–17:00 — <b>SIESTA</b>: Slow day — idealny czas na drzemkę na balkonie. Sklepy zamknięte.', checked: false, siesta: true},
                         {id: 'pb4i4', text: 'Pizza, relaks i wino na balkonie (Zakaz palenia wewn.)', checked: false}
                     ]
                 },
@@ -554,19 +601,22 @@
                     items: [
                         {id: 'pb5i1', text: '<b>Opcja 1 (Trani):</b> Relaks nad morzem, niesamowita biała Katedra i port <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow"><i class="fa-solid fa-train"></i> Trenitalia</a><br><span class="text-[10px] text-red-500 font-bold uppercase"><i class="fa-solid fa-triangle-exclamation"></i> Pamiętaj o check-in / kasowniku!</span>', checked: false},
                         {id: 'pb5i2', text: '<b>Opcja 2 (Matera):</b> Miasto w skałach. Uwaga na schody!', checked: false},
-                        {id: 'pb5i3', text: 'Do Matery jeździ stacja FAL (Osobny budynek po lewej na pl. Aldo Moro!)', checked: false}
+                        {id: 'pb5i3', text: 'Do Matery jeździ stacja FAL (Osobny budynek po lewej na pl. Aldo Moro!)', checked: false},
+                        {id: 'pb5siesta', text: '13:00–17:00 — <b>SIESTA</b>: W Trani/Materze restauracje mogą przerwać. Zaplanuj lunch wcześniej.', checked: false, siesta: true}
                     ]
                 },
                 {
                     id: 'pb6', date: 'Dzień 6 (15.06) - Powrót do KRK',
                     items: [
                         {id: 'pb6i1', text: 'Film z Check-outu', checked: false},
+                        {id: 'pb6siesta', text: '13:00–17:00 — <b>SIESTA</b>: Ostatni dzień — zrób zakupy i lunch przed południem (wylot wieczorem).', checked: false, siesta: true},
                         {id: 'pb6i2', text: 'Spacer na Quintino Sella -> Pociąg na Lotnisko (5.30€)', checked: false},
                         {id: 'pb6i3', text: 'Wylot do Krakowa 23:05', checked: false}
                     ]
                 }
             ],
-            transportStopPhotos: []
+            transportStopPhotos: [],
+            customMapPins: []
         };
 
         // Migawka stanu "fabrycznego" – kopia domyślnych danych zanim cokolwiek wczytamy
@@ -613,7 +663,26 @@
                 if(parsed.bagsData) state.bagsData = parsed.bagsData;
                 if(parsed.planBari) state.planBari = parsed.planBari;
                 if(parsed.transportStopPhotos) state.transportStopPhotos = parsed.transportStopPhotos;
+                if(parsed.customMapPins) state.customMapPins = parsed.customMapPins;
+                ensureSiestaItems();
             } catch(e) {}
+        }
+
+        const SIESTA_TEXT = '13:00–17:00 — <b>SIESTA</b>: Sklepy i większość lokali zamknięta. Jedz i rób zakupy rano lub po 17:00.';
+        const SIESTA_AFTER = { pb1: 'pb1i4', pb2: 'pb2i1', pb3: 'pb3i3', pb4: 'pb4i3', pb5: 'pb5i3', pb6: 'pb6i1' };
+
+        function ensureSiestaItems() {
+            if (!state.planBari) return false;
+            let changed = false;
+            state.planBari.forEach(day => {
+                if (day.items.some(i => i.siesta)) return;
+                const afterId = SIESTA_AFTER[day.id];
+                let idx = afterId ? day.items.findIndex(i => i.id === afterId) + 1 : day.items.length;
+                if (idx < 0) idx = day.items.length;
+                day.items.splice(idx, 0, { id: day.id + 'siesta', text: SIESTA_TEXT, checked: false, siesta: true });
+                changed = true;
+            });
+            return changed;
         }
 
         function handleRemoteChange(key, value) {
@@ -700,6 +769,7 @@
                 });
             }
 
+            if (ensureSiestaItems()) saveState();
             renderAll();
         }
 
@@ -714,20 +784,28 @@
         const modal = document.getElementById('custom-modal');
         const modalContent = document.getElementById('custom-modal-content');
 
-        function openModal({title, desc = '', inputType = 'text', defaultValue = '', showSecurity = false, confirmText = 'Zatwierdź', onConfirm}) {
+        function openModal({title, desc = '', inputType = 'text', defaultValue = '', defaultNote = '', showSecurity = false, confirmText = 'Zatwierdź', onConfirm}) {
             document.getElementById('modal-title').innerText = title;
             const descEl = document.getElementById('modal-desc');
             if(desc) { descEl.innerText = desc; descEl.classList.remove('hidden'); } else { descEl.classList.add('hidden'); }
 
             const inputText = document.getElementById('modal-input-text');
+            const inputNote = document.getElementById('modal-input-note');
             const inputDate = document.getElementById('modal-input-date');
-            inputText.classList.add('hidden'); inputDate.classList.add('hidden');
+            inputText.classList.add('hidden'); inputNote.classList.add('hidden'); inputDate.classList.add('hidden');
 
             let activeInput = null;
-            if(inputType === 'text') {
+            let useNote = false;
+            if(inputType === 'text' || inputType === 'pin') {
                 activeInput = inputText;
                 inputText.value = defaultValue;
+                inputText.placeholder = inputType === 'pin' ? 'Nazwa miejsca' : 'Wpisz wartość...';
                 inputText.classList.remove('hidden');
+                if (inputType === 'pin') {
+                    useNote = true;
+                    inputNote.value = defaultNote;
+                    inputNote.classList.remove('hidden');
+                }
             } else if (inputType === 'date') {
                 activeInput = inputDate;
                 inputDate.value = defaultValue;
@@ -747,8 +825,12 @@
 
             modalCallback = () => {
                 const val = activeInput ? activeInput.value : null;
+                const noteVal = useNote ? inputNote.value : null;
                 const isSec = showSecurity ? secCheck.checked : false;
-                if(onConfirm) onConfirm(val, isSec);
+                if (onConfirm) {
+                    if (useNote) onConfirm(val, noteVal);
+                    else onConfirm(val, isSec);
+                }
                 closeModal();
             };
 
@@ -759,7 +841,7 @@
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 modalContent.classList.remove('scale-95');
-                if(inputType === 'text') inputText.focus();
+                if(inputType === 'text' || inputType === 'pin') inputText.focus();
             }, 10);
         }
 
@@ -783,7 +865,7 @@
 
             listArray.forEach((item) => {
                 const div = document.createElement('div');
-                div.className = 'flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200 shadow-sm mb-2';
+                div.className = 'flex justify-between items-center p-3 rounded-lg border shadow-sm mb-2 ' + (item.siesta ? 'bg-orange-50 border-orange-200' : 'bg-white border-slate-200');
 
                 const onChangeStr = parentId ? `toggleNestedItem('${stateKey}', '${parentId}', '${item.id}')` : `toggleItem('${stateKey}', '${item.id}')`;
                 const editStr = parentId ? `editItemPrompt('${stateKey}', '${item.id}', '${parentId}')` : `editItemPrompt('${stateKey}', '${item.id}')`;
@@ -793,7 +875,7 @@
                     <label class="cb-container ${item.checked ? 'crossed' : ''} flex-1 m-0">
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="${onChangeStr}">
                         <span class="checkmark mt-[-10px]"></span>
-                        <span class="ml-2 text-sm leading-tight pr-2 block">${item.text} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}</span>
+                        <span class="ml-2 text-sm leading-tight pr-2 block">${item.text} ${item.siesta ? '<i class="fa-solid fa-sun text-orange-500 ml-1 text-xs"></i>' : ''} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}</span>
                     </label>
                     <div class="flex gap-4 ml-2 text-slate-300 shrink-0">
                         <button onclick="${editStr}" class="hover:text-bari-primary active:scale-90"><i class="fa-solid fa-pen"></i></button>
@@ -829,14 +911,25 @@
             state.planBari.forEach(day => {
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'bg-white rounded-xl p-4 shadow-sm border border-slate-100';
+                const weatherMeta = PLAN_WEATHER_LOC[day.id];
+                const weatherBlock = weatherMeta ? `
+                    <div id="weather-${day.id}" class="shrink-0 bg-sky-50 border border-sky-100 rounded-xl px-3 py-2 text-center min-w-[5.5rem]">
+                        <span class="text-[9px] text-sky-600 font-bold uppercase block">${weatherMeta.label}</span>
+                        <span class="text-xs text-slate-400">⏳</span>
+                    </div>
+                ` : '';
                 dayDiv.innerHTML = `
-                    <h3 class="font-bold text-bari-dark mb-3">${day.date}</h3>
+                    <div class="flex justify-between items-start gap-3 mb-3">
+                        <h3 class="font-bold text-bari-dark flex-1 leading-snug">${day.date}</h3>
+                        ${weatherBlock}
+                    </div>
                     <div id="plan-items-${day.id}" class="space-y-1"></div>
                     <button onclick="addCustomNestedItem('planBari', '${day.id}')" class="mt-2 text-xs text-slate-500 font-bold py-2 px-3 border border-slate-200 rounded-lg hover:bg-slate-50"><i class="fa-solid fa-plus"></i> Dodaj punkt</button>
                 `;
                 planContainer.appendChild(dayDiv);
                 renderChecklist(`plan-items-${day.id}`, day.items, 'planBari', day.id);
             });
+            fetchPlanWeather();
 
             const checkoutSec = document.getElementById('checkout-section');
             const returnBtn = document.getElementById('toggle-return-btn');
@@ -864,6 +957,8 @@
             const notesEl = document.getElementById('transport-notes');
             if (notesEl && document.activeElement !== notesEl) notesEl.value = inlineFields.transport_notes || '';
             renderTransportStops();
+            renderCustomMapPins();
+            renderBariMapLegend();
         }
 
         /* --- INTERAKCJE --- */
@@ -1201,6 +1296,370 @@
             });
             btnElement.classList.remove('text-slate-400'); btnElement.classList.add('text-bari-primary');
             window.scrollTo(0,0);
+            if (tabId === 'baza') setTimeout(invalidateBariMap, 150);
+            if (tabId === 'plan') fetchPlanWeather();
+        }
+
+        /* --- POGODA W PLANIE (10–15.06) --- */
+        const PLAN_WEATHER_LOC = {
+            pb1: { date: '2026-06-10', lat: 41.117, lng: 16.871, label: 'Bari' },
+            pb2: { date: '2026-06-11', lat: 40.784, lng: 17.237, label: 'Alberobello' },
+            pb3: { date: '2026-06-12', lat: 40.995, lng: 17.217, label: 'Polignano' },
+            pb4: { date: '2026-06-13', lat: 41.127, lng: 16.872, label: 'Bari' },
+            pb5: { date: '2026-06-14', lat: 41.248, lng: 16.420, label: 'Trani' },
+            pb6: { date: '2026-06-15', lat: 41.117, lng: 16.871, label: 'Bari' }
+        };
+
+        function wmoToIcon(code) {
+            if (code === 0) return '☀️';
+            if (code <= 3) return '⛅';
+            if (code <= 48) return '🌫️';
+            if (code <= 57) return '🌦️';
+            if (code <= 67) return '🌧️';
+            if (code <= 77) return '🌨️';
+            if (code <= 82) return '🌧️';
+            if (code <= 86) return '🌨️';
+            return '⛈️';
+        }
+
+        function applyPlanWeather(data) {
+            Object.entries(data).forEach(([dayId, w]) => {
+                const el = document.getElementById('weather-' + dayId);
+                if (!el) return;
+                if (!w) {
+                    el.innerHTML = '<span class="text-[9px] text-slate-400">Brak danych</span>';
+                    return;
+                }
+                el.innerHTML = `
+                    <span class="text-[9px] text-sky-600 font-bold uppercase block">${w.label || PLAN_WEATHER_LOC[dayId]?.label || ''}</span>
+                    <span class="text-xl leading-none">${wmoToIcon(w.code)}</span>
+                    <span class="text-xs font-bold text-slate-700">${w.max}° / ${w.min}°</span>
+                    <span class="text-[9px] text-sky-500 block">💧 ${w.rain}%</span>
+                `;
+            });
+        }
+
+        async function fetchPlanWeather() {
+            const cacheKey = 'bariApp_plan_weather_v1';
+            try {
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    const { ts, data } = JSON.parse(cached);
+                    if (Date.now() - ts < 3600000) {
+                        applyPlanWeather(data);
+                        return;
+                    }
+                }
+            } catch(e) {}
+
+            const results = {};
+            await Promise.all(Object.entries(PLAN_WEATHER_LOC).map(async ([dayId, loc]) => {
+                try {
+                    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + loc.lat + '&longitude=' + loc.lng
+                        + '&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max'
+                        + '&timezone=Europe%2FRome&start_date=' + loc.date + '&end_date=' + loc.date;
+                    const res = await fetch(url);
+                    const json = await res.json();
+                    if (!json.daily) throw new Error('no data');
+                    results[dayId] = {
+                        label: loc.label,
+                        max: Math.round(json.daily.temperature_2m_max[0]),
+                        min: Math.round(json.daily.temperature_2m_min[0]),
+                        code: json.daily.weathercode[0],
+                        rain: json.daily.precipitation_probability_max[0] ?? '—'
+                    };
+                } catch(e) {
+                    results[dayId] = null;
+                }
+            }));
+
+            try {
+                localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: results }));
+            } catch(e) {}
+            applyPlanWeather(results);
+        }
+
+        /* --- INTERAKTYWNA MAPA BARI (Leaflet + OpenStreetMap) --- */
+        const BARI_MAP_POIS = [
+            { id: 'home', lat: 41.11987, lng: 16.86204, title: 'Apartament', desc: 'Via Trevisani 236 — check-in 12:00', icon: 'fa-house', color: '#e74c3c' },
+            { id: 'quintino', lat: 41.11056, lng: 16.87222, title: 'Quintino Sella', desc: 'Stacja pociągu lotniskowego (5.30€)', icon: 'fa-train-subway', color: '#2563eb' },
+            { id: 'centrale', lat: 41.1176, lng: 16.8698, title: 'Bari Centrale', desc: 'Główny dworzec — pociągi nad morze', icon: 'fa-train', color: '#dc2626' },
+            { id: 'fal', lat: 41.1175, lng: 16.8678, title: 'Stacja FAL (Matera)', desc: 'Osobny budynek po lewej od pl. Aldo Moro', icon: 'fa-train-tram', color: '#7c3aed' },
+            { id: 'airport', lat: 41.1386, lng: 16.7606, title: 'Lotnisko BRI', desc: 'Karol Wojtyła — przylot / wylot', icon: 'fa-plane', color: '#0ea5e9' },
+            { id: 'vecchia', lat: 41.1278, lng: 16.8717, title: 'Bari Vecchia', desc: 'Stare Miasto — wejście od Zamku', icon: 'fa-landmark', color: '#d97706' },
+            { id: 'nicola', lat: 41.1308, lng: 16.8711, title: 'Basilica San Nicola', desc: 'Dzień 4 — spacer po Starym Mieście', icon: 'fa-church', color: '#059669' },
+            { id: 'pasta', lat: 41.1289, lng: 16.8720, title: 'Via dell\'Arco Basso', desc: '"Ulica Makaronu" — orecchiette', icon: 'fa-utensils', color: '#ea580c' }
+        ];
+
+        const CUSTOM_PIN_COLOR = '#6366f1';
+
+        let bariMap = null;
+        let bariMapMarkers = {};
+        let bariMapCustomMarkers = {};
+        let mapAddPinMode = false;
+        let bazaMapPanelOpen = localStorage.getItem('bariApp_baza_map_panel_open') === '1';
+
+        function escapeHtml(str) {
+            return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function createMapMarkerIcon(poi) {
+            return L.divIcon({
+                className: '',
+                html: `<div class="bari-map-marker" style="border-color:${poi.color};color:${poi.color}"><i class="fa-solid ${poi.icon}"></i></div>`,
+                iconSize: [34, 34],
+                iconAnchor: [17, 17],
+                popupAnchor: [0, -18]
+            });
+        }
+
+        function createCustomMapMarkerIcon() {
+            return L.divIcon({
+                className: '',
+                html: `<div class="bari-map-marker" style="border-color:${CUSTOM_PIN_COLOR};color:${CUSTOM_PIN_COLOR}"><i class="fa-solid fa-map-pin"></i></div>`,
+                iconSize: [34, 34],
+                iconAnchor: [17, 34],
+                popupAnchor: [0, -34]
+            });
+        }
+
+        function mapsNavUrl(poi) {
+            return 'https://maps.google.com/?q=' + encodeURIComponent(poi.lat + ',' + poi.lng);
+        }
+
+        function buildCustomPinPopup(pin) {
+            const noteHtml = pin.note ? `<p class="text-slate-600 text-xs mb-2 whitespace-pre-wrap">${escapeHtml(pin.note)}</p>` : '';
+            return `
+                <p class="font-bold text-slate-800 mb-1">${escapeHtml(pin.title)} <span class="text-[10px] text-indigo-500 font-bold">(Twoja)</span></p>
+                ${noteHtml}
+                <div class="flex gap-2 flex-wrap mt-1">
+                    <a href="${mapsNavUrl(pin)}" target="_blank" class="inline-block bg-blue-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg">Nawiguj</a>
+                    <button type="button" onclick="editCustomMapPin('${pin.id}')" class="bg-slate-100 text-slate-700 text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-200">Edytuj</button>
+                    <button type="button" onclick="deleteCustomMapPin('${pin.id}')" class="bg-red-50 text-red-600 text-xs font-bold px-2.5 py-1.5 rounded-lg border border-red-200">Usuń</button>
+                </div>
+            `;
+        }
+
+        function renderBariMapLegend() {
+            const legend = document.getElementById('bari-map-legend');
+            if (!legend) return;
+
+            const builtinHtml = BARI_MAP_POIS.map(poi => `
+                <button type="button" onclick="focusMapPoi('${poi.id}')" class="w-full flex items-center gap-3 bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-left active:scale-[0.98] transition-transform hover:bg-blue-50">
+                    <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm" style="background:${poi.color}20;color:${poi.color};border:2px solid ${poi.color}">
+                        <i class="fa-solid ${poi.icon} text-xs"></i>
+                    </span>
+                    <span class="min-w-0">
+                        <span class="block text-sm font-bold text-slate-800">${poi.title}</span>
+                        <span class="block text-[10px] text-slate-500 truncate">${poi.desc}</span>
+                    </span>
+                    <i class="fa-solid fa-location-arrow text-blue-500 ml-auto shrink-0 text-xs"></i>
+                </button>
+            `).join('');
+
+            const customPins = state.customMapPins || [];
+            const customHtml = customPins.length ? `
+                <p class="text-[10px] uppercase font-bold text-slate-400 pt-3 pb-1">Twoje pinezki</p>
+                ${customPins.map(pin => `
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="focusCustomMapPin('${pin.id}')" class="flex-1 flex items-center gap-3 bg-indigo-50 border border-indigo-100 p-2.5 rounded-lg text-left active:scale-[0.98] transition-transform min-w-0">
+                            <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm bg-indigo-100 text-indigo-600 border-2 border-indigo-400">
+                                <i class="fa-solid fa-map-pin text-xs"></i>
+                            </span>
+                            <span class="min-w-0">
+                                <span class="block text-sm font-bold text-slate-800 truncate">${escapeHtml(pin.title)}</span>
+                                <span class="block text-[10px] text-slate-500 truncate">${pin.note ? escapeHtml(pin.note) : 'Brak adnotacji'}</span>
+                            </span>
+                        </button>
+                        <button type="button" onclick="editCustomMapPin('${pin.id}')" class="text-slate-300 hover:text-bari-primary p-2"><i class="fa-solid fa-pen"></i></button>
+                        <button type="button" onclick="deleteCustomMapPin('${pin.id}')" class="text-slate-300 hover:text-red-500 p-2"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('')}
+            ` : '';
+
+            legend.innerHTML = builtinHtml + customHtml;
+        }
+
+        function renderCustomMapPins() {
+            if (!bariMap) return;
+            Object.values(bariMapCustomMarkers).forEach(m => bariMap.removeLayer(m));
+            bariMapCustomMarkers = {};
+            (state.customMapPins || []).forEach(pin => {
+                const marker = L.marker([pin.lat, pin.lng], { icon: createCustomMapMarkerIcon() }).addTo(bariMap);
+                marker.bindPopup(buildCustomPinPopup(pin));
+                bariMapCustomMarkers[pin.id] = marker;
+            });
+        }
+
+        function updateMapAddPinModeUI() {
+            const btn = document.getElementById('map-add-pin-btn');
+            const hint = document.getElementById('map-add-pin-hint');
+            const mapEl = document.getElementById('bari-map');
+            if (!btn) return;
+            if (mapAddPinMode) {
+                btn.className = 'w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold mb-2 border border-indigo-500 active:scale-95 transition-all text-sm shadow-md';
+                btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Anuluj dodawanie';
+                if (hint) hint.classList.remove('hidden');
+                if (mapEl) mapEl.classList.add('ring-2', 'ring-indigo-400');
+            } else {
+                btn.className = 'w-full bg-slate-100 text-slate-700 py-2.5 rounded-xl font-bold mb-2 border border-slate-200 active:scale-95 transition-all text-sm';
+                btn.innerHTML = '<i class="fa-solid fa-map-pin text-indigo-500"></i> Dodaj własną pinezkę';
+                if (hint) hint.classList.add('hidden');
+                if (mapEl) mapEl.classList.remove('ring-2', 'ring-indigo-400');
+            }
+        }
+
+        function toggleMapAddPinMode() {
+            mapAddPinMode = !mapAddPinMode;
+            updateMapAddPinModeUI();
+            if (mapAddPinMode) {
+                if (!bazaMapPanelOpen) {
+                    bazaMapPanelOpen = true;
+                    updateBazaMapPanelUI();
+                } else {
+                    initBariMap();
+                }
+            }
+        }
+
+        function promptAddCustomPin(lat, lng) {
+            openModal({
+                title: 'Nowa pinezka',
+                desc: 'Nazwa miejsca i opcjonalna adnotacja',
+                inputType: 'pin',
+                confirmText: 'Dodaj',
+                onConfirm: (title, note) => {
+                    if (!title || !title.trim()) return;
+                    if (!state.customMapPins) state.customMapPins = [];
+                    const pin = { id: generateId(), lat, lng, title: title.trim(), note: (note || '').trim() };
+                    state.customMapPins.push(pin);
+                    saveState();
+                    renderCustomMapPins();
+                    renderBariMapLegend();
+                    mapAddPinMode = false;
+                    updateMapAddPinModeUI();
+                    showToast('Dodano pinezkę');
+                    focusCustomMapPin(pin.id);
+                }
+            });
+        }
+
+        function editCustomMapPin(pinId) {
+            const pin = (state.customMapPins || []).find(p => p.id === pinId);
+            if (!pin) return;
+            openModal({
+                title: 'Edytuj pinezkę',
+                inputType: 'pin',
+                defaultValue: pin.title,
+                defaultNote: pin.note || '',
+                confirmText: 'Zapisz',
+                onConfirm: (title, note) => {
+                    if (!title || !title.trim()) return;
+                    pin.title = title.trim();
+                    pin.note = (note || '').trim();
+                    saveState();
+                    renderCustomMapPins();
+                    renderBariMapLegend();
+                    showToast('Zaktualizowano pinezkę');
+                }
+            });
+        }
+
+        function deleteCustomMapPin(pinId) {
+            openConfirm('Usunąć tę pinezkę? Zniknie też u drugiej osoby.', () => {
+                state.customMapPins = (state.customMapPins || []).filter(p => p.id !== pinId);
+                saveState();
+                renderCustomMapPins();
+                renderBariMapLegend();
+                showToast('Usunięto pinezkę');
+            });
+        }
+
+        function focusCustomMapPin(pinId) {
+            if (!bazaMapPanelOpen) {
+                bazaMapPanelOpen = true;
+                updateBazaMapPanelUI();
+                try { localStorage.setItem('bariApp_baza_map_panel_open', '1'); } catch(e) {}
+            } else {
+                initBariMap();
+            }
+            const pin = (state.customMapPins || []).find(p => p.id === pinId);
+            const marker = bariMapCustomMarkers[pinId];
+            if (!pin || !marker || !bariMap) return;
+            bariMap.flyTo([pin.lat, pin.lng], 17, { duration: 0.6 });
+            setTimeout(() => marker.openPopup(), 400);
+        }
+
+        function initBariMap() {
+            if (bariMap || typeof L === 'undefined') return;
+            const el = document.getElementById('bari-map');
+            if (!el) return;
+
+            bariMap = L.map('bari-map', { zoomControl: true, scrollWheelZoom: true }).setView([41.122, 16.865], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+            }).addTo(bariMap);
+
+            BARI_MAP_POIS.forEach(poi => {
+                const marker = L.marker([poi.lat, poi.lng], { icon: createMapMarkerIcon(poi) }).addTo(bariMap);
+                marker.bindPopup(`
+                    <p class="font-bold text-slate-800 mb-1">${poi.title}</p>
+                    <p class="text-slate-600 text-xs mb-2">${poi.desc}</p>
+                    <a href="${mapsNavUrl(poi)}" target="_blank" class="inline-block bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Nawiguj <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                `);
+                bariMapMarkers[poi.id] = marker;
+            });
+
+            bariMap.on('click', (e) => {
+                if (!mapAddPinMode) return;
+                promptAddCustomPin(e.latlng.lat, e.latlng.lng);
+            });
+
+            renderCustomMapPins();
+            renderBariMapLegend();
+            setTimeout(() => bariMap.invalidateSize(), 100);
+        }
+
+        function invalidateBariMap() {
+            if (!bariMap) return;
+            bariMap.invalidateSize();
+        }
+
+        function updateBazaMapPanelUI() {
+            const body = document.getElementById('baza-map-panel-body');
+            const chevron = document.getElementById('baza-map-chevron');
+            if (!body) return;
+            if (bazaMapPanelOpen) {
+                body.classList.remove('hidden');
+                if (chevron) chevron.classList.add('rotate-180');
+                initBariMap();
+                setTimeout(invalidateBariMap, 200);
+            } else {
+                body.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }
+        }
+
+        function toggleBazaMapPanel() {
+            bazaMapPanelOpen = !bazaMapPanelOpen;
+            updateBazaMapPanelUI();
+            try { localStorage.setItem('bariApp_baza_map_panel_open', bazaMapPanelOpen ? '1' : '0'); } catch(e) {}
+        }
+
+        function focusMapPoi(poiId) {
+            if (!bazaMapPanelOpen) {
+                bazaMapPanelOpen = true;
+                updateBazaMapPanelUI();
+                try { localStorage.setItem('bariApp_baza_map_panel_open', '1'); } catch(e) {}
+            } else {
+                initBariMap();
+            }
+            const poi = BARI_MAP_POIS.find(p => p.id === poiId);
+            const marker = bariMapMarkers[poiId];
+            if (!poi || !marker || !bariMap) return;
+            bariMap.flyTo([poi.lat, poi.lng], 16, { duration: 0.6 });
+            setTimeout(() => marker.openPopup(), 400);
         }
 
         /* --- CZAS I POWITANIA --- */
@@ -1269,20 +1728,137 @@
             document.getElementById('calc-eur').value = isNaN(pln) ? '' : (pln / EURO_RATE).toFixed(2);
         }
 
-        function toggleRestaurantMode(show) {
-            const panel = document.getElementById('restaurant-panel');
-            const sheet = document.getElementById('restaurant-sheet');
+        /* --- SŁOWNIK & TŁUMACZ --- */
+        let phraseCategory = 'all';
+        let lastTranslation = '';
+
+        const PHRASEBOOK = [
+            { cat: 'restaurant', pl: 'Rachunek proszę', it: 'Il conto, per favore', en: 'The bill, please' },
+            { cat: 'restaurant', pl: 'Woda niegazowana', it: 'Acqua naturale, per favore', en: 'Still water, please' },
+            { cat: 'restaurant', pl: 'Woda gazowana', it: 'Acqua frizzante, per favore', en: 'Sparkling water, please' },
+            { cat: 'restaurant', pl: 'Mogę zapłacić kartą?', it: 'Posso pagare con la carta?', en: 'Can I pay by card?' },
+            { cat: 'restaurant', pl: 'Bez ogórków (np. w Macu)', it: 'Senza cetrioli, per favore', en: 'Without pickles, please', highlight: true },
+            { cat: 'restaurant', pl: 'Stolik dla dwóch', it: 'Un tavolo per due, per favore', en: 'A table for two, please' },
+            { cat: 'restaurant', pl: 'Co polecacie?', it: 'Cosa ci consiglia?', en: 'What do you recommend?' },
+            { cat: 'restaurant', pl: 'Jestem uczulony/a na...', it: 'Sono allergico/a a...', en: 'I am allergic to...' },
+            { cat: 'restaurant', pl: 'Bez glutenu', it: 'Senza glutine', en: 'Gluten-free' },
+            { cat: 'restaurant', pl: 'Wegetariańskie', it: 'Vegetariano, per favore', en: 'Vegetarian, please' },
+            { cat: 'restaurant', pl: 'Co to jest coperto?', it: "Cos'è il coperto?", en: 'What is the cover charge?' },
+            { cat: 'restaurant', pl: 'Jeszcze jedno piwo', it: "Un'altra birra, per favore", en: 'Another beer, please' },
+            { cat: 'train', pl: 'Bilet do... (powiedz miasto)', it: 'Un biglietto per..., per favore', en: 'A ticket to..., please' },
+            { cat: 'train', pl: 'Jeden bilet', it: 'Un biglietto', en: 'One ticket' },
+            { cat: 'train', pl: 'Dwa bilety', it: 'Due biglietti', en: 'Two tickets' },
+            { cat: 'train', pl: 'Który peron?', it: 'Quale binario?', en: 'Which platform?' },
+            { cat: 'train', pl: 'Gdzie jest kasa biletowa?', it: "Dov'è la biglietteria?", en: 'Where is the ticket office?' },
+            { cat: 'train', pl: 'Gdzie jest peron 3?', it: 'Dove si trova il binario 3?', en: 'Where is platform 3?' },
+            { cat: 'train', pl: 'Czy ten pociąg jedzie do...?', it: 'Questo treno va a...?', en: 'Does this train go to...?' },
+            { cat: 'train', pl: 'Muszę zrobić check-in', it: 'Devo fare il check-in', en: 'I need to check in' },
+            { cat: 'train', pl: 'Gdzie kasować bilet?', it: 'Dove convalido il biglietto?', en: 'Where do I validate the ticket?' },
+            { cat: 'train', pl: 'Pociąg jest opóźniony?', it: 'Il treno è in ritardo?', en: 'Is the train delayed?' },
+            { cat: 'train', pl: 'Autobus do centrum', it: 'Autobus per il centro', en: 'Bus to the city center' },
+            { cat: 'city', pl: 'Gdzie jest...?', it: "Dov'è...?", en: 'Where is...?' },
+            { cat: 'city', pl: 'Jak dojść do...?', it: 'Come si arriva a...?', en: 'How do I get to...?' },
+            { cat: 'city', pl: 'Ile to kosztuje?', it: 'Quanto costa?', en: 'How much does it cost?' },
+            { cat: 'city', pl: 'Proszę', it: 'Per favore', en: 'Please' },
+            { cat: 'city', pl: 'Dziękuję', it: 'Grazie mille', en: 'Thank you very much' },
+            { cat: 'city', pl: 'Przepraszam', it: 'Scusi / Mi scusi', en: 'Excuse me' },
+            { cat: 'city', pl: 'Nie rozumiem', it: 'Non capisco', en: "I don't understand" },
+            { cat: 'city', pl: 'Mówicie po angielsku?', it: 'Parlate inglese?', en: 'Do you speak English?' },
+            { cat: 'city', pl: 'Potrzebuję pomocy', it: 'Ho bisogno di aiuto', en: 'I need help' },
+            { cat: 'city', pl: 'Gdzie jest apteka?', it: "Dov'è la farmacia?", en: 'Where is the pharmacy?' },
+            { cat: 'city', pl: 'Gdzie jest toaleta?', it: "Dov'è il bagno?", en: 'Where is the toilet?' },
+            { cat: 'city', pl: 'Jestem zagubiony/a', it: 'Mi sono perso/a', en: 'I am lost' },
+            { cat: 'city', pl: 'O której otwieracie?', it: 'A che ora aprite?', en: 'What time do you open?' },
+            { cat: 'emergency', pl: 'Pomocy!', it: 'Aiuto!', en: 'Help!' },
+            { cat: 'emergency', pl: 'Policja', it: 'Polizia', en: 'Police' },
+            { cat: 'emergency', pl: 'Pogotowie', it: 'Ambulanza', en: 'Ambulance' },
+            { cat: 'emergency', pl: 'Zaginął mi paszport', it: 'Ho perso il passaporto', en: 'I lost my passport' },
+            { cat: 'emergency', pl: 'Potrzebuję lekarza', it: 'Ho bisogno di un medico', en: 'I need a doctor' },
+            { cat: 'emergency', pl: 'Numer alarmowy to 112', it: 'Il numero di emergenza è 112', en: 'The emergency number is 112' },
+            { cat: 'emergency', pl: 'Boli mnie...', it: 'Mi fa male...', en: 'My ... hurts' }
+        ];
+
+        function togglePhrasebook(show) {
+            const panel = document.getElementById('phrasebook-panel');
+            const sheet = document.getElementById('phrasebook-sheet');
             if (show) {
                 panel.classList.remove('hidden');
+                renderPhraseList();
                 setTimeout(() => { panel.classList.remove('opacity-0'); sheet.classList.remove('translate-y-full'); }, 10);
             } else {
                 sheet.classList.add('translate-y-full'); panel.classList.add('opacity-0');
                 setTimeout(() => panel.classList.add('hidden'), 300);
             }
         }
-        function calculateBill() {
-            const eur = parseFloat(document.getElementById('bill-amount').value) || 0;
-            document.getElementById('bill-split').innerText = ((eur * EURO_RATE) / 2).toFixed(2) + ' zł';
+
+        function filterPhrases(cat, btn) {
+            phraseCategory = cat;
+            document.querySelectorAll('.phrase-cat-btn').forEach(b => {
+                b.className = 'phrase-cat-btn shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600';
+            });
+            if (btn) btn.className = 'phrase-cat-btn shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white';
+            renderPhraseList();
+        }
+
+        function renderPhraseList() {
+            const list = document.getElementById('phrase-list');
+            if (!list) return;
+            const q = (document.getElementById('phrase-search')?.value || '').toLowerCase().trim();
+            const filtered = PHRASEBOOK.filter(p => {
+                if (phraseCategory !== 'all' && p.cat !== phraseCategory) return false;
+                if (!q) return true;
+                return (p.pl + p.it + p.en).toLowerCase().includes(q);
+            });
+            if (filtered.length === 0) {
+                list.innerHTML = '<p class="text-center text-slate-400 text-sm py-6">Brak wyników</p>';
+                return;
+            }
+            list.innerHTML = filtered.map(p => `
+                <div class="rounded-xl border ${p.highlight ? 'border-orange-200 bg-orange-50' : 'border-slate-200 bg-slate-50'} p-3">
+                    <p class="font-bold text-sm text-slate-800 mb-2">${p.pl}</p>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="copyAndToast(${JSON.stringify(p.it)})" class="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-2 text-left active:scale-[0.98] min-w-0">
+                            <span class="text-[9px] font-bold text-green-700 uppercase">🇮🇹 IT</span>
+                            <span class="block text-xs text-slate-700 truncate">${p.it}</span>
+                        </button>
+                        <button type="button" onclick="copyAndToast(${JSON.stringify(p.en)})" class="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-2 text-left active:scale-[0.98] min-w-0">
+                            <span class="text-[9px] font-bold text-blue-700 uppercase">🇬🇧 EN</span>
+                            <span class="block text-xs text-slate-700 truncate">${p.en}</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function translatePhrase() {
+            const lang = document.getElementById('translate-lang').value;
+            const text = document.getElementById('translate-input').value.trim();
+            const resultEl = document.getElementById('translate-result');
+            const copyBtn = document.getElementById('translate-copy-btn');
+            if (!text) { showToast('Wpisz tekst do tłumaczenia'); return; }
+
+            resultEl.classList.remove('hidden');
+            resultEl.textContent = 'Tłumaczę...';
+            copyBtn.classList.add('hidden');
+            lastTranslation = '';
+
+            try {
+                const res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=' + lang + '|pl');
+                const data = await res.json();
+                if (data.responseStatus === 200 && data.responseData?.translatedText) {
+                    lastTranslation = data.responseData.translatedText;
+                    resultEl.textContent = lastTranslation;
+                    copyBtn.classList.remove('hidden');
+                } else {
+                    resultEl.textContent = 'Nie udało się przetłumaczyć — użyj fraz poniżej.';
+                }
+            } catch(e) {
+                resultEl.textContent = 'Brak internetu — wybierz frazę z listy poniżej.';
+            }
+        }
+
+        function copyTranslateResult() {
+            if (lastTranslation) copyAndToast(lastTranslation);
         }
 
         /* --- MAPY / ZDJĘCIA OFFLINE --- */
@@ -1523,6 +2099,7 @@
             }
 
             updateTransportPanelUI();
+            updateBazaMapPanelUI();
         };
     </script>
 </body>
