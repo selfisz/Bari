@@ -193,7 +193,7 @@
             <!-- Przypomnienia -->
             <div class="bg-purple-50 rounded-xl p-4 border border-purple-200 mb-4">
                 <h4 class="font-bold text-bari-primary mb-2 flex items-center gap-2"><i class="fa-solid fa-bell text-purple-600"></i> Przypomnienia</h4>
-                <p class="text-[10px] text-purple-800 mb-3">Magnesy (dzień 3 i 6), sjesta. Na iPhone: dodaj apkę na ekran główny, potem włącz powiadomienia.</p>
+                <p class="text-[10px] text-purple-800 mb-3">Codzienny briefing o 8:00 (pogoda, plan, dni do powrotu), magnesy (dzień 3 i 6), sjesta. Popup w apce zawsze; push — po włączeniu poniżej.</p>
                 <button type="button" onclick="enableTripNotifications()" id="notif-enable-btn" class="w-full bg-purple-600 text-white py-2.5 rounded-lg font-bold text-sm active:scale-95">
                     <i class="fa-solid fa-bell"></i> Włącz powiadomienia
                 </button>
@@ -239,6 +239,25 @@
             <div class="flex gap-3 justify-end mt-2">
                 <button id="modal-btn-cancel" class="px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors">Anuluj</button>
                 <button id="modal-btn-confirm" class="px-5 py-2.5 bg-bari-primary text-white font-bold rounded-xl shadow-md active:scale-95 transition-transform">Zatwierdź</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PORANNY BRIEFING (8:00 w trakcie wyjazdu) -->
+    <div id="morning-briefing" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[310] hidden flex items-center justify-center p-4 opacity-0 transition-opacity" onclick="if(event.target===this) closeMorningBriefing()">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transform scale-95 transition-transform" id="morning-briefing-content">
+            <div class="bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 text-white p-5">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-sky-100"><i class="fa-solid fa-sun"></i> Dobry poranek!</p>
+                <h3 id="briefing-title" class="text-lg font-bold mt-1 leading-snug">Dzień 1</h3>
+                <p id="briefing-countdown" class="text-sm mt-2 text-sky-100 font-medium"></p>
+            </div>
+            <div class="p-5">
+                <div id="briefing-weather" class="flex items-center gap-3 bg-sky-50 border border-sky-100 rounded-xl p-3 mb-4"></div>
+                <p class="text-[10px] uppercase font-bold text-slate-500 mb-2"><i class="fa-regular fa-calendar-check"></i> Dziś w planie</p>
+                <ul id="briefing-plan" class="text-sm text-slate-700 space-y-2 mb-5 list-disc pl-4 leading-snug"></ul>
+                <button type="button" onclick="closeMorningBriefing()" class="w-full bg-bari-primary text-white py-3.5 rounded-xl font-bold active:scale-95 shadow-md">
+                    <i class="fa-solid fa-person-walking-luggage"></i> Ruszamy!
+                </button>
             </div>
         </div>
     </div>
@@ -2018,7 +2037,7 @@
                 return;
             }
             if (Notification.permission === 'granted') {
-                el.textContent = '✓ Powiadomienia włączone (magnesy, sjesta)';
+                el.textContent = '✓ Powiadomienia: briefing 8:00, magnesy, sjesta';
                 if (btn) btn.textContent = 'Powiadomienia aktywne ✓';
             } else if (Notification.permission === 'denied') {
                 el.textContent = 'Zablokowane w ustawieniach telefonu.';
@@ -2443,6 +2462,183 @@
                 localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: results }));
             } catch(e) {}
             applyPlanWeather(results);
+        }
+
+        /* --- PORANNY BRIEFING (8:00) --- */
+        const RETURN_DAY = 15;
+
+        function stripHtmlText(html) {
+            return String(html || '').replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
+        }
+
+        function getDaysUntilReturn() {
+            const now = new Date();
+            if (now.getFullYear() !== TRIP_YEAR || now.getMonth() !== 5) return null;
+            const today = now.getDate();
+            if (today < 10 || today > RETURN_DAY) return null;
+            return RETURN_DAY - today;
+        }
+
+        function formatDaysUntilReturn(daysLeft) {
+            if (daysLeft === null) return '';
+            if (daysLeft === 0) return '✈️ Dziś wylot do Krakowa (23:05)!';
+            if (daysLeft === 1) return '⏳ Do powrotu: 1 dzień';
+            return '⏳ Do powrotu do Krakowa: ' + daysLeft + ' dni';
+        }
+
+        function getMorningBriefingTodayKey() {
+            return new Date().toISOString().slice(0, 10);
+        }
+
+        function wasMorningBriefingShownToday() {
+            try {
+                return !!localStorage.getItem('bariApp_morning_briefing_' + getMorningBriefingTodayKey());
+            } catch (e) { return true; }
+        }
+
+        function markMorningBriefingShown() {
+            try {
+                localStorage.setItem('bariApp_morning_briefing_' + getMorningBriefingTodayKey(), '1');
+            } catch (e) {}
+        }
+
+        function shouldShowMorningBriefing() {
+            if (!isDuringTrip()) return false;
+            if (new Date().getHours() < 8) return false;
+            return !wasMorningBriefingShownToday();
+        }
+
+        function getTodayPlanPreview(maxItems) {
+            const dayId = getTodayPlanDayId();
+            if (!dayId) return null;
+            const day = state.planBari.find(d => d.id === dayId);
+            if (!day) return null;
+            const items = day.items
+                .filter(i => !i.siesta)
+                .sort((a, b) => (a.checked ? 1 : 0) - (b.checked ? 1 : 0))
+                .slice(0, maxItems || 4)
+                .map(i => stripHtmlText(i.text))
+                .filter(Boolean);
+            return {
+                dayId,
+                title: stripHtmlText(day.date),
+                items: items.length ? items : ['Sprawdź plan dnia w zakładce Plan.']
+            };
+        }
+
+        async function fetchWeatherForDay(dayId) {
+            const loc = PLAN_WEATHER_LOC[dayId];
+            if (!loc) return null;
+            try {
+                const cached = localStorage.getItem('bariApp_plan_weather_v1');
+                if (cached) {
+                    const { ts, data } = JSON.parse(cached);
+                    if (data && data[dayId] && Date.now() - ts < 3600000) return data[dayId];
+                }
+            } catch (e) {}
+            try {
+                const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + loc.lat + '&longitude=' + loc.lng
+                    + '&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max'
+                    + '&timezone=Europe%2FRome&start_date=' + loc.date + '&end_date=' + loc.date;
+                const res = await fetch(url);
+                const json = await res.json();
+                if (!json.daily) return null;
+                const w = {
+                    label: loc.label,
+                    max: Math.round(json.daily.temperature_2m_max[0]),
+                    min: Math.round(json.daily.temperature_2m_min[0]),
+                    code: json.daily.weathercode[0],
+                    rain: json.daily.precipitation_probability_max[0] ?? '—'
+                };
+                try {
+                    const cached = localStorage.getItem('bariApp_plan_weather_v1');
+                    let store = { ts: Date.now(), data: {} };
+                    if (cached) {
+                        const parsed = JSON.parse(cached);
+                        store.data = parsed.data || {};
+                    }
+                    store.data[dayId] = w;
+                    store.ts = Date.now();
+                    localStorage.setItem('bariApp_plan_weather_v1', JSON.stringify(store));
+                } catch (e) {}
+                return w;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function buildMorningBriefingContent() {
+            const preview = getTodayPlanPreview(4);
+            if (!preview) return null;
+            const daysLeft = getDaysUntilReturn();
+            const weather = await fetchWeatherForDay(preview.dayId);
+            const countdown = formatDaysUntilReturn(daysLeft);
+            let weatherHtml = '';
+            let weatherShort = 'Pogoda: brak danych';
+            if (weather) {
+                weatherHtml = `
+                    <span class="text-3xl leading-none shrink-0">${wmoToIcon(weather.code)}</span>
+                    <div>
+                        <p class="font-bold text-slate-800">${weather.label}: ${weather.max}° / ${weather.min}°</p>
+                        <p class="text-xs text-sky-600">Szansa deszczu: ${weather.rain}%</p>
+                    </div>
+                `;
+                weatherShort = weather.label + ' ' + weather.max + '°/' + weather.min + '°';
+            } else {
+                weatherHtml = '<p class="text-sm text-slate-500"><i class="fa-solid fa-cloud"></i> Pogoda niedostępna — sprawdź połączenie.</p>';
+            }
+            const notificationBody = [countdown, weatherShort, preview.items[0]].filter(Boolean).join(' · ');
+            return { preview, countdown, weatherHtml, notificationBody, todayKey: getMorningBriefingTodayKey() };
+        }
+
+        function openMorningBriefingModal(content) {
+            const panel = document.getElementById('morning-briefing');
+            const sheet = document.getElementById('morning-briefing-content');
+            const titleEl = document.getElementById('briefing-title');
+            const countdownEl = document.getElementById('briefing-countdown');
+            const weatherEl = document.getElementById('briefing-weather');
+            const planEl = document.getElementById('briefing-plan');
+            if (!panel || !content) return;
+            if (titleEl) titleEl.textContent = content.preview.title;
+            if (countdownEl) countdownEl.textContent = content.countdown;
+            if (weatherEl) weatherEl.innerHTML = content.weatherHtml;
+            if (planEl) {
+                planEl.innerHTML = content.preview.items
+                    .map(item => '<li>' + escapeHtml(item) + '</li>')
+                    .join('');
+            }
+            panel.classList.remove('hidden');
+            setTimeout(() => {
+                panel.classList.remove('opacity-0');
+                if (sheet) sheet.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeMorningBriefing() {
+            const panel = document.getElementById('morning-briefing');
+            const sheet = document.getElementById('morning-briefing-content');
+            if (!panel) return;
+            panel.classList.add('opacity-0');
+            if (sheet) sheet.classList.add('scale-95');
+            setTimeout(() => panel.classList.add('hidden'), 250);
+        }
+
+        async function runMorningBriefingCheck() {
+            if (!shouldShowMorningBriefing()) return;
+            const content = await buildMorningBriefingContent();
+            if (!content) return;
+            markMorningBriefingShown();
+
+            if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+                new Notification('Bari Autopilot ☀️', {
+                    body: content.notificationBody,
+                    icon: '/icons/icon-192.png',
+                    tag: 'morning-' + content.todayKey
+                });
+                return;
+            }
+
+            openMorningBriefingModal(content);
         }
 
         /* --- INTERAKTYWNA MAPA BARI (Leaflet + OpenStreetMap) --- */
@@ -3601,10 +3797,12 @@
                 updateDynamicGreeting();
                 updateSiestaAlert();
                 updateMagnetAlert();
+                runMorningBriefingCheck();
                 runTripNotifications();
             }, 60000);
             updateSiestaAlert();
             updateMagnetAlert();
+            setTimeout(() => runMorningBriefingCheck(), 900);
             if (localStorage.getItem('bariApp_notif_enabled') === '1') runTripNotifications();
 
             if ('serviceWorker' in navigator) {
