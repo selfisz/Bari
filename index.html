@@ -326,7 +326,7 @@
             </div>
 
             <div id="normal-bags-view">
-                <p class="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 leading-snug"><i class="fa-solid fa-hourglass-half"></i> <b>Tymczasowa</b> — bez przypisanego bagażu. <i class="fa-solid fa-mobile-screen-button text-violet-600"></i> = przy sobie · <i class="fa-solid fa-sun text-sky-500"></i> = zależy od pogody. <span class="text-amber-600">v10</span></p>
+                <p class="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 leading-snug"><i class="fa-solid fa-hourglass-half"></i> <b>Tymczasowa</b> — bez przypisanego bagażu. <i class="fa-solid fa-mobile-screen-button text-violet-600"></i> = przy sobie · <i class="fa-solid fa-sun text-sky-500"></i> = zależy od pogody. <span class="text-amber-600">v11</span></p>
                 <!-- Check-out Via Trevisani -->
                 <div id="checkout-section" class="hidden mb-6 bg-orange-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden">
                     <button type="button" onclick="toggleSectionPanel('checkout')" class="w-full p-4 flex items-center justify-between text-left active:bg-orange-100/50 transition-colors">
@@ -895,7 +895,6 @@
                 {
                     id: 'bag1', name: 'Walizka 10kg (Główna)', icon: 'fa-suitcase', color: 'text-slate-600',
                     items: [
-                        { id: 'b1i2', text: 'Kosmetyki w PRZEZROCZYSTYM WORKU 100ml', sec: true, checked: false },
                         { id: 'b1i3', text: 'Wygodne buty na zwiedzanie', checked: false },
                         { id: 'b1i4', text: 'Klapki Dawid', weather: true, checked: false },
                         { id: 'b1i5', text: 'Buty do wody Dawid', weather: true, checked: false },
@@ -915,8 +914,8 @@
                         { id: 'b2d1', text: 'Majtki ×6', checked: false },
                         { id: 'b2d2', text: 'Spodenki krótkie ×3', weather: true, checked: false },
                         { id: 'b2d3', text: 'Spodnie długie', checked: false },
-                        { id: 'b2d4', text: 'Koszule ×3', checked: false },
-                        { id: 'b2d5', text: 'T-shirty', checked: false },
+                        { id: 'b2d4', text: 'Koszula ×1', checked: false },
+                        { id: 'b2d5', text: 'T-shirty ×3', checked: false },
                         { id: 'b2d6', text: 'Kosmetyczka z płynami (work 100ml!)', sec: true, checked: false }
                     ]
                 },
@@ -1085,7 +1084,6 @@
                 { id: 'btemp3', text: 'Majtki Dawid ×1 (do walizki)', checked: false }
             ],
             bag1: [
-                { id: 'b1i2', text: 'Kosmetyki w PRZEZROCZYSTYM WORKU 100ml', sec: true, checked: false },
                 { id: 'b1i3', text: 'Wygodne buty na zwiedzanie', checked: false },
                 { id: 'b1i4', text: 'Klapki Dawid', weather: true, checked: false },
                 { id: 'b1i5', text: 'Buty do wody Dawid', weather: true, checked: false },
@@ -1098,8 +1096,8 @@
                 { id: 'b2d1', text: 'Majtki ×6', checked: false },
                 { id: 'b2d2', text: 'Spodenki krótkie ×3', weather: true, checked: false },
                 { id: 'b2d3', text: 'Spodnie długie', checked: false },
-                { id: 'b2d4', text: 'Koszule ×3', checked: false },
-                { id: 'b2d5', text: 'T-shirty', checked: false },
+                { id: 'b2d4', text: 'Koszula ×1', checked: false },
+                { id: 'b2d5', text: 'T-shirty ×3', checked: false },
                 { id: 'b2d6', text: 'Kosmetyczka z płynami (work 100ml!)', sec: true, checked: false }
             ]
         };
@@ -1108,9 +1106,16 @@
             if (!state.bagsData) return false;
             let changed = false;
             const bag1 = state.bagsData.find(b => b.id === 'bag1');
-            if (bag1 && bag1.items.some(i => i.id === 'b1i1')) {
-                bag1.items = bag1.items.filter(i => i.id !== 'b1i1');
+            if (bag1 && bag1.items.some(i => i.id === 'b1i1' || i.id === 'b1i2')) {
+                bag1.items = bag1.items.filter(i => i.id !== 'b1i1' && i.id !== 'b1i2');
                 changed = true;
+            }
+            const bag2 = state.bagsData.find(b => b.id === 'bag2');
+            if (bag2) {
+                const d4 = bag2.items.find(i => i.id === 'b2d4');
+                if (d4 && d4.text !== 'Koszula ×1') { d4.text = 'Koszula ×1'; changed = true; }
+                const d5 = bag2.items.find(i => i.id === 'b2d5');
+                if (d5 && d5.text !== 'T-shirty ×3') { d5.text = 'T-shirty ×3'; changed = true; }
             }
             Object.entries(BAG_SEED_ITEMS).forEach(([bagId, seeds]) => {
                 const bag = state.bagsData.find(b => b.id === bagId);
