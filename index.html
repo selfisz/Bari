@@ -27,6 +27,7 @@
     <!-- Leaflet (interaktywna mapa) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="assets/apt-bus-schedules.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -536,8 +537,27 @@
                     <i id="transport-panel-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
                 </button>
                 <div id="transport-panel-body" class="hidden px-4 pb-4 border-t border-slate-100">
-                    <div class="mt-4 bg-blue-50 border border-blue-100 rounded-xl p-3 cursor-pointer hover:bg-blue-100" onclick="editInline('transport_bus', 'Linie autobusowe')">
-                        <p class="text-[10px] uppercase text-blue-600 font-bold mb-1"><i class="fa-solid fa-bus"></i> Linie autobusowe (MUVT)</p>
+                    <div id="apt-bus-panel" class="mt-4 bg-gradient-to-br from-blue-50 to-slate-50 border border-blue-200 rounded-xl p-3">
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                                <p class="text-[10px] uppercase text-blue-700 font-bold"><i class="fa-solid fa-bus"></i> Autobus z apartamentu</p>
+                                <p class="text-xs text-blue-900 font-bold">Via Trevisani 236 → Bari Centrale</p>
+                            </div>
+                            <span id="apt-bus-clock" class="text-[10px] text-slate-500 tabular-nums shrink-0"></span>
+                        </div>
+                        <p class="text-[10px] text-blue-800 mb-3 leading-snug">Najlepiej <b>~3 min pieszo</b> do <b>Q. Sella-Crisanzio</b> (linie 03, 16, 19, 53…). Przy domu (<b>Crisanzio-Trevisani</b>, 2 min) tylko linia <b>07</b> — <b>nie jedzie na Centrale</b>, tylko w stronę Dep. Amtab.</p>
+                        <p class="text-[10px] uppercase text-slate-500 font-bold mb-1.5">Następne na Bari Centrale (Q. Sella)</p>
+                        <div id="apt-bus-next" class="space-y-1.5 mb-3"></div>
+                        <div id="apt-bus-stops" class="space-y-2"></div>
+                        <p id="apt-bus-disclaimer" class="text-[9px] text-slate-400 mt-3 leading-snug"></p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <a href="https://www.google.com/maps/dir/?api=1&origin=Via+Trevisani+236,+Bari&destination=Bari+Centrale,+Bari&travelmode=transit" target="_blank" rel="noopener" class="text-[10px] font-bold bg-white border border-blue-200 text-blue-700 px-2.5 py-1.5 rounded-lg active:scale-95"><i class="fa-solid fa-map"></i> Google Maps</a>
+                            <a href="https://moovitapp.com/?lang=pl" target="_blank" rel="noopener" class="text-[10px] font-bold bg-white border border-orange-200 text-orange-700 px-2.5 py-1.5 rounded-lg active:scale-95"><i class="fa-solid fa-location-dot"></i> Moovit (live)</a>
+                            <a href="https://www.muvt.app/en/orari-amtab/" target="_blank" rel="noopener" class="text-[10px] font-bold bg-white border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg active:scale-95"><i class="fa-solid fa-clock"></i> Orary AMTAB</a>
+                        </div>
+                    </div>
+                    <div class="mt-4 bg-blue-50 border border-blue-100 rounded-xl p-3 cursor-pointer hover:bg-blue-100" onclick="editInline('transport_bus', 'Własne notatki — linie autobusowe')">
+                        <p class="text-[10px] uppercase text-blue-600 font-bold mb-1"><i class="fa-solid fa-pen"></i> Własne notatki (MUVT)</p>
                         <p class="text-sm text-blue-900" id="transport_bus">Via Trevisani ↔ Centrum — wpisz numery linii</p>
                     </div>
                     <div class="mt-4">
@@ -1773,6 +1793,7 @@
 
             const busEl = document.getElementById('transport_bus');
             if (busEl) busEl.textContent = inlineFields.transport_bus || 'Via Trevisani ↔ Centrum — wpisz numery linii';
+            renderApartmentBusSchedule();
             const polisaEl = document.getElementById('awaria_polisa');
             if (polisaEl) polisaEl.textContent = inlineFields.awaria_polisa || '_Wpisz numer polisy_';
             const cashStartEl = document.getElementById('cash-start');
@@ -1983,6 +2004,111 @@
             try { localStorage.setItem('bariApp_transport_notes', val); } catch(e) {}
             clearTimeout(transportNotesTimer);
             transportNotesTimer = setTimeout(() => syncToServer('transport_notes', val), 800);
+        }
+
+        const APT_BUS_MAIN_LINES = ['03', '16', '19', '53', '13', '02'];
+        const APT_BUS_SKIP_LINES = new Set(['325']);
+
+        function busTimeToMinutes(t) {
+            let [h, m] = t.split(':').map(Number);
+            if (h >= 24) h -= 24;
+            return h * 60 + m;
+        }
+
+        function getRomeTimeParts() {
+            const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+            return {
+                hour: +parts.find(p => p.type === 'hour').value,
+                minute: +parts.find(p => p.type === 'minute').value
+            };
+        }
+
+        function getRomeMinutesNow() {
+            const t = getRomeTimeParts();
+            return t.hour * 60 + t.minute;
+        }
+
+        function getNextBusTimes(times, count) {
+            if (!times || !times.length) return [];
+            const now = getRomeMinutesNow();
+            const sorted = [...times].sort((a, b) => busTimeToMinutes(a) - busTimeToMinutes(b));
+            const upcoming = sorted.filter(t => busTimeToMinutes(t) >= now);
+            if (upcoming.length >= count) return upcoming.slice(0, count);
+            return [...upcoming, ...sorted.slice(0, count - upcoming.length)];
+        }
+
+        function getAggregatedNextToCentrale(stop, count) {
+            const all = [];
+            (stop.lines || []).forEach(ln => {
+                if (!APT_BUS_MAIN_LINES.includes(ln.line)) return;
+                (ln.toCentrale || []).forEach(time => all.push({ line: ln.line, time }));
+            });
+            all.sort((a, b) => busTimeToMinutes(a.time) - busTimeToMinutes(b.time));
+            const now = getRomeMinutesNow();
+            const upcoming = all.filter(x => busTimeToMinutes(x.time) >= now);
+            if (upcoming.length >= count) return upcoming.slice(0, count);
+            return [...upcoming, ...all.slice(0, count - upcoming.length)];
+        }
+
+        function renderApartmentBusSchedule() {
+            const panel = document.getElementById('apt-bus-panel');
+            if (!panel || typeof APT_BUS_SCHEDULES === 'undefined') return;
+
+            const clockEl = document.getElementById('apt-bus-clock');
+            const nextEl = document.getElementById('apt-bus-next');
+            const stopsEl = document.getElementById('apt-bus-stops');
+            const disclaimerEl = document.getElementById('apt-bus-disclaimer');
+            if (!nextEl || !stopsEl) return;
+
+            const rome = getRomeTimeParts();
+            if (clockEl) clockEl.textContent = 'Teraz: ' + String(rome.hour).padStart(2, '0') + ':' + String(rome.minute).padStart(2, '0') + ' (Włochy)';
+
+            const sellaStop = APT_BUS_SCHEDULES.stops.find(s => s.id === '08441104') || APT_BUS_SCHEDULES.stops[APT_BUS_SCHEDULES.stops.length - 1];
+            const nextBuses = getAggregatedNextToCentrale(sellaStop, 5);
+
+            if (!nextBuses.length) {
+                nextEl.innerHTML = '<p class="text-xs text-slate-500">Brak danych rozkładu.</p>';
+            } else {
+                nextEl.innerHTML = nextBuses.map(b => `
+                    <div class="flex items-center justify-between bg-white border border-blue-100 rounded-lg px-3 py-2">
+                        <span class="text-xs font-bold text-slate-700"><span class="inline-flex items-center justify-center min-w-[1.75rem] h-6 px-1 rounded bg-blue-600 text-white text-[11px] mr-2">L${escapeHtml(b.line)}</span>→ Centrale</span>
+                        <span class="text-sm font-bold text-blue-800 tabular-nums">${escapeHtml(b.time)}</span>
+                    </div>
+                `).join('');
+            }
+
+            stopsEl.innerHTML = APT_BUS_SCHEDULES.stops.map(stop => {
+                const lines = (stop.lines || []).filter(ln => !APT_BUS_SKIP_LINES.has(ln.line));
+                const lineRows = lines.map(ln => {
+                    const times = ln.toCentrale.length ? ln.toCentrale : ln.other;
+                    const dest = ln.toCentrale.length ? '→ Bari Centrale' : '→ Dep. Amtab (nie Centrale!)';
+                    const next = getNextBusTimes(times, 3);
+                    return `
+                        <div class="flex items-start justify-between gap-2 py-1.5 border-t border-slate-100 first:border-t-0">
+                            <div class="min-w-0">
+                                <span class="inline-flex items-center justify-center min-w-[1.75rem] h-6 px-1 rounded bg-slate-700 text-white text-[11px] font-bold mr-1.5">L${escapeHtml(ln.line)}</span>
+                                <span class="text-[10px] text-slate-600">${escapeHtml(dest)}</span>
+                            </div>
+                            <div class="text-right shrink-0">
+                                ${next.map(t => `<span class="block text-xs font-bold text-slate-800 tabular-nums">${escapeHtml(t)}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                return `
+                    <details class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                        <summary class="cursor-pointer px-3 py-2 text-xs font-bold text-slate-700 active:bg-slate-50">
+                            <i class="fa-solid fa-signs-post text-blue-500 mr-1"></i> ${escapeHtml(stop.name)} <span class="font-normal text-slate-500">(~${stop.walkMin} min pieszo)</span>
+                        </summary>
+                        <div class="px-3 pb-2">
+                            <p class="text-[10px] text-slate-500 mb-2">${escapeHtml(stop.note || '')}</p>
+                            ${lineRows || '<p class="text-[10px] text-slate-400">Brak linii</p>'}
+                        </div>
+                    </details>
+                `;
+            }).join('');
+
+            if (disclaimerEl) disclaimerEl.textContent = APT_BUS_SCHEDULES.gtfsNote || '';
         }
 
         function getStopPhotoData(imgId) {
