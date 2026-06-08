@@ -249,8 +249,16 @@
         <!-- ZAKŁADKA 1: PROCEDURA STARTOWA -->
         <section id="tab-start" class="tab-content">
             <h2 class="text-2xl font-bold text-bari-primary mb-4 flex items-center gap-2"><i class="fa-solid fa-plane-departure text-bari-accent"></i> Start (10 Czerwca)</h2>
-            <div id="start-list-container" class="space-y-3"></div>
-            <button onclick="addCustomItem('startBari')" class="mt-4 w-full py-3 border-2 border-dashed border-slate-300 text-slate-500 rounded-xl font-bold hover:bg-slate-50 transition-colors"><i class="fa-solid fa-plus"></i> Dodaj własny krok</button>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+                <button type="button" onclick="toggleSectionPanel('start')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
+                    <h3 class="font-bold text-bari-primary flex items-center gap-2"><i class="fa-solid fa-list-check text-bari-accent"></i> Procedura startowa</h3>
+                    <i id="section-start-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+                </button>
+                <div id="section-start-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                    <div id="start-list-container" class="space-y-3 pt-3"></div>
+                    <button onclick="addCustomItem('startBari')" class="mt-4 w-full py-3 border-2 border-dashed border-slate-300 text-slate-500 rounded-xl font-bold hover:bg-slate-50 transition-colors"><i class="fa-solid fa-plus"></i> Dodaj własny krok</button>
+                </div>
+            </div>
         </section>
 
         <!-- ZAKŁADKA 2: WALIZKA & KUWETA -->
@@ -277,9 +285,14 @@
 
             <div id="normal-bags-view">
                 <!-- Check-out Via Trevisani -->
-                <div id="checkout-section" class="hidden mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-xl shadow-sm">
-                    <h3 class="font-bold text-orange-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-door-open"></i> Check-out Via Trevisani (Kaucja!)</h3>
-                    <div id="checkout-items" class="space-y-2"></div>
+                <div id="checkout-section" class="hidden mb-6 bg-orange-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden">
+                    <button type="button" onclick="toggleSectionPanel('checkout')" class="w-full p-4 flex items-center justify-between text-left active:bg-orange-100/50 transition-colors">
+                        <h3 class="font-bold text-orange-800 flex items-center gap-2"><i class="fa-solid fa-door-open"></i> Check-out Via Trevisani (Kaucja!)</h3>
+                        <i id="section-checkout-chevron" class="fa-solid fa-chevron-down text-orange-400 transition-transform duration-200"></i>
+                    </button>
+                    <div id="section-checkout-body" class="hidden px-4 pb-4 border-t border-orange-200">
+                        <div id="checkout-items" class="space-y-2 pt-3"></div>
+                    </div>
                 </div>
 
                 <div id="bags-container" class="space-y-6"></div>
@@ -311,33 +324,38 @@
                 <i class="fa-brands fa-whatsapp text-2xl"></i> Wyślij zdjęcia dowodów do Dario
             </a>
 
-            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 mb-4">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <p class="text-xs text-slate-400 font-bold uppercase tracking-wide">Twój Apartament</p>
-                        <p class="font-bold text-lg text-bari-dark">Via Trevisani 236, Bari</p>
-                    </div>
-                    <a href="https://maps.google.com/?q=Via+Trevisani+236,+Bari" target="_blank" class="bg-blue-100 text-blue-600 w-10 h-10 flex items-center justify-center rounded-full hover:bg-blue-200"><i class="fa-solid fa-location-arrow"></i></a>
-                </div>
-
-                <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg mb-3">
-                    <p class="text-xs font-bold text-blue-800 uppercase mb-1"><i class="fa-solid fa-key"></i> Instrukcja Wejścia (12:00)</p>
-                    <p class="text-sm text-blue-900">1. Domofon: <b>Liddi CUTRIGNELLI</b> lub <b>Art Nouveau</b>.</p>
-                    <p class="text-sm text-blue-900">2. Piętro: <b>2 (Second floor)</b>.</p>
-                    <p class="text-sm text-blue-900">3. Czeka Katia: Dać <b>21€ w gotówce</b>, zapytać jak włączyć prąd!</p>
-                </div>
-
-                <div class="mt-4 space-y-3">
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex justify-between items-center cursor-pointer hover:bg-yellow-50" onclick="editInline('baza_wifi', 'Hasło Wi-Fi')">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+                <button type="button" onclick="toggleSectionPanel('baza-apartament')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
+                    <h3 class="font-bold text-bari-primary flex items-center gap-2"><i class="fa-solid fa-building text-bari-accent"></i> Apartament & Wi-Fi</h3>
+                    <i id="section-baza-apartament-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+                </button>
+                <div id="section-baza-apartament-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                    <div class="flex items-start justify-between pt-4">
                         <div>
-                            <p class="text-[10px] uppercase text-slate-500 font-bold">Hasło Wi-Fi</p>
-                            <p class="font-mono font-bold text-lg" id="baza_wifi">_Wpisz Wi-Fi_</p>
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-wide">Twój Apartament</p>
+                            <p class="font-bold text-lg text-bari-dark">Via Trevisani 236, Bari</p>
                         </div>
-                        <i class="fa-solid fa-pen text-slate-300"></i>
+                        <a href="https://maps.google.com/?q=Via+Trevisani+236,+Bari" target="_blank" class="bg-blue-100 text-blue-600 w-10 h-10 flex items-center justify-center rounded-full hover:bg-blue-200"><i class="fa-solid fa-location-arrow"></i></a>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg mb-3">
+                        <p class="text-xs font-bold text-blue-800 uppercase mb-1"><i class="fa-solid fa-key"></i> Instrukcja Wejścia (12:00)</p>
+                        <p class="text-sm text-blue-900">1. Domofon: <b>Liddi CUTRIGNELLI</b> lub <b>Art Nouveau</b>.</p>
+                        <p class="text-sm text-blue-900">2. Piętro: <b>2 (Second floor)</b>.</p>
+                        <p class="text-sm text-blue-900">3. Czeka Katia: Dać <b>21€ w gotówce</b>, zapytać jak włączyć prąd!</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex justify-between items-center cursor-pointer hover:bg-yellow-50" onclick="editInline('baza_wifi', 'Hasło Wi-Fi')">
+                            <div>
+                                <p class="text-[10px] uppercase text-slate-500 font-bold">Hasło Wi-Fi</p>
+                                <p class="font-mono font-bold text-lg" id="baza_wifi">_Wpisz Wi-Fi_</p>
+                            </div>
+                            <i class="fa-solid fa-pen text-slate-300"></i>
+                        </div>
                     </div>
                 </div>
-
-                </div>
+            </div>
 
 
 
@@ -390,13 +408,18 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100">
-                <h3 class="font-bold text-bari-primary mb-3">Zrzuty ekranu / Mapy</h3>
-                <input type="file" id="img-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'saved-map')">
-                <button onclick="document.getElementById('img-upload').click()" class="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-bold mb-3 border border-slate-200 active:scale-95 transition-transform"><i class="fa-solid fa-image text-bari-accent"></i> Dodaj zdjęcie / zrzut</button>
-                <div class="relative">
-                    <img id="saved-map" src="" class="w-full rounded-xl hidden border border-slate-200 shadow-sm">
-                    <button id="clear-map" onclick="clearImage('saved-map')" class="hidden absolute top-2 right-2 bg-slate-800/70 text-white w-8 h-8 rounded-full"><i class="fa-solid fa-xmark"></i></button>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+                <button type="button" onclick="toggleSectionPanel('baza-maps-upload')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
+                    <h3 class="font-bold text-bari-primary flex items-center gap-2"><i class="fa-solid fa-image text-bari-accent"></i> Zrzuty ekranu / Mapy</h3>
+                    <i id="section-baza-maps-upload-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+                </button>
+                <div id="section-baza-maps-upload-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                    <input type="file" id="img-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'saved-map')">
+                    <button onclick="document.getElementById('img-upload').click()" class="w-full mt-3 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold mb-3 border border-slate-200 active:scale-95 transition-transform"><i class="fa-solid fa-image text-bari-accent"></i> Dodaj zdjęcie / zrzut</button>
+                    <div class="relative">
+                        <img id="saved-map" src="" class="w-full rounded-xl hidden border border-slate-200 shadow-sm">
+                        <button id="clear-map" onclick="clearImage('saved-map')" class="hidden absolute top-2 right-2 bg-slate-800/70 text-white w-8 h-8 rounded-full"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -414,8 +437,13 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
-                <div class="grid grid-cols-1 gap-2 mb-4">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+                <button type="button" onclick="toggleSectionPanel('transport-links')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
+                    <h3 class="font-bold text-bari-primary flex items-center gap-2"><i class="fa-solid fa-link text-blue-500"></i> Linki & Zasady kasowania</h3>
+                    <i id="section-transport-links-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+                </button>
+                <div id="section-transport-links-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                <div class="grid grid-cols-1 gap-2 mb-4 mt-4">
                     <a href="https://www.trenitalia.com/" target="_blank" class="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3 rounded-lg hover:bg-slate-100 active:scale-95 transition-transform">
                         <div class="bg-red-100 text-red-600 w-10 h-10 rounded-full flex items-center justify-center shrink-0"><i class="fa-solid fa-train"></i></div>
                         <div>
@@ -447,6 +475,7 @@
                         <li><b>Trenitalia (Aplikacja/WWW):</b> Musisz kliknąć przycisk "Check-in" w telefonie zanim pociąg ruszy!</li>
                         <li><b>MUVT (Autobus):</b> Zarejestruj się i dodaj kartę ZANIM wsiądziesz!</li>
                     </ul>
+                </div>
                 </div>
             </div>
 
@@ -502,10 +531,56 @@
         <section id="tab-narzedzia" class="tab-content">
             <h2 class="text-2xl font-bold text-bari-primary mb-4"><i class="fa-solid fa-toolbox text-bari-accent"></i> Narzędzia</h2>
 
+            <!-- Kalkulator EUR/PLN na żywo -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+                <button type="button" onclick="toggleSectionPanel('narzedzia-calc')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
+                    <h3 class="font-bold text-bari-primary flex items-center gap-2"><i class="fa-solid fa-coins text-yellow-500"></i> Kalkulator EUR ↔ PLN</h3>
+                    <i id="section-narzedzia-calc-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+                </button>
+                <div id="section-narzedzia-calc-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3 mt-3">
+                    <div class="flex gap-2 mb-2">
+                        <div class="flex-1">
+                            <label class="text-[9px] uppercase font-bold text-slate-500">EUR</label>
+                            <input type="number" id="calc-eur" placeholder="0.00" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm font-bold outline-none focus:border-bari-primary" oninput="calcFromEur()">
+                        </div>
+                        <div class="flex items-end pb-2 text-slate-400"><i class="fa-solid fa-arrows-left-right"></i></div>
+                        <div class="flex-1">
+                            <label class="text-[9px] uppercase font-bold text-slate-500">PLN</label>
+                            <input type="number" id="calc-pln" placeholder="0.00" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm font-bold outline-none focus:border-bari-primary" oninput="calcFromPln()">
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-400 text-center" id="calc-rate-info">Kurs: ładowanie...</p>
+                </div>
+                </div>
+            </div>
+
+            <!-- Portfel gotówki -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+                <button type="button" onclick="toggleSectionPanel('narzedzia-cash')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
+                    <h3 class="font-bold text-bari-primary flex items-center gap-2"><i class="fa-solid fa-wallet text-emerald-600"></i> Portfel gotówki (€)</h3>
+                    <i id="section-narzedzia-cash-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+                </button>
+                <div id="section-narzedzia-cash-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center mb-3 mt-3">
+                    <p class="text-[10px] uppercase font-bold text-emerald-700 mb-1">Pozostało w portfelu</p>
+                    <p id="cash-remaining" class="text-2xl font-bold text-slate-800">— €</p>
+                    <p id="cash-spent-info" class="text-[10px] text-slate-500 mt-1">Wydano gotówką: 0.00 €</p>
+                </div>
+                <label class="text-[9px] uppercase font-bold text-slate-500">Ile € wzięliście na start?</label>
+                <input type="number" id="cash-start" step="0.01" min="0" placeholder="np. 80" class="w-full mt-1 p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold outline-none focus:border-bari-primary" oninput="saveCashStart()">
+                <p class="text-[9px] text-slate-400 mt-2">Odejmuje wydatki oznaczone jako „Gotówka” z rozliczeń. Pamiętaj: 21€ na Katię!</p>
+                </div>
+            </div>
+
             <!-- ADVANCED SPLIT TRACKER -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
-                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-money-bill-transfer text-green-600"></i> Rozliczenia (Kto komu)</h3>
-                <div class="bg-green-50 p-3 rounded-xl border border-green-200 mb-4 text-center">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+                <button type="button" onclick="toggleSectionPanel('narzedzia-split')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
+                    <h3 class="font-bold text-bari-primary flex items-center gap-2"><i class="fa-solid fa-money-bill-transfer text-green-600"></i> Rozliczenia (Kto komu)</h3>
+                    <i id="section-narzedzia-split-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+                </button>
+                <div id="section-narzedzia-split-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                <div class="bg-green-50 p-3 rounded-xl border border-green-200 mb-4 text-center mt-3">
                     <p class="text-[10px] uppercase font-bold text-green-700 mb-1">Obecny Bilans</p>
                     <p id="split-balance" class="text-lg font-bold text-slate-800">Jesteście na zero</p>
                     <p id="split-total" class="text-xs text-slate-500 mt-1">Łącznie wydano: 0.00 €</p>
@@ -547,51 +622,29 @@
                 <button onclick="resetSplitExpenses()" class="w-full mt-3 bg-slate-100 text-slate-600 border border-slate-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-200">
                     <i class="fa-solid fa-rotate-left"></i> Zresetuj bilans (Zapłacone/BLIK)
                 </button>
-            </div>
-
-            <!-- Portfel gotówki -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
-                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-wallet text-emerald-600"></i> Portfel gotówki (€)</h3>
-                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center mb-3">
-                    <p class="text-[10px] uppercase font-bold text-emerald-700 mb-1">Pozostało w portfelu</p>
-                    <p id="cash-remaining" class="text-2xl font-bold text-slate-800">— €</p>
-                    <p id="cash-spent-info" class="text-[10px] text-slate-500 mt-1">Wydano gotówką: 0.00 €</p>
                 </div>
-                <label class="text-[9px] uppercase font-bold text-slate-500">Ile € wzięliście na start?</label>
-                <input type="number" id="cash-start" step="0.01" min="0" placeholder="np. 80" class="w-full mt-1 p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold outline-none focus:border-bari-primary" oninput="saveCashStart()">
-                <p class="text-[9px] text-slate-400 mt-2">Odejmuje wydatki oznaczone jako „Gotówka” z rozliczeń. Pamiętaj: 21€ na Katię!</p>
             </div>
 
             <!-- Jedzenie & miejsca -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
-                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-utensils text-orange-500"></i> Restauracje & Gelato</h3>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+                <button type="button" onclick="toggleSectionPanel('narzedzia-food')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
+                    <h3 class="font-bold text-bari-primary flex items-center gap-2"><i class="fa-solid fa-utensils text-orange-500"></i> Restauracje & Gelato</h3>
+                    <i id="section-narzedzia-food-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+                </button>
+                <div id="section-narzedzia-food-body" class="hidden px-4 pb-4 border-t border-slate-100">
                 <div id="food-spots-list" class="space-y-2 mb-3"></div>
                 <button onclick="addFoodSpot()" class="w-full text-xs text-slate-500 font-bold py-3 border border-slate-200 rounded-lg active:bg-slate-50"><i class="fa-solid fa-plus"></i> Dodaj miejsce</button>
                 <p class="text-[9px] text-slate-400 mt-2">Po dodaniu wskaż miejsce na mapie (zakładka Baza) — pojawi się pomarańczowa pinezka 🍽. Możesz też użyć „Moja lokalizacja” przy wpisie.</p>
-            </div>
-
-            <!-- Kalkulator EUR/PLN na żywo -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
-                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-coins text-yellow-500"></i> Kalkulator EUR ↔ PLN</h3>
-                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3">
-                    <div class="flex gap-2 mb-2">
-                        <div class="flex-1">
-                            <label class="text-[9px] uppercase font-bold text-slate-500">EUR</label>
-                            <input type="number" id="calc-eur" placeholder="0.00" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm font-bold outline-none focus:border-bari-primary" oninput="calcFromEur()">
-                        </div>
-                        <div class="flex items-end pb-2 text-slate-400"><i class="fa-solid fa-arrows-left-right"></i></div>
-                        <div class="flex-1">
-                            <label class="text-[9px] uppercase font-bold text-slate-500">PLN</label>
-                            <input type="number" id="calc-pln" placeholder="0.00" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm font-bold outline-none focus:border-bari-primary" oninput="calcFromPln()">
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-slate-400 text-center" id="calc-rate-info">Kurs: ładowanie...</p>
                 </div>
             </div>
 
             <!-- Awaria & kontakty -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
-                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-kit-medical text-red-500"></i> Awaria & Kontakty</h3>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+                <button type="button" onclick="toggleSectionPanel('narzedzia-awaria')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
+                    <h3 class="font-bold text-bari-primary flex items-center gap-2"><i class="fa-solid fa-kit-medical text-red-500"></i> Awaria & Kontakty</h3>
+                    <i id="section-narzedzia-awaria-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+                </button>
+                <div id="section-narzedzia-awaria-body" class="hidden px-4 pb-4 border-t border-slate-100">
                 <div class="grid grid-cols-2 gap-2 mb-3">
                     <a href="tel:112" class="bg-red-600 text-white py-3 rounded-xl font-bold text-center text-sm active:scale-95 shadow-sm">
                         <i class="fa-solid fa-phone"></i> 112<br><span class="text-[9px] font-normal opacity-90">Alarmowe EU</span>
@@ -626,13 +679,19 @@
                         <i class="fa-solid fa-pen text-slate-300"></i>
                     </div>
                 </div>
+                </div>
             </div>
 
             <!-- Sklep -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-4">
-                <h3 class="font-bold text-bari-primary mb-3 flex items-center gap-2"><i class="fa-solid fa-basket-shopping text-orange-500"></i> Lista Zakupów</h3>
-                <div id="shop-list-container" class="space-y-2 mb-3"></div>
-                <button onclick="addCustomItem('shopData')" class="w-full text-xs text-slate-500 font-bold py-3 border border-slate-200 rounded-lg active:bg-slate-50"><i class="fa-solid fa-plus"></i> Dodaj do listy</button>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
+                <button type="button" onclick="toggleSectionPanel('narzedzia-shop')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
+                    <h3 class="font-bold text-bari-primary flex items-center gap-2"><i class="fa-solid fa-basket-shopping text-orange-500"></i> Lista Zakupów</h3>
+                    <i id="section-narzedzia-shop-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+                </button>
+                <div id="section-narzedzia-shop-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                    <div id="shop-list-container" class="space-y-2 mb-3 mt-3"></div>
+                    <button onclick="addCustomItem('shopData')" class="w-full text-xs text-slate-500 font-bold py-3 border border-slate-200 rounded-lg active:bg-slate-50"><i class="fa-solid fa-plus"></i> Dodaj do listy</button>
+                </div>
             </div>
 
 
@@ -1316,17 +1375,22 @@
             const bagsContainer = document.getElementById('bags-container');
             bagsContainer.innerHTML = '';
             state.bagsData.forEach(bag => {
+                const panelKey = 'bag-' + bag.id;
                 const bagDiv = document.createElement('div');
-                bagDiv.className = 'bg-white rounded-xl p-4 shadow-sm border border-slate-100';
+                bagDiv.className = 'bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden';
                 bagDiv.innerHTML = `
-                    <div class="flex justify-between items-center mb-3">
+                    <button type="button" onclick="toggleSectionPanel('${panelKey}')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
                         <h3 class="font-bold ${bag.color} flex items-center gap-2"><i class="fa-solid ${bag.icon}"></i> ${bag.name}</h3>
+                        <i id="section-${panelKey}-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200 shrink-0 ml-2"></i>
+                    </button>
+                    <div id="section-${panelKey}-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                        <div id="bag-items-${bag.id}" class="space-y-1 pt-3"></div>
+                        <button onclick="addCustomNestedItem('bagsData', '${bag.id}')" class="mt-2 text-xs text-slate-500 font-bold hover:text-slate-700 py-2 px-3 border border-slate-200 rounded-lg"><i class="fa-solid fa-plus"></i> Dodaj rzecz</button>
                     </div>
-                    <div id="bag-items-${bag.id}" class="space-y-1"></div>
-                    <button onclick="addCustomNestedItem('bagsData', '${bag.id}')" class="mt-2 text-xs text-slate-500 font-bold hover:text-slate-700 py-2 px-3 border border-slate-200 rounded-lg"><i class="fa-solid fa-plus"></i> Dodaj rzecz</button>
                 `;
                 bagsContainer.appendChild(bagDiv);
                 renderChecklist(`bag-items-${bag.id}`, bag.items, 'bagsData', bag.id);
+                initSectionPanel(panelKey, false);
             });
 
             const planContainer = document.getElementById('plan-container');
@@ -1334,10 +1398,11 @@
             const todayPlanId = getTodayPlanDayId();
             state.planBari.forEach(day => {
                 const isToday = day.id === todayPlanId;
+                const panelKey = 'plan-' + day.id;
                 const dayDiv = document.createElement('div');
                 dayDiv.className = isToday
-                    ? 'rounded-xl p-4 shadow-md border-2 border-bari-accent bg-gradient-to-br from-orange-50 to-white ring-2 ring-orange-200/80'
-                    : 'bg-white rounded-xl p-4 shadow-sm border border-slate-100';
+                    ? 'rounded-xl shadow-md border-2 border-bari-accent bg-gradient-to-br from-orange-50 to-white ring-2 ring-orange-200/80 overflow-hidden'
+                    : 'bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden';
                 if (isToday) dayDiv.id = 'plan-day-today';
                 const weatherMeta = PLAN_WEATHER_LOC[day.id];
                 const weatherBlock = weatherMeta ? `
@@ -1364,19 +1429,25 @@
                 `;
                 const todayBadge = isToday ? '<span class="shrink-0 bg-bari-accent text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide shadow-sm">Dziś</span>' : '';
                 dayDiv.innerHTML = `
-                    <div class="flex justify-between items-start gap-3 mb-2">
-                        <h3 class="font-bold text-bari-dark flex-1 leading-snug">${day.date}</h3>
-                        <div class="flex flex-col items-end gap-1.5 shrink-0">
-                            ${todayBadge}
-                            ${weatherBlock}
+                    <button type="button" onclick="toggleSectionPanel('${panelKey}')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50/80 transition-colors">
+                        <div class="flex justify-between items-start gap-3 flex-1 min-w-0">
+                            <h3 class="font-bold text-bari-dark flex-1 leading-snug text-left">${day.date}</h3>
+                            <div class="flex flex-col items-end gap-1.5 shrink-0">
+                                ${todayBadge}
+                                ${weatherBlock}
+                            </div>
                         </div>
+                        <i id="section-${panelKey}-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200 shrink-0 ml-2"></i>
+                    </button>
+                    <div id="section-${panelKey}-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                        ${timesHtml}
+                        <div id="plan-items-${day.id}" class="space-y-1 pt-1"></div>
+                        <button onclick="addCustomNestedItem('planBari', '${day.id}')" class="mt-2 text-xs text-slate-500 font-bold py-2 px-3 border border-slate-200 rounded-lg hover:bg-slate-50"><i class="fa-solid fa-plus"></i> Dodaj punkt</button>
                     </div>
-                    ${timesHtml}
-                    <div id="plan-items-${day.id}" class="space-y-1"></div>
-                    <button onclick="addCustomNestedItem('planBari', '${day.id}')" class="mt-2 text-xs text-slate-500 font-bold py-2 px-3 border border-slate-200 rounded-lg hover:bg-slate-50"><i class="fa-solid fa-plus"></i> Dodaj punkt</button>
                 `;
                 planContainer.appendChild(dayDiv);
                 renderChecklist(`plan-items-${day.id}`, day.items, 'planBari', day.id);
+                initSectionPanel(panelKey, isToday);
             });
             fetchPlanWeather();
 
@@ -1388,6 +1459,7 @@
                 returnBtn.classList.replace('bg-slate-200', 'bg-orange-200');
                 returnBtn.classList.replace('text-slate-700', 'text-orange-800');
                 renderChecklist('checkout-items', state.checkoutData, 'checkoutData');
+                initSectionPanel('checkout', true);
             } else {
                 checkoutSec.classList.add('hidden');
                 returnBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Tryb Pakowania: Kraków';
@@ -1484,6 +1556,61 @@
                 saveState(); renderAll(); showToast("Usunięto!");
             });
         }
+        /* --- ZWIJANE SEKCJE (wspólny mechanizm) --- */
+        const SECTION_PANEL_PREFIX = 'bariApp_section_';
+
+        function getSectionPanelStored(key) {
+            try {
+                const v = localStorage.getItem(SECTION_PANEL_PREFIX + key);
+                if (v === null) return null;
+                return v === '1';
+            } catch (e) { return null; }
+        }
+
+        function setSectionPanelStored(key, open) {
+            try { localStorage.setItem(SECTION_PANEL_PREFIX + key, open ? '1' : '0'); } catch (e) {}
+        }
+
+        function updateSectionPanelUI(key) {
+            const body = document.getElementById('section-' + key + '-body');
+            const chevron = document.getElementById('section-' + key + '-chevron');
+            if (!body) return;
+            const stored = getSectionPanelStored(key);
+            const open = stored === null ? false : stored;
+            body.classList.toggle('hidden', !open);
+            if (chevron) chevron.classList.toggle('rotate-180', open);
+        }
+
+        function initSectionPanel(key, defaultOpen) {
+            if (getSectionPanelStored(key) === null) {
+                setSectionPanelStored(key, defaultOpen);
+            }
+            updateSectionPanelUI(key);
+        }
+
+        function toggleSectionPanel(key) {
+            const body = document.getElementById('section-' + key + '-body');
+            if (!body) return;
+            const willOpen = body.classList.contains('hidden');
+            setSectionPanelStored(key, willOpen);
+            updateSectionPanelUI(key);
+        }
+
+        function initStaticSectionPanels() {
+            [
+                ['start', false],
+                ['baza-apartament', false],
+                ['baza-maps-upload', false],
+                ['transport-links', false],
+                ['narzedzia-split', false],
+                ['narzedzia-cash', false],
+                ['narzedzia-food', false],
+                ['narzedzia-calc', false],
+                ['narzedzia-awaria', false],
+                ['narzedzia-shop', false],
+            ].forEach(([key, def]) => initSectionPanel(key, def));
+        }
+
         /* --- TRANSPORT: NOTATKI & PRZYSTANKI --- */
         let transportPanelOpen = localStorage.getItem('bariApp_transport_panel_open') === '1';
         let transportNotesTimer = null;
@@ -3470,6 +3597,7 @@
                 applyImage('kasownik-photo', kasImg);
             }
 
+            initStaticSectionPanels();
             updateTransportPanelUI();
             updateBazaMapPanelUI();
             updateLiveShareUI();
