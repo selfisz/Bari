@@ -303,6 +303,7 @@
             </div>
 
             <div id="normal-bags-view">
+                <p class="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 leading-snug"><i class="fa-solid fa-hourglass-half"></i> <b>Tymczasowa</b> — rzeczy gotowe, ale jeszcze bez przypisanego bagażu. Przenieś je do walizki lub plecaka, gdy zdecydujesz.</p>
                 <!-- Check-out Via Trevisani -->
                 <div id="checkout-section" class="hidden mb-6 bg-orange-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden">
                     <button type="button" onclick="toggleSectionPanel('checkout')" class="w-full p-4 flex items-center justify-between text-left active:bg-orange-100/50 transition-colors">
@@ -859,6 +860,10 @@
             ],
             bagsData: [
                 {
+                    id: 'bagTemp', name: 'Tymczasowa', icon: 'fa-hourglass-half', color: 'text-amber-600', temp: true,
+                    items: []
+                },
+                {
                     id: 'bag1', name: 'Walizka 10kg (Główna)', icon: 'fa-suitcase', color: 'text-slate-600',
                     items: [
                         {id: 'b1i1', text: 'Ubrania (Koszule, T-shirty, Spodnie)', sec: false, checked: false},
@@ -1014,7 +1019,22 @@
                 ensureDay6ReturnPlan();
                 ensureDay6PlanRefresh();
                 ensurePlanDayMeta();
+                ensureTempBag();
             } catch(e) {}
+        }
+
+        function ensureTempBag() {
+            if (!state.bagsData) return false;
+            if (state.bagsData.some(b => b.id === 'bagTemp')) return false;
+            state.bagsData.unshift({
+                id: 'bagTemp',
+                name: 'Tymczasowa',
+                icon: 'fa-hourglass-half',
+                color: 'text-amber-600',
+                temp: true,
+                items: []
+            });
+            return true;
         }
 
         const SIESTA_TEXT = '13:00–17:00 — <b>SIESTA</b>: Sklepy i większość lokali zamknięta. Jedz i rób zakupy rano lub po 17:00.';
@@ -1312,7 +1332,7 @@
             }
 
             if (!state.planDayMeta) ensurePlanDayMeta();
-            let migrated = ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureMagnetShopItems() || ensureDay6ReturnPlan() || ensureDay6PlanRefresh() || ensurePlanDayMeta();
+            let migrated = ensureTempBag() || ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureMagnetShopItems() || ensureDay6ReturnPlan() || ensureDay6PlanRefresh() || ensurePlanDayMeta();
             if (migrated) saveState();
             renderAll();
         }
@@ -1409,20 +1429,28 @@
 
             listArray.forEach((item) => {
                 const div = document.createElement('div');
-                const itemStyle = item.siesta ? 'bg-orange-50 border-orange-200' : (item.magnet ? 'bg-purple-50 border-purple-200' : (item.checkin ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'));
+                const isTempBag = parentId === 'bagTemp';
+                const itemStyle = item.siesta ? 'bg-orange-50 border-orange-200' : (item.magnet ? 'bg-purple-50 border-purple-200' : (item.checkin ? 'bg-red-50 border-red-200' : (isTempBag ? 'bg-amber-50/80 border-amber-200' : 'bg-white border-slate-200')));
                 div.className = 'flex justify-between items-center p-3 rounded-lg border shadow-sm mb-2 ' + itemStyle;
 
                 const onChangeStr = parentId ? `toggleNestedItem('${stateKey}', '${parentId}', '${item.id}')` : `toggleItem('${stateKey}', '${item.id}')`;
                 const editStr = parentId ? `editItemPrompt('${stateKey}', '${item.id}', '${parentId}')` : `editItemPrompt('${stateKey}', '${item.id}')`;
                 const deleteStr = parentId ? `deleteItem('${stateKey}', '${item.id}', '${parentId}')` : `deleteItem('${stateKey}', '${item.id}')`;
+                const moveSelect = (stateKey === 'bagsData' && parentId && state.bagsData.length > 1) ? (() => {
+                    const opts = state.bagsData.filter(b => b.id !== parentId).map(b =>
+                        `<option value="${b.id}">${escapeHtml(b.name.replace(/ \(.*\)/, ''))}</option>`
+                    ).join('');
+                    return `<select onchange="moveBagItem('${parentId}','${item.id}', this.value); this.value=''" class="text-[9px] font-bold border border-slate-200 rounded-lg px-1 py-1 text-slate-600 max-w-[5.5rem] shrink-0" title="Przenieś do innego bagażu"><option value="">→ bagaż</option>${opts}</select>`;
+                })() : '';
 
                 div.innerHTML = `
-                    <label class="cb-container ${item.checked ? 'crossed' : ''} flex-1 m-0">
+                    <label class="cb-container ${item.checked ? 'crossed' : ''} flex-1 m-0 min-w-0">
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="${onChangeStr}">
                         <span class="checkmark mt-[-10px]"></span>
-                        <span class="ml-2 text-sm leading-tight pr-2 block">${item.text} ${item.siesta ? '<i class="fa-solid fa-sun text-orange-500 ml-1 text-xs"></i>' : ''} ${item.magnet ? '<i class="fa-solid fa-magnet text-purple-500 ml-1 text-xs"></i>' : ''} ${item.checkin ? '<i class="fa-solid fa-ticket text-red-500 ml-1 text-xs"></i>' : ''} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}</span>
+                        <span class="ml-2 text-sm leading-tight pr-2 block">${item.text} ${item.siesta ? '<i class="fa-solid fa-sun text-orange-500 ml-1 text-xs"></i>' : ''} ${item.magnet ? '<i class="fa-solid fa-magnet text-purple-500 ml-1 text-xs"></i>' : ''} ${item.checkin ? '<i class="fa-solid fa-ticket text-red-500 ml-1 text-xs"></i>' : ''} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}${isTempBag ? ' <span class="text-[9px] text-amber-600 font-bold uppercase">tymczasowo</span>' : ''}</span>
                     </label>
-                    <div class="flex gap-4 ml-2 text-slate-300 shrink-0">
+                    <div class="flex gap-2 ml-2 text-slate-300 shrink-0 items-center">
+                        ${moveSelect}
                         <button onclick="${editStr}" class="hover:text-bari-primary active:scale-90"><i class="fa-solid fa-pen"></i></button>
                         <button onclick="${deleteStr}" class="hover:text-red-500 active:scale-90"><i class="fa-solid fa-trash"></i></button>
                     </div>
@@ -1439,21 +1467,24 @@
             bagsContainer.innerHTML = '';
             state.bagsData.forEach(bag => {
                 const panelKey = 'bag-' + bag.id;
+                const isTemp = bag.temp === true;
                 const bagDiv = document.createElement('div');
-                bagDiv.className = 'bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden';
+                bagDiv.className = isTemp
+                    ? 'bg-amber-50 rounded-xl shadow-sm border-2 border-dashed border-amber-300 overflow-hidden'
+                    : 'bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden';
                 bagDiv.innerHTML = `
                     <button type="button" onclick="toggleSectionPanel('${panelKey}')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
-                        <h3 class="font-bold ${bag.color} flex items-center gap-2"><i class="fa-solid ${bag.icon}"></i> ${bag.name}</h3>
+                        <h3 class="font-bold ${bag.color} flex items-center gap-2"><i class="fa-solid ${bag.icon}"></i> ${bag.name}${isTemp ? ' <span class="text-[9px] font-normal normal-case text-amber-700">— jeszcze bez miejsca</span>' : ''}</h3>
                         <i id="section-${panelKey}-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200 shrink-0 ml-2"></i>
                     </button>
-                    <div id="section-${panelKey}-body" class="hidden px-4 pb-4 border-t border-slate-100">
+                    <div id="section-${panelKey}-body" class="hidden px-4 pb-4 border-t ${isTemp ? 'border-amber-200' : 'border-slate-100'}">
                         <div id="bag-items-${bag.id}" class="space-y-1 pt-3"></div>
                         <button onclick="addCustomNestedItem('bagsData', '${bag.id}')" class="mt-2 text-xs text-slate-500 font-bold hover:text-slate-700 py-2 px-3 border border-slate-200 rounded-lg"><i class="fa-solid fa-plus"></i> Dodaj rzecz</button>
                     </div>
                 `;
                 bagsContainer.appendChild(bagDiv);
                 renderChecklist(`bag-items-${bag.id}`, bag.items, 'bagsData', bag.id);
-                initSectionPanel(panelKey, false);
+                initSectionPanel(panelKey, isTemp);
             });
 
             const planContainer = document.getElementById('plan-container');
@@ -1607,7 +1638,7 @@
                 if (panelKey) ensureSectionPanelOpen(panelKey);
                 const isBag = (stateKey === 'bagsData');
                 openModal({
-                    title: "Dodaj nowy element", showSecurity: isBag,
+                    title: parentId === 'bagTemp' ? 'Dodaj do tymczasowej' : 'Dodaj nowy element', showSecurity: isBag,
                     onConfirm: (val, isSec) => {
                         if(val && val.trim() !== '') {
                             parent.items.push({ id: generateId(), text: val.trim(), checked: false, sec: isSec });
@@ -1635,6 +1666,21 @@
                 } else { state[stateKey] = state[stateKey].filter(i => i.id !== itemId); }
                 saveState(); renderAll(); showToast("Usunięto!");
             });
+        }
+
+        function moveBagItem(fromBagId, itemId, toBagId) {
+            if (!toBagId || fromBagId === toBagId) return;
+            const fromBag = state.bagsData.find(b => b.id === fromBagId);
+            const toBag = state.bagsData.find(b => b.id === toBagId);
+            if (!fromBag || !toBag) return;
+            const idx = fromBag.items.findIndex(i => i.id === itemId);
+            if (idx < 0) return;
+            const [item] = fromBag.items.splice(idx, 1);
+            toBag.items.push(item);
+            saveState();
+            renderAll();
+            showToast('Przeniesiono → ' + toBag.name);
+            ensureSectionPanelOpen('bag-' + toBagId);
         }
         /* --- ZWIJANE SEKCJE (wspólny mechanizm) --- */
         const SECTION_PANEL_PREFIX = 'bariApp_section_';
