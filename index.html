@@ -547,6 +547,7 @@
                         </div>
                         <p class="text-[10px] text-blue-800 mb-3 leading-snug">Najlepiej <b>~3 min pieszo</b> do <b>Q. Sella-Crisanzio</b> (linie 03, 16, 19, 53…). Przy domu (<b>Crisanzio-Trevisani</b>, 2 min) tylko linia <b>07</b> — <b>nie jedzie na Centrale</b>, tylko w stronę Dep. Amtab.</p>
                         <p class="text-[10px] uppercase text-slate-500 font-bold mb-1.5">Następne na Bari Centrale (Q. Sella)</p>
+                        <p class="text-[9px] text-slate-500 mb-2">Tapnij przycisk apki pod odjazdem — otworzy MUVT, Moovit lub Maps.</p>
                         <div id="apt-bus-next" class="space-y-1.5 mb-3"></div>
                         <div id="apt-bus-stops" class="space-y-2"></div>
                         <p id="apt-bus-disclaimer" class="text-[9px] text-slate-400 mt-3 leading-snug"></p>
@@ -2008,6 +2009,23 @@
 
         const APT_BUS_MAIN_LINES = ['03', '16', '19', '53', '13', '02'];
         const APT_BUS_SKIP_LINES = new Set(['325']);
+        const BUS_STOP_COORDS = {
+            '08126103': { lat: 41.119418, lng: 16.860624, name: 'Crisanzio-Trevisani' },
+            '08441104': { lat: 41.119865, lng: 16.864542, name: 'Q. Sella-Crisanzio' }
+        };
+
+        function renderBusAppLinks(line, stopId) {
+            const stop = BUS_STOP_COORDS[stopId] || BUS_STOP_COORDS['08441104'];
+            const btn = (href, label, cls, icon) =>
+                `<a href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="inline-flex items-center gap-0.5 ${cls} text-white px-2 py-1 rounded text-[9px] font-bold shadow active:scale-95"><i class="fa-solid ${icon}"></i> ${label}</a>`;
+            const lineLabel = escapeHtml(String(line));
+            return `<div class="flex flex-wrap gap-1 mt-1.5">
+                ${btn('https://www.amtab.it/it/muvt', 'MUVT', 'bg-blue-600', 'fa-ticket')}
+                ${btn('https://moovitapp.com/index/en/public_transit-lines-Bari-3342-855278', 'Moovit', 'bg-orange-500', 'fa-location-dot')}
+                ${btn('https://www.google.com/maps/dir/?api=1&origin=' + stop.lat + ',' + stop.lng + '&destination=Bari+Centrale,+Bari&travelmode=transit', 'Maps L' + lineLabel, 'bg-green-600', 'fa-map')}
+                ${btn('https://ro.autobus.it/TP/amtab/lines.aspx', 'Orario AMTAB', 'bg-slate-600', 'fa-clock')}
+            </div>`;
+        }
 
         function busTimeToMinutes(t) {
             let [h, m] = t.split(':').map(Number);
@@ -2070,9 +2088,12 @@
                 nextEl.innerHTML = '<p class="text-xs text-slate-500">Brak danych rozkładu.</p>';
             } else {
                 nextEl.innerHTML = nextBuses.map(b => `
-                    <div class="flex items-center justify-between bg-white border border-blue-100 rounded-lg px-3 py-2">
-                        <span class="text-xs font-bold text-slate-700"><span class="inline-flex items-center justify-center min-w-[1.75rem] h-6 px-1 rounded bg-blue-600 text-white text-[11px] mr-2">L${escapeHtml(b.line)}</span>→ Centrale</span>
-                        <span class="text-sm font-bold text-blue-800 tabular-nums">${escapeHtml(b.time)}</span>
+                    <div class="bg-white border border-blue-100 rounded-lg px-3 py-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700"><span class="inline-flex items-center justify-center min-w-[1.75rem] h-6 px-1 rounded bg-blue-600 text-white text-[11px] mr-2">L${escapeHtml(b.line)}</span>→ Centrale</span>
+                            <span class="text-sm font-bold text-blue-800 tabular-nums">${escapeHtml(b.time)}</span>
+                        </div>
+                        ${renderBusAppLinks(b.line, '08441104')}
                     </div>
                 `).join('');
             }
@@ -2084,14 +2105,17 @@
                     const dest = ln.toCentrale.length ? '→ Bari Centrale' : '→ Dep. Amtab (nie Centrale!)';
                     const next = getNextBusTimes(times, 3);
                     return `
-                        <div class="flex items-start justify-between gap-2 py-1.5 border-t border-slate-100 first:border-t-0">
-                            <div class="min-w-0">
-                                <span class="inline-flex items-center justify-center min-w-[1.75rem] h-6 px-1 rounded bg-slate-700 text-white text-[11px] font-bold mr-1.5">L${escapeHtml(ln.line)}</span>
-                                <span class="text-[10px] text-slate-600">${escapeHtml(dest)}</span>
+                        <div class="py-2 border-t border-slate-100 first:border-t-0">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="min-w-0">
+                                    <span class="inline-flex items-center justify-center min-w-[1.75rem] h-6 px-1 rounded bg-slate-700 text-white text-[11px] font-bold mr-1.5">L${escapeHtml(ln.line)}</span>
+                                    <span class="text-[10px] text-slate-600">${escapeHtml(dest)}</span>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    ${next.map(t => `<span class="block text-xs font-bold text-slate-800 tabular-nums">${escapeHtml(t)}</span>`).join('')}
+                                </div>
                             </div>
-                            <div class="text-right shrink-0">
-                                ${next.map(t => `<span class="block text-xs font-bold text-slate-800 tabular-nums">${escapeHtml(t)}</span>`).join('')}
-                            </div>
+                            ${renderBusAppLinks(ln.line, stop.id)}
                         </div>
                     `;
                 }).join('');
