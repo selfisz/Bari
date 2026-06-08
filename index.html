@@ -243,19 +243,11 @@
                 </div>
             </label>
 
-            <label id="modal-pocket-container" class="hidden flex items-center gap-3 mb-3 p-3 bg-violet-50 rounded-xl border border-violet-200 text-sm font-bold text-violet-800 cursor-pointer">
+            <label id="modal-pocket-container" class="hidden flex items-center gap-3 mb-5 p-3 bg-violet-50 rounded-xl border border-violet-200 text-sm font-bold text-violet-800 cursor-pointer">
                 <input type="checkbox" id="modal-pocket-check" class="custom-cb">
                 <div class="flex-1">
                     <span><i class="fa-solid fa-mobile-screen-button"></i> Przy sobie / w kieszeni</span>
                     <p class="text-[10px] text-violet-600 font-normal leading-tight">Masz to na sobie (portfel, słuchawki…) — nie w walizce.</p>
-                </div>
-            </label>
-
-            <label id="modal-weather-container" class="hidden flex items-center gap-3 mb-5 p-3 bg-sky-50 rounded-xl border border-sky-200 text-sm font-bold text-sky-800 cursor-pointer">
-                <input type="checkbox" id="modal-weather-check" class="custom-cb">
-                <div class="flex-1">
-                    <span><i class="fa-solid fa-sun"></i> Zależy od pogody</span>
-                    <p class="text-[10px] text-sky-600 font-normal leading-tight">Kąpielówki, szorty, sandały — pakuj jeśli będzie ciepło.</p>
                 </div>
             </label>
 
@@ -326,7 +318,7 @@
             </div>
 
             <div id="normal-bags-view">
-                <p class="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 leading-snug"><i class="fa-solid fa-hourglass-half"></i> <b>Tymczasowa</b> — bez przypisanego bagażu. <i class="fa-solid fa-mobile-screen-button text-violet-600"></i> = przy sobie · <i class="fa-solid fa-sun text-sky-500"></i> = zależy od pogody. <span class="text-amber-600">v11</span></p>
+                <p class="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 leading-snug"><i class="fa-solid fa-hourglass-half"></i> <b>Tymczasowa</b> — bez przypisanego bagażu. <i class="fa-solid fa-mobile-screen-button text-violet-600"></i> = przy sobie · <b>− / +</b> = ilość sztuk. <span class="text-amber-600">v12</span></p>
                 <!-- Check-out Via Trevisani -->
                 <div id="checkout-section" class="hidden mb-6 bg-orange-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden">
                     <button type="button" onclick="toggleSectionPanel('checkout')" class="w-full p-4 flex items-center justify-between text-left active:bg-orange-100/50 transition-colors">
@@ -887,36 +879,36 @@
                 {
                     id: 'bagTemp', name: 'Tymczasowa', icon: 'fa-hourglass-half', color: 'text-amber-600', temp: true,
                     items: [
-                        { id: 'btemp1', text: 'Kąpielówki Dawid', weather: true, checked: false },
-                        { id: 'btemp2', text: 'T-shirty Dawid ×3 (do walizki?)', checked: false },
-                        { id: 'btemp3', text: 'Majtki Dawid ×1 (do walizki)', checked: false }
+                        { id: 'btemp1', text: 'Kąpielówki Dawid', qty: 1, checked: false },
+                        { id: 'btemp2', text: 'T-shirty Dawid (do walizki?)', qty: 3, checked: false },
+                        { id: 'btemp3', text: 'Majtki Dawid (do walizki)', qty: 1, checked: false }
                     ]
                 },
                 {
                     id: 'bag1', name: 'Walizka 10kg (Główna)', icon: 'fa-suitcase', color: 'text-slate-600',
                     items: [
-                        { id: 'b1i3', text: 'Wygodne buty na zwiedzanie', checked: false },
-                        { id: 'b1i4', text: 'Klapki Dawid', weather: true, checked: false },
-                        { id: 'b1i5', text: 'Buty do wody Dawid', weather: true, checked: false },
-                        { id: 'b1i6', text: 'Buty do wody Gosia', weather: true, checked: false },
-                        { id: 'b1i7', text: 'Piżama Dawid', checked: false },
-                        { id: 'b1i8', text: 'Piżama Gosia', checked: false },
-                        { id: 'b1i9', text: 'Sandały Gosia', weather: true, checked: false }
+                        { id: 'b1i3', text: 'Wygodne buty na zwiedzanie', qty: 1, checked: false },
+                        { id: 'b1i4', text: 'Klapki Dawid', qty: 1, checked: false },
+                        { id: 'b1i5', text: 'Buty do wody Dawid', qty: 1, checked: false },
+                        { id: 'b1i6', text: 'Buty do wody Gosia', qty: 1, checked: false },
+                        { id: 'b1i7', text: 'Piżama Dawid', qty: 1, checked: false },
+                        { id: 'b1i8', text: 'Piżama Gosia', qty: 1, checked: false },
+                        { id: 'b1i9', text: 'Sandały Gosia', qty: 1, checked: false }
                     ]
                 },
                 {
                     id: 'bag2', name: 'Plecak Dawida (Pod fotel)', icon: 'fa-backpack', color: 'text-blue-600',
                     items: [
-                        { id: 'b2i1', text: 'Paszporty / Dowody', sec: true, pocket: true, checked: false },
-                        { id: 'b2i2', text: 'Portfel (Karty płatnicze, EKUZ)', sec: true, pocket: true, checked: false },
-                        { id: 'b2i5', text: '<b class="text-green-700">Dokładnie 21€ dla Katii (Sprzątaczki)</b>', checked: false },
-                        { id: 'b2i3', text: 'Powerbank (Musi być w podręcznym!)', sec: true, pocket: true, checked: false },
-                        { id: 'b2d1', text: 'Majtki ×6', checked: false },
-                        { id: 'b2d2', text: 'Spodenki krótkie ×3', weather: true, checked: false },
-                        { id: 'b2d3', text: 'Spodnie długie', checked: false },
-                        { id: 'b2d4', text: 'Koszula ×1', checked: false },
-                        { id: 'b2d5', text: 'T-shirty ×3', checked: false },
-                        { id: 'b2d6', text: 'Kosmetyczka z płynami (work 100ml!)', sec: true, checked: false }
+                        { id: 'b2i1', text: 'Paszporty / Dowody', sec: true, pocket: true, qty: 1, checked: false },
+                        { id: 'b2i2', text: 'Portfel (Karty płatnicze, EKUZ)', sec: true, pocket: true, qty: 1, checked: false },
+                        { id: 'b2i5', text: '<b class="text-green-700">Dokładnie 21€ dla Katii (Sprzątaczki)</b>', qty: 1, checked: false },
+                        { id: 'b2i3', text: 'Powerbank (Musi być w podręcznym!)', sec: true, pocket: true, qty: 1, checked: false },
+                        { id: 'b2d1', text: 'Majtki', qty: 6, checked: false },
+                        { id: 'b2d2', text: 'Spodenki krótkie', qty: 3, checked: false },
+                        { id: 'b2d3', text: 'Spodnie długie', qty: 1, checked: false },
+                        { id: 'b2d4', text: 'Koszula', qty: 1, checked: false },
+                        { id: 'b2d5', text: 'T-shirty', qty: 3, checked: false },
+                        { id: 'b2d6', text: 'Kosmetyczka z płynami (work 100ml!)', sec: true, qty: 1, checked: false }
                     ]
                 },
                 {
@@ -1060,6 +1052,7 @@
                 ensurePlanDayMeta();
                 ensureTempBag();
                 ensureBagSeedItems();
+                normalizeBagItems();
             } catch(e) {}
         }
 
@@ -1079,44 +1072,59 @@
 
         const BAG_SEED_ITEMS = {
             bagTemp: [
-                { id: 'btemp1', text: 'Kąpielówki Dawid', weather: true, checked: false },
-                { id: 'btemp2', text: 'T-shirty Dawid ×3 (do walizki?)', checked: false },
-                { id: 'btemp3', text: 'Majtki Dawid ×1 (do walizki)', checked: false }
+                { id: 'btemp1', text: 'Kąpielówki Dawid', qty: 1, checked: false },
+                { id: 'btemp2', text: 'T-shirty Dawid (do walizki?)', qty: 3, checked: false },
+                { id: 'btemp3', text: 'Majtki Dawid (do walizki)', qty: 1, checked: false }
             ],
             bag1: [
-                { id: 'b1i3', text: 'Wygodne buty na zwiedzanie', checked: false },
-                { id: 'b1i4', text: 'Klapki Dawid', weather: true, checked: false },
-                { id: 'b1i5', text: 'Buty do wody Dawid', weather: true, checked: false },
-                { id: 'b1i6', text: 'Buty do wody Gosia', weather: true, checked: false },
-                { id: 'b1i7', text: 'Piżama Dawid', checked: false },
-                { id: 'b1i8', text: 'Piżama Gosia', checked: false },
-                { id: 'b1i9', text: 'Sandały Gosia', weather: true, checked: false }
+                { id: 'b1i3', text: 'Wygodne buty na zwiedzanie', qty: 1, checked: false },
+                { id: 'b1i4', text: 'Klapki Dawid', qty: 1, checked: false },
+                { id: 'b1i5', text: 'Buty do wody Dawid', qty: 1, checked: false },
+                { id: 'b1i6', text: 'Buty do wody Gosia', qty: 1, checked: false },
+                { id: 'b1i7', text: 'Piżama Dawid', qty: 1, checked: false },
+                { id: 'b1i8', text: 'Piżama Gosia', qty: 1, checked: false },
+                { id: 'b1i9', text: 'Sandały Gosia', qty: 1, checked: false }
             ],
             bag2: [
-                { id: 'b2d1', text: 'Majtki ×6', checked: false },
-                { id: 'b2d2', text: 'Spodenki krótkie ×3', weather: true, checked: false },
-                { id: 'b2d3', text: 'Spodnie długie', checked: false },
-                { id: 'b2d4', text: 'Koszula ×1', checked: false },
-                { id: 'b2d5', text: 'T-shirty ×3', checked: false },
-                { id: 'b2d6', text: 'Kosmetyczka z płynami (work 100ml!)', sec: true, checked: false }
+                { id: 'b2d1', text: 'Majtki', qty: 6, checked: false },
+                { id: 'b2d2', text: 'Spodenki krótkie', qty: 3, checked: false },
+                { id: 'b2d3', text: 'Spodnie długie', qty: 1, checked: false },
+                { id: 'b2d4', text: 'Koszula', qty: 1, checked: false },
+                { id: 'b2d5', text: 'T-shirty', qty: 3, checked: false },
+                { id: 'b2d6', text: 'Kosmetyczka z płynami (work 100ml!)', sec: true, qty: 1, checked: false }
             ]
         };
 
-        function ensureBagSeedItems() {
+        function normalizeBagItems() {
             if (!state.bagsData) return false;
             let changed = false;
+            state.bagsData.forEach(bag => {
+                bag.items.forEach(item => {
+                    if (item.weather) { delete item.weather; changed = true; }
+                    const mulMatch = item.text.match(/^(.+?)\s*[×x]\s*(\d+)\s*(.*)$/i);
+                    if (mulMatch) {
+                        const rest = mulMatch[3] ? ' ' + mulMatch[3].trim() : '';
+                        item.text = (mulMatch[1].trim() + rest).trim();
+                        item.qty = parseInt(mulMatch[2], 10);
+                        changed = true;
+                    }
+                    if (item.qty == null || item.qty < 1) {
+                        item.qty = 1;
+                        changed = true;
+                    }
+                });
+            });
             const bag1 = state.bagsData.find(b => b.id === 'bag1');
             if (bag1 && bag1.items.some(i => i.id === 'b1i1' || i.id === 'b1i2')) {
                 bag1.items = bag1.items.filter(i => i.id !== 'b1i1' && i.id !== 'b1i2');
                 changed = true;
             }
-            const bag2 = state.bagsData.find(b => b.id === 'bag2');
-            if (bag2) {
-                const d4 = bag2.items.find(i => i.id === 'b2d4');
-                if (d4 && d4.text !== 'Koszula ×1') { d4.text = 'Koszula ×1'; changed = true; }
-                const d5 = bag2.items.find(i => i.id === 'b2d5');
-                if (d5 && d5.text !== 'T-shirty ×3') { d5.text = 'T-shirty ×3'; changed = true; }
-            }
+            return changed;
+        }
+
+        function ensureBagSeedItems() {
+            if (!state.bagsData) return false;
+            let changed = false;
             Object.entries(BAG_SEED_ITEMS).forEach(([bagId, seeds]) => {
                 const bag = state.bagsData.find(b => b.id === bagId);
                 if (!bag) return;
@@ -1425,7 +1433,7 @@
             }
 
             if (!state.planDayMeta) ensurePlanDayMeta();
-            let migrated = ensureTempBag() || ensureBagSeedItems() || ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureMagnetShopItems() || ensureDay6ReturnPlan() || ensureDay6PlanRefresh() || ensurePlanDayMeta();
+            let migrated = ensureTempBag() || ensureBagSeedItems() || normalizeBagItems() || ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureMagnetShopItems() || ensureDay6ReturnPlan() || ensureDay6PlanRefresh() || ensurePlanDayMeta();
             if (migrated) saveState();
             renderAll();
         }
@@ -1441,7 +1449,7 @@
         const modal = document.getElementById('custom-modal');
         const modalContent = document.getElementById('custom-modal-content');
 
-        function openModal({title, desc = '', inputType = 'text', defaultValue = '', defaultNote = '', showSecurity = false, showPocket = false, showWeather = false, defaultPocket = false, defaultWeather = false, confirmText = 'Zatwierdź', onConfirm}) {
+        function openModal({title, desc = '', inputType = 'text', defaultValue = '', defaultNote = '', showSecurity = false, showPocket = false, defaultPocket = false, confirmText = 'Zatwierdź', onConfirm}) {
             document.getElementById('modal-title').innerText = title;
             const descEl = document.getElementById('modal-desc');
             if(desc) { descEl.innerText = desc; descEl.classList.remove('hidden'); } else { descEl.classList.add('hidden'); }
@@ -1473,8 +1481,6 @@
             const secCheck = document.getElementById('modal-sec-check');
             const pocketContainer = document.getElementById('modal-pocket-container');
             const pocketCheck = document.getElementById('modal-pocket-check');
-            const weatherContainer = document.getElementById('modal-weather-container');
-            const weatherCheck = document.getElementById('modal-weather-check');
             if(showSecurity) {
                 secContainer.classList.remove('hidden');
                 secCheck.checked = false;
@@ -1487,12 +1493,6 @@
             } else {
                 pocketContainer.classList.add('hidden');
             }
-            if(showWeather) {
-                weatherContainer.classList.remove('hidden');
-                weatherCheck.checked = !!defaultWeather;
-            } else {
-                weatherContainer.classList.add('hidden');
-            }
 
             document.getElementById('modal-btn-confirm').innerText = confirmText;
 
@@ -1501,10 +1501,9 @@
                 const noteVal = useNote ? inputNote.value : null;
                 const isSec = showSecurity ? secCheck.checked : false;
                 const isPocket = showPocket ? pocketCheck.checked : false;
-                const isWeather = showWeather ? weatherCheck.checked : false;
                 if (onConfirm) {
                     if (useNote) onConfirm(val, noteVal);
-                    else if (showSecurity || showPocket || showWeather) onConfirm(val, { sec: isSec, pocket: isPocket, weather: isWeather });
+                    else if (showSecurity || showPocket) onConfirm(val, { sec: isSec, pocket: isPocket });
                     else onConfirm(val, isSec);
                 }
                 closeModal();
@@ -1542,12 +1541,20 @@
             listArray.forEach((item) => {
                 const div = document.createElement('div');
                 const isTempBag = parentId === 'bagTemp';
-                const itemStyle = item.siesta ? 'bg-orange-50 border-orange-200' : (item.magnet ? 'bg-purple-50 border-purple-200' : (item.checkin ? 'bg-red-50 border-red-200' : (item.weather ? 'bg-sky-50/80 border-sky-200' : (isTempBag ? 'bg-amber-50/80 border-amber-200' : 'bg-white border-slate-200'))));
+                const itemStyle = item.siesta ? 'bg-orange-50 border-orange-200' : (item.magnet ? 'bg-purple-50 border-purple-200' : (item.checkin ? 'bg-red-50 border-red-200' : (isTempBag ? 'bg-amber-50/80 border-amber-200' : 'bg-white border-slate-200')));
                 div.className = 'flex justify-between items-center p-3 rounded-lg border shadow-sm mb-2 ' + itemStyle;
 
                 const onChangeStr = parentId ? `toggleNestedItem('${stateKey}', '${parentId}', '${item.id}')` : `toggleItem('${stateKey}', '${item.id}')`;
                 const editStr = parentId ? `editItemPrompt('${stateKey}', '${item.id}', '${parentId}')` : `editItemPrompt('${stateKey}', '${item.id}')`;
                 const deleteStr = parentId ? `deleteItem('${stateKey}', '${item.id}', '${parentId}')` : `deleteItem('${stateKey}', '${item.id}')`;
+                const qty = item.qty != null ? item.qty : 1;
+                const qtyStepper = (stateKey === 'bagsData' && parentId) ? `
+                    <div class="flex items-center gap-0.5 shrink-0 mr-1">
+                        <button type="button" onclick="adjustBagItemQty('${parentId}','${item.id}', -1)" class="w-7 h-7 rounded-lg border border-slate-200 text-slate-600 font-bold text-sm leading-none active:scale-90 hover:bg-slate-50" title="Mniej">−</button>
+                        <span class="text-xs font-bold text-slate-700 min-w-[1.25rem] text-center tabular-nums">${qty}</span>
+                        <button type="button" onclick="adjustBagItemQty('${parentId}','${item.id}', 1)" class="w-7 h-7 rounded-lg border border-slate-200 text-slate-600 font-bold text-sm leading-none active:scale-90 hover:bg-slate-50" title="Więcej">+</button>
+                    </div>
+                ` : '';
                 const moveSelect = (stateKey === 'bagsData' && parentId && state.bagsData.length > 1) ? (() => {
                     const opts = state.bagsData.filter(b => b.id !== parentId).map(b =>
                         `<option value="${b.id}">${escapeHtml(b.name.replace(/ \(.*\)/, ''))}</option>`
@@ -1560,21 +1567,15 @@
                     </button>
                 ` : '';
                 const pocketBadge = item.pocket ? ' <span class="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase text-violet-700 bg-violet-100 border border-violet-200 rounded px-1.5 py-0.5 ml-1 align-middle"><i class="fa-solid fa-mobile-screen-button"></i> przy sobie</span>' : '';
-                const weatherBtn = stateKey === 'bagsData' && parentId ? `
-                    <button type="button" onclick="toggleBagItemWeather('${parentId}','${item.id}')" class="rounded-lg px-1.5 py-1 border active:scale-90 transition-colors ${item.weather ? 'text-sky-700 bg-sky-100 border-sky-300' : 'text-slate-400 border-slate-200 hover:text-sky-600 hover:bg-sky-50'}" title="Zależy od pogody (szorty, kąpielówki…)">
-                        <i class="fa-solid fa-sun text-xs"></i>
-                    </button>
-                ` : '';
-                const weatherBadge = item.weather ? ' <span class="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase text-sky-700 bg-sky-100 border border-sky-200 rounded px-1.5 py-0.5 ml-1 align-middle"><i class="fa-solid fa-sun"></i> pogoda</span>' : '';
 
                 div.innerHTML = `
                     <label class="cb-container ${item.checked ? 'crossed' : ''} flex-1 m-0 min-w-0">
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="${onChangeStr}">
                         <span class="checkmark mt-[-10px]"></span>
-                        <span class="ml-2 text-sm leading-tight pr-2 block">${item.text}${pocketBadge}${weatherBadge} ${item.siesta ? '<i class="fa-solid fa-sun text-orange-500 ml-1 text-xs"></i>' : ''} ${item.magnet ? '<i class="fa-solid fa-magnet text-purple-500 ml-1 text-xs"></i>' : ''} ${item.checkin ? '<i class="fa-solid fa-ticket text-red-500 ml-1 text-xs"></i>' : ''} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}${isTempBag && !item.pocket ? ' <span class="text-[9px] text-amber-600 font-bold uppercase">tymczasowo</span>' : ''}</span>
+                        <span class="ml-2 text-sm leading-tight pr-2 block">${item.text}${pocketBadge} ${item.siesta ? '<i class="fa-solid fa-sun text-orange-500 ml-1 text-xs"></i>' : ''} ${item.magnet ? '<i class="fa-solid fa-magnet text-purple-500 ml-1 text-xs"></i>' : ''} ${item.checkin ? '<i class="fa-solid fa-ticket text-red-500 ml-1 text-xs"></i>' : ''} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}${isTempBag && !item.pocket ? ' <span class="text-[9px] text-amber-600 font-bold uppercase">tymczasowo</span>' : ''}</span>
                     </label>
                     <div class="flex gap-1.5 ml-2 text-slate-300 shrink-0 items-center">
-                        ${weatherBtn}
+                        ${qtyStepper}
                         ${pocketBtn}
                         ${moveSelect}
                         <button onclick="${editStr}" class="hover:text-bari-primary active:scale-90"><i class="fa-solid fa-pen"></i></button>
@@ -1586,7 +1587,7 @@
         }
 
         function renderAll() {
-            if (ensureTempBag() || ensureBagSeedItems()) saveState();
+            if (ensureTempBag() || ensureBagSeedItems() || normalizeBagItems()) saveState();
             renderChecklist('start-list-container', state.startBari, 'startBari');
             renderChecklist('shop-list-container', state.shopData, 'shopData');
 
@@ -1780,12 +1781,11 @@
                     title: parentId === 'bagTemp' ? 'Dodaj do tymczasowej' : 'Dodaj nowy element',
                     showSecurity: isBag,
                     showPocket: isBag,
-                    showWeather: isBag,
                     defaultPocket: parentId === 'bagTemp',
                     onConfirm: (val, extras) => {
                         if(val && val.trim() !== '') {
-                            const opts = extras && typeof extras === 'object' ? extras : { sec: !!extras, pocket: false, weather: false };
-                            parent.items.push({ id: generateId(), text: val.trim(), checked: false, sec: opts.sec, pocket: opts.pocket, weather: opts.weather });
+                            const opts = extras && typeof extras === 'object' ? extras : { sec: !!extras, pocket: false };
+                            parent.items.push({ id: generateId(), text: val.trim(), checked: false, qty: 1, sec: opts.sec, pocket: opts.pocket });
                             if (panelKey) ensureSectionPanelOpen(panelKey);
                             saveState(); renderAll(); showToast("Dodano!");
                         }
@@ -1837,14 +1837,15 @@
             showToast(item.pocket ? 'Przy sobie 👖' : 'Nie przy sobie');
         }
 
-        function toggleBagItemWeather(bagId, itemId) {
+        function adjustBagItemQty(bagId, itemId, delta) {
             const bag = state.bagsData.find(b => b.id === bagId);
             const item = bag && bag.items.find(i => i.id === itemId);
             if (!item) return;
-            item.weather = !item.weather;
+            const next = (item.qty != null ? item.qty : 1) + delta;
+            if (next < 1) return;
+            item.qty = next;
             saveState();
             renderAll();
-            showToast(item.weather ? 'Zależy od pogody ☀️' : 'Bez flagi pogody');
         }
         /* --- ZWIJANE SEKCJE (wspólny mechanizm) --- */
         const SECTION_PANEL_PREFIX = 'bariApp_section_';
