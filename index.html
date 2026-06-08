@@ -4,13 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bari Autopilot</title>
+    <script>
+        window.__BARI_BASE__ = (function() {
+            var path = location.pathname;
+            if (path === '/Bari' || path.indexOf('/Bari/') === 0) return '/Bari/';
+            return '/';
+        })();
+    </script>
     <meta name="theme-color" content="#009246">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Bari">
-    <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -311,7 +318,7 @@
             </div>
 
             <div id="normal-bags-view">
-                <p class="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 leading-snug"><i class="fa-solid fa-hourglass-half"></i> <b>Tymczasowa</b> — rzeczy gotowe, ale jeszcze bez bagażu. Ikona <i class="fa-solid fa-mobile-screen-button text-violet-600"></i> = <b>przy sobie</b> (portfel, słuchawki…). <span class="text-amber-600">Wersja apki: v8</span></p>
+                <p class="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 leading-snug"><i class="fa-solid fa-hourglass-half"></i> <b>Tymczasowa</b> — rzeczy gotowe, ale jeszcze bez bagażu. Ikona <i class="fa-solid fa-mobile-screen-button text-violet-600"></i> = <b>przy sobie</b> (portfel, słuchawki…). <span class="text-amber-600">Wersja: v9</span></p>
                 <!-- Check-out Via Trevisani -->
                 <div id="checkout-section" class="hidden mb-6 bg-orange-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden">
                     <button type="button" onclick="toggleSectionPanel('checkout')" class="w-full p-4 flex items-center justify-between text-left active:bg-orange-100/50 transition-colors">
@@ -733,8 +740,8 @@
                             <a href="sms:+48661001601" class="block w-full bg-white border border-emerald-300 text-emerald-800 py-2 rounded-xl text-xs font-bold text-center mb-3 active:scale-95">
                                 <i class="fa-solid fa-comment-sms"></i> SMS: +48 661 001 601
                             </a>
-                            <img src="/assets/polisa-uniqa-1.png" alt="Polisa UNIQA strona 1" class="w-full rounded-xl border border-emerald-200 shadow-sm mb-2" loading="lazy">
-                            <img src="/assets/polisa-uniqa-2.png" alt="Polisa UNIQA strona 2" class="w-full rounded-xl border border-emerald-200 shadow-sm" loading="lazy">
+                            <img src="assets/polisa-uniqa-1.png" alt="Polisa UNIQA strona 1" class="w-full rounded-xl border border-emerald-200 shadow-sm mb-2" loading="lazy">
+                            <img src="assets/polisa-uniqa-2.png" alt="Polisa UNIQA strona 2" class="w-full rounded-xl border border-emerald-200 shadow-sm" loading="lazy">
                         </div>
                     </div>
 
@@ -745,7 +752,7 @@
                             <i id="section-awaria-ekuz-img-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200 shrink-0 ml-2"></i>
                         </button>
                         <div id="section-awaria-ekuz-img-body" class="hidden px-3 pb-3 border-t border-slate-200">
-                            <img src="/assets/ekuz-karty.png" alt="Karty EKUZ Dawid i Gosia" class="w-full rounded-xl border border-slate-200 shadow-sm mt-2" loading="lazy">
+                            <img src="assets/ekuz-karty.png" alt="Karty EKUZ Dawid i Gosia" class="w-full rounded-xl border border-slate-200 shadow-sm mt-2" loading="lazy">
                         </div>
                     </div>
                 </div>
@@ -830,6 +837,8 @@
 
     <script>
         /* --- SUPABASE (KONFIGURACJA) --- */
+        const APP_BASE = window.__BARI_BASE__ || '/';
+        function appUrl(path) { return APP_BASE + String(path || '').replace(/^\//, ''); }
         const SUPABASE_URL = 'https://ygjqkxtbchoinixwamip.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_rHv90qDmFYzmTJUKlKwlew_g49KAFZW';
         const ROOM_ID = 'bari'; // wspólny "pokój" – oba telefony używają tego samego, więc widzą te same dane
@@ -2248,7 +2257,7 @@
                     const dayLabel = now.getDate() === 12 ? 'Dzień 3' : 'Dzień 6';
                     new Notification('Bari Autopilot 🧲', {
                         body: dayLabel + ': Kup magnesy na pamiątkę! Stragany i sklepy turystyczne.',
-                        icon: '/icons/icon-192.png',
+                        icon: appUrl('icons/icon-192.png'),
                         tag: 'magnet-' + todayKey
                     });
                     try { localStorage.setItem(mKey, '1'); } catch(e) {}
@@ -2260,7 +2269,7 @@
                 if (!localStorage.getItem(sKey)) {
                     new Notification('Bari Autopilot ☀️', {
                         body: 'Za chwilę sjesta (13:00)! Zjedz i zrób zakupy teraz.',
-                        icon: '/icons/icon-192.png',
+                        icon: appUrl('icons/icon-192.png'),
                         tag: 'siesta-' + todayKey
                     });
                     try { localStorage.setItem(sKey, '1'); } catch(e) {}
@@ -2927,7 +2936,7 @@
             if (!('Notification' in window) || Notification.permission !== 'granted') return false;
             new Notification(content.notificationTitle, {
                 body: content.notificationBody,
-                icon: '/icons/icon-192.png',
+                icon: appUrl('icons/icon-192.png'),
                 tag: content.tag
             });
             return true;
@@ -4291,7 +4300,7 @@
             if (localStorage.getItem('bariApp_notif_enabled') === '1') runTripNotifications();
 
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js').then((reg) => {
+                navigator.serviceWorker.register(appUrl('sw.js')).then((reg) => {
                     reg.update();
                     if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
                     reg.addEventListener('updatefound', () => {

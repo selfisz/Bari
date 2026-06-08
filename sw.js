@@ -1,15 +1,22 @@
-const CACHE = 'bari-autopilot-v8';
+const CACHE = 'bari-autopilot-v9';
 const CDN_CACHE = 'bari-autopilot-cdn-v2';
+
+const BASE = (() => {
+  const p = self.location.pathname;
+  const idx = p.lastIndexOf('/sw.js');
+  return idx >= 0 ? p.slice(0, idx + 1) : '/';
+})();
+
 const SHELL = [
-  '/',
-  '/index.html',
-  '/manifest.webmanifest',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png',
-  '/assets/polisa-uniqa-1.png',
-  '/assets/polisa-uniqa-2.png',
-  '/assets/ekuz-karty.png'
+  BASE,
+  BASE + 'index.html',
+  BASE + 'manifest.webmanifest',
+  BASE + 'icons/icon-192.png',
+  BASE + 'icons/icon-512.png',
+  BASE + 'icons/apple-touch-icon.png',
+  BASE + 'assets/polisa-uniqa-1.png',
+  BASE + 'assets/polisa-uniqa-2.png',
+  BASE + 'assets/ekuz-karty.png'
 ];
 
 const CDN_ASSETS = [
@@ -38,7 +45,11 @@ function isCdnRequest(url) {
 }
 
 function isAppShellRequest(url) {
-  return url.pathname === '/' || url.pathname === '/index.html' || url.pathname === '/sw.js';
+  const path = url.pathname;
+  const baseNoSlash = BASE.replace(/\/$/, '');
+  if (path === baseNoSlash || path === BASE + 'index.html' || path.endsWith('/sw.js')) return true;
+  if (BASE === '/' && (path === '/' || path === '/index.html')) return true;
+  return false;
 }
 
 self.addEventListener('message', (event) => {
@@ -103,7 +114,9 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/index.html')))
+        .catch(() =>
+          caches.match(event.request).then((cached) => cached || caches.match(BASE + 'index.html'))
+        )
     );
     return;
   }
