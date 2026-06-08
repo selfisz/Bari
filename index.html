@@ -977,6 +977,7 @@
                         {id: 'pb1i3', text: '12:00 CHECK-IN: Domofon Liddi CUTRIGNELLI. Drugie piętro.', checked: false},
                         {id: 'pb1i4', text: 'Dać 21€ Katii i zapytać jak włączyć prąd!', checked: false},
                         {id: 'pb1siesta', text: '13:00–17:00 — <b>SIESTA</b>: Sklepy zamknięte. McDonald\'s i większość lokali — po 17:00 lub przed 13:00.', checked: false, siesta: true},
+                        {id: 'pb1kiko', text: '💄 <b>KIKO Milano — grawer laserowy</b> (Via Sparano 53). <b>TAK, robią!</b> Zwykle <b>~1€</b> (czasem 1–2€); <b>gratis</b> w programie <b>KIKO ME</b> przy zakupie od ~30€ (rejestracja darmowa w sklepie). <b>Jak poprosić — IT:</b> „<i>Posso avere un\'incisione laser su questo prodotto?</i>” · „<i>Vorrei incidere un nome, per favore</i>”. <b>EN:</b> „<i>Can I get a laser engraving on this product?</i>” · „<i>I\'d like to engrave a name, please</i>”. Rossetti, gloss, perfumy — max ok. 15 znaków. Godz.: pn–sb 9:00–20:30, nd 10:00–20:30 · tel. 080 573 9849. <b>Dojazd (~20 min pieszo):</b> Via Trevisani 236 → Corso Cavour → Via Sparano 53 (Murat, przy dworcu). Autobus AMTAB z Crisanzio (linie 03/16/19) w stronę centrum. <a href="https://maps.google.com/?q=Via+Trevisani+236+Bari+to+Via+Sparano+53+Bari" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-person-walking"></i> Trasa pieszo</a> <a href="https://maps.google.com/?q=KIKO+Milano+Via+Sparano+53+Bari" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-fuchsia-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> KIKO na mapie</a> <button type="button" onclick="event.stopPropagation();focusMapPoi(\'kiko-sparano\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Pinezka w apce</button>', checked: false},
                         {id: 'pb1i5', text: 'Popołudnie: McDonald\'s! Cel: <b>Crispy McBacon (senza cetrioli)</b>', checked: false}
                     ]
                 },
@@ -1096,6 +1097,7 @@
                 ensureSiestaItems();
                 ensureCheckinItems();
                 ensureMagnetItems();
+                ensureKikoPlanItem();
                 ensureMagnetShopItems();
                 ensureDay6ReturnPlan();
                 ensureDay6PlanRefresh();
@@ -1214,6 +1216,11 @@
         const MAGNET_ITEMS = {
             pb3: { id: 'pb3magnet', after: 'pb3siesta', text: '🧲 <b>Magnesy na pamiątkę!</b> Polignano i Monopoli — stragany przy plaży i w starym mieście.' },
             pb6: { id: 'pb6magnet', after: 'pb6checkout', text: '🧲 <b>Ostatnia szansa na magnesy!</b> Kup w Bari rano — przed wyjazdem na lotnisko.' }
+        };
+        const KIKO_PLAN_ITEM = {
+            id: 'pb1kiko',
+            after: 'pb1siesta',
+            text: '💄 <b>KIKO Milano — grawer laserowy</b> (Via Sparano 53). <b>TAK, robią!</b> Zwykle <b>~1€</b> (czasem 1–2€); <b>gratis</b> w programie <b>KIKO ME</b> przy zakupie od ~30€ (rejestracja darmowa w sklepie). <b>Jak poprosić — IT:</b> „<i>Posso avere un\'incisione laser su questo prodotto?</i>” · „<i>Vorrei incidere un nome, per favore</i>”. <b>EN:</b> „<i>Can I get a laser engraving on this product?</i>” · „<i>I\'d like to engrave a name, please</i>”. Rossetti, gloss, perfumy — max ok. 15 znaków. Godz.: pn–sb 9:00–20:30, nd 10:00–20:30 · tel. 080 573 9849. <b>Dojazd (~20 min pieszo):</b> Via Trevisani 236 → Corso Cavour → Via Sparano 53 (Murat, przy dworcu). Autobus AMTAB z Crisanzio (linie 03/16/19) w stronę centrum. <a href="https://maps.google.com/?q=Via+Trevisani+236+Bari+to+Via+Sparano+53+Bari" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-person-walking"></i> Trasa pieszo</a> <a href="https://maps.google.com/?q=KIKO+Milano+Via+Sparano+53+Bari" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-fuchsia-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> KIKO na mapie</a> <button type="button" onclick="event.stopPropagation();focusMapPoi(\'kiko-sparano\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Pinezka w apce</button>'
         };
         const TRIP_YEAR = 2026;
         const SIESTA_AFTER = { pb1: 'pb1i4', pb2: 'pb2checkin', pb3: 'pb3checkin', pb4: 'pb4i3', pb5: 'pb5checkin', pb6: 'pb6magnet' };
@@ -1345,6 +1352,21 @@
                 changed = true;
             });
             return changed;
+        }
+
+        function ensureKikoPlanItem() {
+            if (!state.planBari) return false;
+            const day = state.planBari.find(d => d.id === 'pb1');
+            if (!day) return false;
+            const existing = day.items.find(i => i.id === KIKO_PLAN_ITEM.id);
+            if (existing) {
+                if (existing.text === KIKO_PLAN_ITEM.text) return false;
+                existing.text = KIKO_PLAN_ITEM.text;
+                return true;
+            }
+            const idx = day.items.findIndex(i => i.id === KIKO_PLAN_ITEM.after) + 1;
+            day.items.splice(idx < 1 ? day.items.length : idx, 0, { id: KIKO_PLAN_ITEM.id, text: KIKO_PLAN_ITEM.text, checked: false });
+            return true;
         }
 
         function isMagnetReminderDay() {
@@ -1502,7 +1524,7 @@
             }
 
             if (!state.planDayMeta) ensurePlanDayMeta();
-            let migrated = ensureTempBag() || ensureBagSeedItems() || normalizeBagItems() || ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureMagnetShopItems() || ensureDay6ReturnPlan() || ensureDay6PlanRefresh() || ensurePlanDayMeta() || ensureCashStart() || ensureCustomMapPinColors();
+            let migrated = ensureTempBag() || ensureBagSeedItems() || normalizeBagItems() || ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureKikoPlanItem() || ensureMagnetShopItems() || ensureDay6ReturnPlan() || ensureDay6PlanRefresh() || ensurePlanDayMeta() || ensureCashStart() || ensureCustomMapPinColors();
             if (migrated) saveState();
             renderAll();
         }
@@ -3370,6 +3392,7 @@
             { id: 'fal', zone: 'bari', cat: 'transport', lat: 41.1175, lng: 16.8678, title: 'Stacja FAL (Matera)', desc: 'Osobny budynek po lewej od pl. Aldo Moro', icon: 'fa-train-tram', color: '#7c3aed' },
             { id: 'airport', zone: 'bari', cat: 'transport', lat: 41.1386, lng: 16.7606, title: 'Bari Aeroporto (stacja)', desc: 'Koniec FR2. Tunel ~300 m do terminala. Piętro 1 = odloty.', icon: 'fa-plane', color: '#0ea5e9' },
             { id: 'vecchia', zone: 'bari', cat: 'attraction', lat: 41.1278, lng: 16.8717, title: 'Bari Vecchia', desc: 'Stare Miasto — wejście od Zamku', icon: 'fa-landmark', color: '#d97706' },
+            { id: 'kiko-sparano', zone: 'bari', cat: 'attraction', lat: 41.12394, lng: 16.86965, title: 'KIKO Milano', desc: 'Via Sparano 53 — grawer laser ~1€ (gratis KIKO ME od 30€) · pn–sb 9–20:30 · tel. 080 573 9849', icon: 'fa-spray-can-sparkles', color: '#c026d3' },
             { id: 'alb-stazione', zone: 'alberobello', cat: 'transport', lat: 40.7853, lng: 17.2361, title: 'Stacja Alberobello', desc: 'Dworzec kolejowy — 15 min pieszo do trulli', icon: 'fa-train', color: '#dc2626' },
             { id: 'alb-santa-lucia', zone: 'alberobello', cat: 'attraction', lat: 40.7836, lng: 17.2378, title: 'Chiesa di Santa Lucia', desc: 'Punkt startowy spaceru — widok na miasto trulli', icon: 'fa-church', color: '#d97706' },
             { id: 'alb-rione-monti', zone: 'alberobello', cat: 'attraction', lat: 40.7865, lng: 17.2372, title: 'Rione Monti', desc: 'Główna dzielnica trulli — labirynt białych domków', icon: 'fa-house-chimney', color: '#ca8a04' },
@@ -4148,6 +4171,7 @@
                 marker.bindPopup(`
                     <p class="font-bold text-slate-800 mb-1">${poi.title}</p>
                     <p class="text-slate-600 text-xs mb-2">${poi.desc}</p>
+                    ${poi.id === 'kiko-sparano' ? '<p class="text-slate-600 text-xs mb-2 leading-snug"><b>Grawer IT:</b> „Posso avere un\'incisione laser su questo prodotto?” · <b>EN:</b> „Can I get a laser engraving on this product?” · ~1€ (gratis KIKO ME). Kup produkt, potem poproś przy kasie.</p>' : ''}
                     <a href="${mapsNavUrl(poi)}" target="_blank" class="inline-block bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Nawiguj <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                 `);
                 bariMapMarkers[poi.id] = marker;
