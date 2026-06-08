@@ -1,4 +1,4 @@
-const CACHE = 'bari-autopilot-v7';
+const CACHE = 'bari-autopilot-v8';
 const CDN_CACHE = 'bari-autopilot-cdn-v2';
 const SHELL = [
   '/',
@@ -36,6 +36,14 @@ const CDN_ORIGINS = [
 function isCdnRequest(url) {
   return CDN_ORIGINS.some((origin) => url.href.startsWith(origin));
 }
+
+function isAppShellRequest(url) {
+  return url.pathname === '/' || url.pathname === '/index.html' || url.pathname === '/sw.js';
+}
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -84,6 +92,21 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.origin !== self.location.origin) return;
+
+  if (event.request.mode === 'navigate' || isAppShellRequest(url)) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/index.html')))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
