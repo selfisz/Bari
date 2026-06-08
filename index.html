@@ -1514,10 +1514,13 @@
         }
         function generateId() { return Math.random().toString(36).substr(2, 9); }
         function addCustomItem(stateKey) {
+            const panelKey = sectionKeyForCustomItem(stateKey);
+            if (panelKey) ensureSectionPanelOpen(panelKey);
             openModal({
                 title: "Dodaj element", onConfirm: (val) => {
                     if(val && val.trim() !== '') {
                         state[stateKey].push({ id: generateId(), text: val.trim(), checked: false });
+                        if (panelKey) ensureSectionPanelOpen(panelKey);
                         saveState(); renderAll(); showToast("Dodano!");
                     }
                 }
@@ -1526,12 +1529,15 @@
         function addCustomNestedItem(stateKey, parentId) {
             const parent = state[stateKey].find(p => p.id === parentId);
             if(parent) {
+                const panelKey = sectionKeyForNestedItem(stateKey, parentId);
+                if (panelKey) ensureSectionPanelOpen(panelKey);
                 const isBag = (stateKey === 'bagsData');
                 openModal({
                     title: "Dodaj nowy element", showSecurity: isBag,
                     onConfirm: (val, isSec) => {
                         if(val && val.trim() !== '') {
                             parent.items.push({ id: generateId(), text: val.trim(), checked: false, sec: isSec });
+                            if (panelKey) ensureSectionPanelOpen(panelKey);
                             saveState(); renderAll(); showToast("Dodano!");
                         }
                     }
@@ -1594,6 +1600,25 @@
             const willOpen = body.classList.contains('hidden');
             setSectionPanelStored(key, willOpen);
             updateSectionPanelUI(key);
+        }
+
+        function ensureSectionPanelOpen(key) {
+            const body = document.getElementById('section-' + key + '-body');
+            if (!body || !body.classList.contains('hidden')) return;
+            setSectionPanelStored(key, true);
+            updateSectionPanelUI(key);
+        }
+
+        function sectionKeyForCustomItem(stateKey) {
+            if (stateKey === 'startBari') return 'start';
+            if (stateKey === 'shopData') return 'narzedzia-shop';
+            return null;
+        }
+
+        function sectionKeyForNestedItem(stateKey, parentId) {
+            if (stateKey === 'bagsData') return 'bag-' + parentId;
+            if (stateKey === 'planBari') return 'plan-' + parentId;
+            return null;
         }
 
         function initStaticSectionPanels() {
