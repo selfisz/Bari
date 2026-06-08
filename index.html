@@ -852,6 +852,7 @@
             targetDate: "2026-06-10T03:15",
             isReturnMode: false,
             splitExpenses: [],
+            removedBagSeedIds: [],
             startBari: [
                 {id: 's0', text: '<b>WAŻNE:</b> Wysłano zdjęcia dowodów i e-mail do Dario na WA!', checked: false},
                 {id: 's1', text: 'Uber na lotnisko (03:15)', checked: false},
@@ -1043,6 +1044,8 @@
                 if(parsed.journalEntries) state.journalEntries = parsed.journalEntries;
                 if(parsed.cashStart !== undefined) state.cashStart = parsed.cashStart;
                 if(parsed.planDayMeta) state.planDayMeta = parsed.planDayMeta;
+                if(parsed.removedBagSeedIds) state.removedBagSeedIds = parsed.removedBagSeedIds;
+                if (!state.removedBagSeedIds) state.removedBagSeedIds = [];
                 ensureSiestaItems();
                 ensureCheckinItems();
                 ensureMagnetItems();
@@ -1122,13 +1125,25 @@
             return changed;
         }
 
+        function isBagSeedItemId(itemId) {
+            return Object.values(BAG_SEED_ITEMS).some(seeds => seeds.some(s => s.id === itemId));
+        }
+
+        function markBagSeedRemoved(itemId) {
+            if (!isBagSeedItemId(itemId)) return;
+            if (!state.removedBagSeedIds) state.removedBagSeedIds = [];
+            if (!state.removedBagSeedIds.includes(itemId)) state.removedBagSeedIds.push(itemId);
+        }
+
         function ensureBagSeedItems() {
             if (!state.bagsData) return false;
+            if (!state.removedBagSeedIds) state.removedBagSeedIds = [];
             let changed = false;
             Object.entries(BAG_SEED_ITEMS).forEach(([bagId, seeds]) => {
                 const bag = state.bagsData.find(b => b.id === bagId);
                 if (!bag) return;
                 seeds.forEach(seed => {
+                    if (state.removedBagSeedIds.includes(seed.id)) return;
                     if (!bag.items.some(i => i.id === seed.id)) {
                         bag.items.push({ ...seed });
                         changed = true;
@@ -1602,7 +1617,7 @@
         }
 
         function renderAll() {
-            if (ensureTempBag() || ensureBagSeedItems() || normalizeBagItems()) saveState();
+            if (ensureTempBag() || normalizeBagItems()) saveState();
             renderChecklist('start-list-container', state.startBari, 'startBari');
             renderChecklist('shop-list-container', state.shopData, 'shopData');
 
@@ -1823,6 +1838,7 @@
                 if(parentId) {
                     const parent = state[stateKey].find(p => p.id === parentId);
                     parent.items = parent.items.filter(i => i.id !== itemId);
+                    if (stateKey === 'bagsData') markBagSeedRemoved(itemId);
                 } else { state[stateKey] = state[stateKey].filter(i => i.id !== itemId); }
                 saveState(); renderAll(); showToast("Usunięto!");
             });
