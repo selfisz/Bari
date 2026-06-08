@@ -332,7 +332,7 @@
             </div>
 
             <div class="bg-slate-100 border border-slate-200 rounded-xl p-3 mb-4 text-xs text-slate-700 leading-snug">
-                <i class="fa-solid fa-route text-bari-accent"></i> <b>Różne dni = różne miejsca.</b> Pogoda przy każdym dniu jest lokalna. <b>Mapa w Bazie</b> ma strefy: Bari, Alberobello, Polignano, Monopoli, Trani — przełącz nad mapą.
+                <i class="fa-solid fa-route text-bari-accent"></i> <b>Różne dni = różne miejsca.</b> Pogoda przy każdym dniu jest lokalna. <b>Mapa w Bazie</b> ma strefy m.in. Bari, Alberobello, Trani, Matera, Ostuni, Locorotondo — przełącz nad mapą.
             </div>
 
             <div id="plan-container" class="space-y-4"></div>
@@ -411,7 +411,7 @@
 
                     <div id="map-scope-notice" class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-2 text-[10px] text-blue-900 leading-snug">
                         <p class="font-bold mb-1"><i class="fa-solid fa-map text-blue-600"></i> Strefy na mapie</p>
-                        <p>Przystanki, atrakcje i lokale dla <b>Bari</b>, <b>Alberobello</b>, <b>Polignano</b>, <b>Monopoli</b> i <b>Trani</b>. Wybierz strefę poniżej — tipy Dario tylko w Bari.</p>
+                        <p>Przystanki, atrakcje i lokale + <b>tipy od Dario</b> dla każdej strefy (Bari, Alberobello, Polignano, Monopoli, Trani, Matera, Ostuni, Locorotondo).</p>
                     </div>
                     <div id="map-today-notice" class="hidden rounded-xl p-3 mb-3 text-[10px] font-bold leading-snug"></div>
 
@@ -2477,7 +2477,7 @@
             pb2: { label: 'Alberobello', mapZones: ['alberobello'], mapHint: 'Wyjazd z Bari Centrale · stacja, trulli i atrakcje na mapie Alberobello.' },
             pb3: { label: 'Polignano & Monopoli', mapZones: ['polignano', 'monopoli'], mapHint: 'Dwa miasta nad morze · przełącz strefę na mapie.' },
             pb4: { label: 'Bari Vecchia', mapZones: ['bari'], mapHint: 'Slow day w Bari · zielone tipy Dario i atrakcje na mapie.' },
-            pb5: { label: 'Trani lub Matera', mapZones: ['trani', 'bari'], mapHint: 'Trani na mapie · stacja FAL (Matera) w strefie Bari.' },
+            pb5: { label: 'Trani lub Matera', mapZones: ['trani', 'matera', 'bari'], mapHint: 'Trani i Matera na mapie · stacja FAL (start do Matery) w strefie Bari.' },
             pb6: { label: 'Bari → lotnisko', mapZones: ['bari'], mapHint: 'Powrót · Quintino Sella i lotnisko na mapie Bari.' }
         };
 
@@ -2486,7 +2486,10 @@
             alberobello: 'Alberobello',
             polignano: 'Polignano',
             monopoli: 'Monopoli',
-            trani: 'Trani'
+            trani: 'Trani',
+            matera: 'Matera',
+            ostuni: 'Ostuni',
+            locorotondo: 'Locorotondo'
         };
 
         function wmoToIcon(code) {
@@ -2867,7 +2870,10 @@
             alberobello: { id: 'alberobello', label: 'Alberobello', center: [40.7865, 17.2375], zoom: 16 },
             polignano: { id: 'polignano', label: 'Polignano', center: [40.996, 17.219], zoom: 15 },
             monopoli: { id: 'monopoli', label: 'Monopoli', center: [40.949, 17.298], zoom: 15 },
-            trani: { id: 'trani', label: 'Trani', center: [41.227, 16.607], zoom: 15 }
+            trani: { id: 'trani', label: 'Trani', center: [41.227, 16.607], zoom: 15 },
+            matera: { id: 'matera', label: 'Matera', center: [40.667, 16.604], zoom: 15 },
+            ostuni: { id: 'ostuni', label: 'Ostuni', center: [40.734, 17.577], zoom: 15 },
+            locorotondo: { id: 'locorotondo', label: 'Locorotondo', center: [40.753, 17.329], zoom: 16 }
         };
 
         const TRIP_MAP_POIS = [
@@ -2890,7 +2896,11 @@
             { id: 'mon-centro', zone: 'monopoli', cat: 'attraction', lat: 40.9493, lng: 17.2980, title: 'Centro storico', desc: 'Białe uliczki, katedra, mury miejskie', icon: 'fa-landmark', color: '#d97706' },
             { id: 'tra-stazione', zone: 'trani', cat: 'transport', lat: 41.2257, lng: 16.6075, title: 'Stacja Trani', desc: 'Dworzec — katedra nad morzem ~12 min pieszo', icon: 'fa-train', color: '#dc2626' },
             { id: 'tra-cattedrale', zone: 'trani', cat: 'attraction', lat: 41.2271, lng: 16.6068, title: 'Cattedrale di Trani', desc: 'Katedra św. Mikołaja — na klifie nad morzem', icon: 'fa-church', color: '#d97706' },
-            { id: 'tra-porto', zone: 'trani', cat: 'attraction', lat: 41.2278, lng: 16.6045, title: 'Porto & lungomare', desc: 'Port rybacki i promenada nad Adriatykiem', icon: 'fa-anchor', color: '#0284c7' }
+            { id: 'tra-porto', zone: 'trani', cat: 'attraction', lat: 41.2278, lng: 16.6045, title: 'Porto & lungomare', desc: 'Port rybacki i promenada nad Adriatykiem', icon: 'fa-anchor', color: '#0284c7' },
+            { id: 'mat-stazione', zone: 'matera', cat: 'transport', lat: 40.6696, lng: 16.6018, title: 'Matera Centrale (FAL)', desc: 'Stacja FAL — pociąg/autobus z Bari (~90 min)', icon: 'fa-train-tram', color: '#7c3aed' },
+            { id: 'mat-sassi', zone: 'matera', cat: 'attraction', lat: 40.6663, lng: 16.6100, title: 'Sassi di Matera', desc: 'Miasto w skałach — uwaga na schody!', icon: 'fa-mountain-city', color: '#d97706' },
+            { id: 'ost-centro', zone: 'ostuni', cat: 'attraction', lat: 40.7340, lng: 17.5772, title: 'Centro storico Ostuni', desc: '„Città Bianca” — białe miasto na wzgórzu', icon: 'fa-landmark', color: '#64748b' },
+            { id: 'loco-centro', zone: 'locorotondo', cat: 'attraction', lat: 40.7532, lng: 17.3285, title: 'Centro storico Locorotondo', desc: 'Okrągłe historyczne centrum — Valle d\'Itria', icon: 'fa-landmark', color: '#d97706' }
         ];
 
         let activeMapZone = (() => {
@@ -2935,7 +2945,7 @@
             DARIO_TIPS.forEach(tip => {
                 const m = bariMapDarioMarkers[tip.id];
                 if (!m) return;
-                if (activeMapZone === 'bari') { if (!bariMap.hasLayer(m)) m.addTo(bariMap); }
+                if ((tip.zone || 'bari') === activeMapZone) { if (!bariMap.hasLayer(m)) m.addTo(bariMap); }
                 else { if (bariMap.hasLayer(m)) bariMap.removeLayer(m); }
             });
             (state.foodSpots || []).forEach(spot => {
@@ -3011,7 +3021,12 @@
             { id: 'dario-tana-polpo', lat: 41.12972, lng: 16.87341, title: 'La Tana del Polpo', address: 'Strada Vallisa 50/51, Bari Vecchia', desc: 'Trattoria z owocami morza — świeże ryby i dania morskie. Tel. 080 975 3338.', icon: 'fa-fish', cat: 'food' },
             { id: 'dario-arpie', lat: 41.12801, lng: 16.87038, title: 'Arpie', address: 'Vico Arco del Carmine 2, Bari Vecchia', desc: 'Orecchiette con la braciola — tradycyjne danie niedzielne w Bari (włoskie niedziele!). Warto zamówić to, co jedzą miejscowi.', icon: 'fa-bowl-food', cat: 'food' },
             { id: 'dario-santa-rita', lat: 41.12762, lng: 16.87258, title: 'Panificio Santa Rita', address: 'Strada dei Dottula 8, Bari Vecchia', desc: 'Focaccia barese — kultowy street food Bari, w każdej piekarni za grosze. Tu jedna z najlepszych. Tel. 346 616 9152.', icon: 'fa-bread-slice', cat: 'food' },
-            { id: 'dario-zaza', lat: 41.12745, lng: 16.86985, title: 'Zazà', address: 'Via Martínez 9, Bari Vecchia', desc: 'Orecchiette i street food — rodzinna pizzeria/rosticceria przy katedrze. Panzerotti i orecchiette na wynos.', icon: 'fa-utensils', cat: 'food' }
+            { id: 'dario-zaza', zone: 'bari', lat: 41.12745, lng: 16.86985, title: 'Zazà', address: 'Via Martínez 9, Bari Vecchia', desc: 'Orecchiette i street food — rodzinna pizzeria/rosticceria przy katedrze. Panzerotti i orecchiette na wynos.', icon: 'fa-utensils', cat: 'food' },
+            { id: 'dario-trani', zone: 'trani', lat: 41.2257, lng: 16.6075, title: 'Trani', address: 'Stazione · Trenitalia z Bari Centrale', desc: 'Tip od Dario: dojazd pociągiem, piękne miasto nad morzem — katedra na klifie, port i spokojny relaks.', icon: 'fa-train', cat: 'destination' },
+            { id: 'dario-matera', zone: 'matera', lat: 40.6663, lng: 16.6100, title: 'Matera', address: 'Sassi di Matera · FAL z Bari', desc: 'Tip od Dario: dojazd autobusem/pociągiem FAL ze stacji FAL w Bari. Miasto w skałach — uwaga na schody!', icon: 'fa-mountain-city', cat: 'destination' },
+            { id: 'dario-ostuni', zone: 'ostuni', lat: 40.7340, lng: 17.5772, title: 'Ostuni', address: 'Centro storico, Città Bianca', desc: 'Tip od Dario: przepiękne białe miasto na wzgórzu — jedno z najpiękniejszych w Apulii.', icon: 'fa-sun', cat: 'destination' },
+            { id: 'dario-locorotondo', zone: 'locorotondo', lat: 40.7532, lng: 17.3285, title: 'Locorotondo', address: 'Centro storico, Valle d\'Itria', desc: 'Tip od Dario: przepiękne okrągłe miasteczko — białe domki, wąskie uliczki, widoki na dolinę.', icon: 'fa-circle', cat: 'destination' },
+            { id: 'dario-bufano', zone: 'locorotondo', lat: 40.7522, lng: 17.3306, title: 'Bufano Sirose Wine', address: 'Via Nardelli, Locorotondo', desc: 'Obowiązkowy przystanek na wino — winnica Bufano, degustacja w terrazzamenti nad miastem. Instagram: @bufano_sirose', icon: 'fa-wine-glass', cat: 'food' }
         ];
 
         const CUSTOM_PIN_COLOR = '#6366f1';
@@ -3307,8 +3322,10 @@
                 </button>
             `;
 
-            const darioAttractions = DARIO_TIPS.filter(t => t.cat === 'attraction');
-            const darioFood = DARIO_TIPS.filter(t => t.cat === 'food');
+            const darioZoneTips = DARIO_TIPS.filter(t => (t.zone || 'bari') === activeMapZone);
+            const darioDestinations = darioZoneTips.filter(t => t.cat === 'destination');
+            const darioAttractions = darioZoneTips.filter(t => t.cat === 'attraction');
+            const darioFood = darioZoneTips.filter(t => t.cat === 'food');
             const darioTipRow = (tip) => `
                 <button type="button" onclick="focusDarioTip('${tip.id}')" class="w-full flex items-center gap-3 bg-green-50 border border-green-200 p-2.5 rounded-lg text-left active:scale-[0.98] transition-transform hover:bg-green-100">
                     <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm" style="background:${DARIO_TIP_COLOR}22;color:${DARIO_TIP_COLOR};border:2px solid ${DARIO_TIP_COLOR}">
@@ -3322,11 +3339,10 @@
                     <i class="fa-solid fa-location-arrow text-green-600 ml-auto shrink-0 text-xs"></i>
                 </button>
             `;
-            const darioHtml = activeMapZone === 'bari' ? `
-                <p class="text-[10px] uppercase font-bold text-green-700 pt-3 pb-1 flex items-center gap-1"><i class="fa-solid fa-star"></i> Tip od Dario 🇮🇹 — atrakcje</p>
-                ${darioAttractions.map(darioTipRow).join('')}
-                <p class="text-[10px] uppercase font-bold text-green-700 pt-3 pb-1">Tip od Dario 🇮🇹 — jedzenie</p>
-                ${darioFood.map(darioTipRow).join('')}
+            const darioHtml = darioZoneTips.length ? `
+                ${darioDestinations.length ? `<p class="text-[10px] uppercase font-bold text-green-700 pt-3 pb-1 flex items-center gap-1"><i class="fa-solid fa-star"></i> Tip od Dario 🇮🇹 — destynacje</p>${darioDestinations.map(darioTipRow).join('')}` : ''}
+                ${darioAttractions.length ? `<p class="text-[10px] uppercase font-bold text-green-700 pt-3 pb-1 flex items-center gap-1"><i class="fa-solid fa-star"></i> Tip od Dario 🇮🇹 — atrakcje</p>${darioAttractions.map(darioTipRow).join('')}` : ''}
+                ${darioFood.length ? `<p class="text-[10px] uppercase font-bold text-green-700 pt-3 pb-1">Tip od Dario 🇮🇹 — jedzenie & wino</p>${darioFood.map(darioTipRow).join('')}` : ''}
             ` : '';
 
             const builtinHtml = `
@@ -3382,7 +3398,7 @@
                 const marker = L.marker([tip.lat, tip.lng], { icon: createDarioTipMarkerIcon(tip), zIndexOffset: 200 });
                 marker.bindPopup(buildDarioTipPopup(tip));
                 bariMapDarioMarkers[tip.id] = marker;
-                if (activeMapZone === 'bari') marker.addTo(bariMap);
+                if ((tip.zone || 'bari') === activeMapZone) marker.addTo(bariMap);
             });
         }
 
@@ -3394,7 +3410,7 @@
             } else {
                 initBariMap();
             }
-            setMapZone('bari', false);
+            setMapZone(tip.zone || 'bari', false);
             const tip = DARIO_TIPS.find(t => t.id === tipId);
             const marker = bariMapDarioMarkers[tipId];
             if (!tip || !marker || !bariMap) return;
