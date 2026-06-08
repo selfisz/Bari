@@ -675,27 +675,56 @@
                 <a href="tel:+390636204200" class="block w-full bg-slate-50 border border-slate-200 py-2.5 rounded-xl text-sm font-bold text-slate-700 text-center mb-3 active:scale-95">
                     <i class="fa-solid fa-landmark"></i> Ambasada RP (Rzym): +39 06 36204200
                 </a>
-                <div class="space-y-2 mb-3">
-                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 flex justify-between items-center cursor-pointer hover:bg-blue-100" onclick="editInline('ekuz_dawid', 'EKUZ Dawid')">
+                <div class="space-y-2 mb-3 mt-3">
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 flex justify-between items-center cursor-pointer hover:bg-blue-100" onclick="editInline('ekuz_dawid', 'EKUZ Dawid — nr karty')">
                         <div>
                             <p class="text-[10px] uppercase text-blue-600 font-bold">EKUZ — Dawid</p>
-                            <p class="font-mono font-bold text-sm" id="ekuz_dawid">_Wpisz numer_</p>
+                            <p class="font-mono font-bold text-sm break-all" id="ekuz_dawid">80616000060054226357</p>
+                            <p class="text-[9px] text-blue-500 mt-0.5">Ważna do 31.07.2028</p>
                         </div>
-                        <i class="fa-solid fa-pen text-slate-300"></i>
+                        <i class="fa-solid fa-pen text-slate-300 shrink-0 ml-2"></i>
                     </div>
-                    <div class="bg-pink-50 p-3 rounded-lg border border-pink-100 flex justify-between items-center cursor-pointer hover:bg-pink-100" onclick="editInline('ekuz_gosia', 'EKUZ Gosia')">
+                    <div class="bg-pink-50 p-3 rounded-lg border border-pink-100 flex justify-between items-center cursor-pointer hover:bg-pink-100" onclick="editInline('ekuz_gosia', 'EKUZ Gosia — nr karty')">
                         <div>
                             <p class="text-[10px] uppercase text-pink-600 font-bold">EKUZ — Gosia</p>
-                            <p class="font-mono font-bold text-sm" id="ekuz_gosia">_Wpisz numer_</p>
+                            <p class="font-mono font-bold text-sm break-all" id="ekuz_gosia">80616000060050923017</p>
+                            <p class="text-[9px] text-pink-500 mt-0.5">Ważna do 27.09.2027</p>
                         </div>
-                        <i class="fa-solid fa-pen text-slate-300"></i>
+                        <i class="fa-solid fa-pen text-slate-300 shrink-0 ml-2"></i>
                     </div>
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex justify-between items-center cursor-pointer hover:bg-yellow-50" onclick="editInline('awaria_polisa', 'Numer polisy turystycznej')">
-                        <div>
-                            <p class="text-[10px] uppercase text-slate-500 font-bold">Polisa turystyczna</p>
-                            <p class="font-mono font-bold text-sm" id="awaria_polisa">_Wpisz numer polisy_</p>
+
+                    <!-- Polisa UNIQA (zwijana) -->
+                    <div class="rounded-xl border border-emerald-200 bg-emerald-50/50 shadow-sm overflow-hidden">
+                        <button type="button" onclick="toggleSectionPanel('awaria-polisa')" class="w-full p-3 flex items-center justify-between text-left active:bg-emerald-100/60 transition-colors">
+                            <div class="min-w-0">
+                                <p class="text-[10px] uppercase text-emerald-700 font-bold"><i class="fa-solid fa-shield-heart"></i> Polisa UNIQA</p>
+                                <p class="font-mono font-bold text-sm text-slate-800 break-all" id="awaria_polisa">MUBI/03627396</p>
+                            </div>
+                            <i id="section-awaria-polisa-chevron" class="fa-solid fa-chevron-down text-emerald-400 transition-transform duration-200 shrink-0 ml-2"></i>
+                        </button>
+                        <div id="section-awaria-polisa-body" class="hidden px-3 pb-3 border-t border-emerald-200">
+                            <button type="button" onclick="editInline('awaria_polisa', 'Numer polisy turystycznej')" class="w-full mt-2 text-[10px] text-emerald-700 font-bold py-1.5 rounded-lg border border-dashed border-emerald-300 active:bg-emerald-100"><i class="fa-solid fa-pen"></i> Edytuj numer polisy</button>
+                            <p class="text-[10px] text-emerald-800 mt-2 mb-2 leading-snug">10.06–16.06.2026 · Europa · wariant Podstawowy · 77 PLN</p>
+                            <a href="tel:+48225999185" class="block w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-bold text-center mb-3 active:scale-95 shadow-sm">
+                                <i class="fa-solid fa-phone"></i> UNIQA Pomoc 24h: +48 22 599 91 85
+                            </a>
+                            <a href="sms:+48661001601" class="block w-full bg-white border border-emerald-300 text-emerald-800 py-2 rounded-xl text-xs font-bold text-center mb-3 active:scale-95">
+                                <i class="fa-solid fa-comment-sms"></i> SMS: +48 661 001 601
+                            </a>
+                            <img src="/assets/polisa-uniqa-1.png" alt="Polisa UNIQA strona 1" class="w-full rounded-xl border border-emerald-200 shadow-sm mb-2" loading="lazy">
+                            <img src="/assets/polisa-uniqa-2.png" alt="Polisa UNIQA strona 2" class="w-full rounded-xl border border-emerald-200 shadow-sm" loading="lazy">
                         </div>
-                        <i class="fa-solid fa-pen text-slate-300"></i>
+                    </div>
+
+                    <!-- Zdjęcia EKUZ (zwijane) -->
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 shadow-sm overflow-hidden">
+                        <button type="button" onclick="toggleSectionPanel('awaria-ekuz-img')" class="w-full p-3 flex items-center justify-between text-left active:bg-slate-100 transition-colors">
+                            <p class="font-bold text-sm text-slate-700"><i class="fa-solid fa-id-card text-blue-500"></i> Zdjęcia kart EKUZ</p>
+                            <i id="section-awaria-ekuz-img-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200 shrink-0 ml-2"></i>
+                        </button>
+                        <div id="section-awaria-ekuz-img-body" class="hidden px-3 pb-3 border-t border-slate-200">
+                            <img src="/assets/ekuz-karty.png" alt="Karty EKUZ Dawid i Gosia" class="w-full rounded-xl border border-slate-200 shadow-sm mt-2" loading="lazy">
+                        </div>
                     </div>
                 </div>
                 </div>
@@ -1250,6 +1279,8 @@
             inlineFields.transport_bus = (serverData && serverData.transport_bus !== undefined) ? serverData.transport_bus : (localStorage.getItem('bariApp_transport_bus') || 'Via Trevisani ↔ Centrum — wpisz numery linii');
             inlineFields.awaria_polisa = (serverData && serverData.awaria_polisa !== undefined) ? serverData.awaria_polisa : (localStorage.getItem('bariApp_awaria_polisa') || '');
 
+            ensureInsuranceDefaults();
+
             liveLocations.dawid = parseLiveLocation((serverData && serverData.loc_dawid) || localStorage.getItem('bariApp_loc_dawid'));
             liveLocations.gosia = parseLiveLocation((serverData && serverData.loc_gosia) || localStorage.getItem('bariApp_loc_gosia'));
             myLiveUser = localStorage.getItem('bariApp_live_user') || '';
@@ -1651,6 +1682,8 @@
                 ['narzedzia-food', false],
                 ['narzedzia-calc', false],
                 ['narzedzia-awaria', false],
+                ['awaria-polisa', false],
+                ['awaria-ekuz-img', false],
                 ['narzedzia-shop', false],
             ].forEach(([key, def]) => initSectionPanel(key, def));
         }
@@ -2014,6 +2047,24 @@
         }
 
         /* --- PRZYPOMNIENIA --- */
+        const INSURANCE_DEFAULTS = {
+            ekuz_dawid: '80616000060054226357',
+            ekuz_gosia: '80616000060050923017',
+            awaria_polisa: 'MUBI/03627396'
+        };
+
+        function ensureInsuranceDefaults() {
+            let changed = false;
+            Object.entries(INSURANCE_DEFAULTS).forEach(([key, val]) => {
+                if (inlineFields[key]) return;
+                inlineFields[key] = val;
+                try { localStorage.setItem('bariApp_' + key, val); } catch (e) {}
+                syncToServer(key, val);
+                changed = true;
+            });
+            return changed;
+        }
+
         function updateMagnetAlert() {
             const el = document.getElementById('magnet-alert');
             if (!el) return;

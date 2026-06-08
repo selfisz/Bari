@@ -1,4 +1,4 @@
-const CACHE = 'bari-autopilot-v2';
+const CACHE = 'bari-autopilot-v3';
 const CDN_CACHE = 'bari-autopilot-cdn-v2';
 const SHELL = [
   '/',
@@ -6,7 +6,10 @@ const SHELL = [
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png'
+  '/icons/apple-touch-icon.png',
+  '/assets/polisa-uniqa-1.png',
+  '/assets/polisa-uniqa-2.png',
+  '/assets/ekuz-karty.png'
 ];
 
 const CDN_ASSETS = [
