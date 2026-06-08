@@ -1414,6 +1414,7 @@
             renderCashWallet();
             renderFoodSpots();
             renderFoodMapMarkers();
+            renderDarioTips();
             renderLiveLocationMarkers();
             renderJournal();
             updateLiveShareUI();
@@ -2299,9 +2300,24 @@
             { id: 'centrale', lat: 41.1176, lng: 16.8698, title: 'Bari Centrale', desc: 'Główny dworzec — pociągi nad morze', icon: 'fa-train', color: '#dc2626' },
             { id: 'fal', lat: 41.1175, lng: 16.8678, title: 'Stacja FAL (Matera)', desc: 'Osobny budynek po lewej od pl. Aldo Moro', icon: 'fa-train-tram', color: '#7c3aed' },
             { id: 'airport', lat: 41.1386, lng: 16.7606, title: 'Bari Aeroporto (stacja)', desc: 'Koniec FR2. Tunel ~300 m do terminala. Piętro 1 = odloty.', icon: 'fa-plane', color: '#0ea5e9' },
-            { id: 'vecchia', lat: 41.1278, lng: 16.8717, title: 'Bari Vecchia', desc: 'Stare Miasto — wejście od Zamku', icon: 'fa-landmark', color: '#d97706' },
-            { id: 'nicola', lat: 41.1308, lng: 16.8711, title: 'Basilica San Nicola', desc: 'Dzień 4 — spacer po Starym Mieście', icon: 'fa-church', color: '#059669' },
-            { id: 'pasta', lat: 41.1289, lng: 16.8720, title: 'Via dell\'Arco Basso', desc: '"Ulica Makaronu" — orecchiette', icon: 'fa-utensils', color: '#ea580c' }
+            { id: 'vecchia', lat: 41.1278, lng: 16.8717, title: 'Bari Vecchia', desc: 'Stare Miasto — wejście od Zamku', icon: 'fa-landmark', color: '#d97706' }
+        ];
+
+        const DARIO_TIP_COLOR = '#22c55e';
+        const DARIO_TIPS = [
+            { id: 'dario-nicola', lat: 41.13056, lng: 16.87056, title: 'Basilica di San Nicola', address: 'Largo Abate Elia, Bari Vecchia', desc: 'Bazylika św. Mikołaja — patrona Bari. Jedna z najważniejszych świątyń w Apulii, miejsce kultu i pielgrzymek.', icon: 'fa-church', cat: 'attraction' },
+            { id: 'dario-cattedrale', lat: 41.12778, lng: 16.86972, title: 'Cattedrale di Bari', address: 'Piazza dell\'Odegitria, Bari Vecchia', desc: 'Katedra św. Sabinusa z podziemnym muzeum — mozaiki bizantyjskie i warstwy historii pod poziomem ulicy.', icon: 'fa-church', cat: 'attraction' },
+            { id: 'dario-pinacoteca', lat: 41.12425, lng: 16.86835, title: 'Pinacoteca di Bari', address: 'Largo Nino Lavermicocca / Lungomare Imperatore Augusto', desc: 'Pinakoteka „Corrado Giaquinto” — malarstwo apulijskie i włoskie. Bilet łączony z Museo Santa Scolastica.', icon: 'fa-palette', cat: 'attraction' },
+            { id: 'dario-scolastica', lat: 41.11972, lng: 16.87611, title: 'Museo di Santa Scolastica', address: 'Via Venezia 73, Bari Vecchia', desc: 'Muzeum archeologiczne w dawnym klasztorze benedyktyńskim — od prehistorii po XIX w. Spacer w czasie pod Starym Miastem.', icon: 'fa-landmark', cat: 'attraction' },
+            { id: 'dario-castello', lat: 41.12694, lng: 16.86861, title: 'Castello Svevo', address: 'Piazza Federico II di Svevia', desc: 'Średniowieczny zamek Hohenstaufów przy wejściu do Bari Vecchia — widoki i wystawy.', icon: 'fa-chess-rook', cat: 'attraction' },
+            { id: 'dario-albicocca', lat: 41.12839, lng: 16.87197, title: 'Largo Albicocca', address: 'Largo Albicocca, Bari Vecchia', desc: '„Plac Zakochanych” — legenda o morelach (albicocche). Kameralny plac w labiryncie Starego Miasta.', icon: 'fa-heart', cat: 'attraction' },
+            { id: 'dario-orecchiette', lat: 41.12886, lng: 16.87218, title: 'Via delle Orecchiette', address: 'Strada Arco Basso, Bari Vecchia', desc: 'Słynna „ulica makaronu” — panie robią orecchiette ręcznie przy stołach. Najlepiej rano (8:00–12:00), nie w niedzielę.', icon: 'fa-utensils', cat: 'attraction' },
+            { id: 'dario-donna-carmela', lat: 41.12842, lng: 16.87188, title: 'Donna Carmela', address: 'Largo Albicocca, Bari Vecchia', desc: 'Street food od Dario: popizze, sgagliozze, orecchiette con le cime di rape. Lokalna kuchnia w zaułku Starego Miasta.', icon: 'fa-burger', cat: 'food' },
+            { id: 'dario-di-cosimo', lat: 41.12848, lng: 16.87202, title: 'Pizzeria Di Cosimo', address: 'Largo Albicocca 19, Bari Vecchia', desc: 'Pizzeria przy Placu Zakochanych. Tel. 080 521 8740.', icon: 'fa-pizza-slice', cat: 'food' },
+            { id: 'dario-tana-polpo', lat: 41.12972, lng: 16.87341, title: 'La Tana del Polpo', address: 'Strada Vallisa 50/51, Bari Vecchia', desc: 'Trattoria z owocami morza — świeże ryby i dania morskie. Tel. 080 975 3338.', icon: 'fa-fish', cat: 'food' },
+            { id: 'dario-arpie', lat: 41.12801, lng: 16.87038, title: 'Arpie', address: 'Vico Arco del Carmine 2, Bari Vecchia', desc: 'Orecchiette con la braciola — tradycyjne danie niedzielne w Bari (włoskie niedziele!). Warto zamówić to, co jedzą miejscowi.', icon: 'fa-bowl-food', cat: 'food' },
+            { id: 'dario-santa-rita', lat: 41.12762, lng: 16.87258, title: 'Panificio Santa Rita', address: 'Strada dei Dottula 8, Bari Vecchia', desc: 'Focaccia barese — kultowy street food Bari, w każdej piekarni za grosze. Tu jedna z najlepszych. Tel. 346 616 9152.', icon: 'fa-bread-slice', cat: 'food' },
+            { id: 'dario-zaza', lat: 41.12745, lng: 16.86985, title: 'Zazà', address: 'Via Martínez 9, Bari Vecchia', desc: 'Orecchiette i street food — rodzinna pizzeria/rosticceria przy katedrze. Panzerotti i orecchiette na wynos.', icon: 'fa-utensils', cat: 'food' }
         ];
 
         const CUSTOM_PIN_COLOR = '#6366f1';
@@ -2315,6 +2331,7 @@
         let bariMapMarkers = {};
         let bariMapCustomMarkers = {};
         let bariMapFoodMarkers = {};
+        let bariMapDarioMarkers = {};
         let bariMapLiveMarkers = {};
         let mapAddPinMode = false;
         let foodMapPickMode = false;
@@ -2347,6 +2364,26 @@
                 iconAnchor: [17, 34],
                 popupAnchor: [0, -34]
             });
+        }
+
+        function createDarioTipMarkerIcon(tip) {
+            return L.divIcon({
+                className: '',
+                html: `<div class="bari-map-marker" style="border-color:${DARIO_TIP_COLOR};color:${DARIO_TIP_COLOR};background:#f0fdf4"><i class="fa-solid ${tip.icon}"></i></div>`,
+                iconSize: [34, 34],
+                iconAnchor: [17, 17],
+                popupAnchor: [0, -18]
+            });
+        }
+
+        function buildDarioTipPopup(tip) {
+            return `
+                <p class="text-[10px] font-bold text-green-600 uppercase mb-1">Tip od Dario 🇮🇹</p>
+                <p class="font-bold text-slate-800 mb-1">${escapeHtml(tip.title)}</p>
+                <p class="text-slate-500 text-xs mb-1"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(tip.address)}</p>
+                <p class="text-slate-600 text-xs mb-2 leading-snug">${escapeHtml(tip.desc)}</p>
+                <a href="${mapsNavUrl(tip)}" target="_blank" class="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Nawiguj <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            `;
         }
 
         function mapsNavUrl(poi) {
@@ -2557,6 +2594,28 @@
             const legend = document.getElementById('bari-map-legend');
             if (!legend) return;
 
+            const darioAttractions = DARIO_TIPS.filter(t => t.cat === 'attraction');
+            const darioFood = DARIO_TIPS.filter(t => t.cat === 'food');
+            const darioTipRow = (tip) => `
+                <button type="button" onclick="focusDarioTip('${tip.id}')" class="w-full flex items-center gap-3 bg-green-50 border border-green-200 p-2.5 rounded-lg text-left active:scale-[0.98] transition-transform hover:bg-green-100">
+                    <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm" style="background:${DARIO_TIP_COLOR}22;color:${DARIO_TIP_COLOR};border:2px solid ${DARIO_TIP_COLOR}">
+                        <i class="fa-solid ${tip.icon} text-xs"></i>
+                    </span>
+                    <span class="min-w-0">
+                        <span class="block text-[9px] font-bold text-green-700 uppercase">Tip od Dario 🇮🇹</span>
+                        <span class="block text-sm font-bold text-slate-800 truncate">${escapeHtml(tip.title)}</span>
+                        <span class="block text-[10px] text-slate-500 truncate">${escapeHtml(tip.address)}</span>
+                    </span>
+                    <i class="fa-solid fa-location-arrow text-green-600 ml-auto shrink-0 text-xs"></i>
+                </button>
+            `;
+            const darioHtml = `
+                <p class="text-[10px] uppercase font-bold text-green-700 pt-3 pb-1 flex items-center gap-1"><i class="fa-solid fa-star"></i> Tip od Dario 🇮🇹 — atrakcje</p>
+                ${darioAttractions.map(darioTipRow).join('')}
+                <p class="text-[10px] uppercase font-bold text-green-700 pt-3 pb-1">Tip od Dario 🇮🇹 — jedzenie</p>
+                ${darioFood.map(darioTipRow).join('')}
+            `;
+
             const builtinHtml = BARI_MAP_POIS.map(poi => `
                 <button type="button" onclick="focusMapPoi('${poi.id}')" class="w-full flex items-center gap-3 bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-left active:scale-[0.98] transition-transform hover:bg-blue-50">
                     <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm" style="background:${poi.color}20;color:${poi.color};border:2px solid ${poi.color}">
@@ -2606,7 +2665,33 @@
                 `).join('')}
             ` : '';
 
-            legend.innerHTML = builtinHtml + foodHtml + customHtml;
+            legend.innerHTML = builtinHtml + darioHtml + foodHtml + customHtml;
+        }
+
+        function renderDarioTips() {
+            if (!bariMap) return;
+            Object.values(bariMapDarioMarkers).forEach(m => bariMap.removeLayer(m));
+            bariMapDarioMarkers = {};
+            DARIO_TIPS.forEach(tip => {
+                const marker = L.marker([tip.lat, tip.lng], { icon: createDarioTipMarkerIcon(tip), zIndexOffset: 200 }).addTo(bariMap);
+                marker.bindPopup(buildDarioTipPopup(tip));
+                bariMapDarioMarkers[tip.id] = marker;
+            });
+        }
+
+        function focusDarioTip(tipId) {
+            if (!bazaMapPanelOpen) {
+                bazaMapPanelOpen = true;
+                updateBazaMapPanelUI();
+                try { localStorage.setItem('bariApp_baza_map_panel_open', '1'); } catch(e) {}
+            } else {
+                initBariMap();
+            }
+            const tip = DARIO_TIPS.find(t => t.id === tipId);
+            const marker = bariMapDarioMarkers[tipId];
+            if (!tip || !marker || !bariMap) return;
+            bariMap.flyTo([tip.lat, tip.lng], 17, { duration: 0.6 });
+            setTimeout(() => marker.openPopup(), 400);
         }
 
         function renderCustomMapPins() {
@@ -2757,6 +2842,7 @@
 
             renderCustomMapPins();
             renderFoodMapMarkers();
+            renderDarioTips();
             renderLiveLocationMarkers();
             renderBariMapLegend();
             setTimeout(() => bariMap.invalidateSize(), 100);
