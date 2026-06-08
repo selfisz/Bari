@@ -132,7 +132,7 @@
     </div>
 
     <!-- FLOATING: mapa + słownik -->
-    <button type="button" onclick="openMapShortcut()" class="fixed bottom-24 right-[5.25rem] bg-blue-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-2xl z-[60] active:scale-90 transition-transform border-4 border-white" title="Mapa Bari">
+    <button type="button" onclick="openMapShortcut()" class="fixed bottom-24 right-[5.25rem] bg-blue-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-2xl z-[60] active:scale-90 transition-transform border-4 border-white" title="Mapa wycieczek">
         <i class="fa-solid fa-map-location-dot"></i>
     </button>
     <button type="button" onclick="togglePhrasebook(true)" class="fixed bottom-24 right-4 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-2xl z-[60] active:scale-90 transition-transform border-4 border-white" title="Słownik & Tłumacz">
@@ -332,7 +332,7 @@
             </div>
 
             <div class="bg-slate-100 border border-slate-200 rounded-xl p-3 mb-4 text-xs text-slate-700 leading-snug">
-                <i class="fa-solid fa-route text-bari-accent"></i> <b>Różne dni = różne miejsca.</b> Pogoda przy każdym dniu jest lokalna (Bari, Alberobello, Polignano…). <b>Mapa w Bazie</b> i pinezki (Dario, dworce) dotyczą <b>tylko Bari</b> — nie dzisiejszej wycieczki poza miastem.
+                <i class="fa-solid fa-route text-bari-accent"></i> <b>Różne dni = różne miejsca.</b> Pogoda przy każdym dniu jest lokalna. <b>Mapa w Bazie</b> ma strefy: Bari, Alberobello, Polignano, Monopoli, Trani — przełącz nad mapą.
             </div>
 
             <div id="plan-container" class="space-y-4"></div>
@@ -382,12 +382,11 @@
 
 
 
-            <!-- Interaktywna mapa Bari -->
+            <!-- Interaktywna mapa wycieczek -->
             <div id="baza-map-section" class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
                 <button type="button" onclick="toggleBazaMapPanel()" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
                     <h3 class="font-bold text-bari-primary flex items-center gap-2">
-                        <i class="fa-solid fa-map-location-dot text-blue-500"></i> Mapa Bari
-                        <span class="text-[9px] font-normal text-slate-400 normal-case">(tylko miasto)</span>
+                        <i class="fa-solid fa-map-location-dot text-blue-500"></i> Mapa wycieczek
                     </h3>
                     <i id="baza-map-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
                 </button>
@@ -410,11 +409,14 @@
                         </div>
                     </div>
 
-                    <div id="map-scope-notice" class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-2 text-[10px] text-amber-900 leading-snug">
-                        <p class="font-bold mb-1"><i class="fa-solid fa-circle-info text-amber-600"></i> Pinezki = tylko Bari</p>
-                        <p>Apartament, dworce, tipy Dario i atrakcje są <b>w Bari</b>. Dni 2–3 i 5 (Alberobello, Polignano, Trani/Matera) — tam plan dnia + Google Maps, nie ta mapa.</p>
+                    <div id="map-scope-notice" class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-2 text-[10px] text-blue-900 leading-snug">
+                        <p class="font-bold mb-1"><i class="fa-solid fa-map text-blue-600"></i> Strefy na mapie</p>
+                        <p>Przystanki, atrakcje i lokale dla <b>Bari</b>, <b>Alberobello</b>, <b>Polignano</b>, <b>Monopoli</b> i <b>Trani</b>. Wybierz strefę poniżej — tipy Dario tylko w Bari.</p>
                     </div>
                     <div id="map-today-notice" class="hidden rounded-xl p-3 mb-3 text-[10px] font-bold leading-snug"></div>
+
+                    <p class="text-[10px] uppercase font-bold text-slate-500 mb-1.5">Strefa mapy</p>
+                    <div id="map-zone-picker" class="flex flex-wrap gap-1.5 mb-3"></div>
 
                     <p class="text-[10px] text-slate-500 mb-2">Przesuwaj i przybliżaj. Kliknij pinezkę albo punkt z listy poniżej.</p>
                     <button type="button" id="map-add-pin-btn" onclick="toggleMapAddPinMode()" class="w-full bg-slate-100 text-slate-700 py-2.5 rounded-xl font-bold mb-2 border border-slate-200 active:scale-95 transition-all text-sm">
@@ -424,7 +426,7 @@
                     <p id="map-food-pick-hint" class="hidden text-[10px] text-orange-600 font-bold mb-2 text-center"><i class="fa-solid fa-utensils"></i> Kliknij mapę — tu jest restauracja / gelato</p>
                     <div id="bari-map-wrapper" class="relative mb-3 rounded-xl overflow-hidden border border-slate-200 shadow-inner">
                         <div class="map-fs-toolbar">
-                            <span class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-blue-300"></i> Mapa Bari</span>
+                            <span class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-blue-300"></i> Mapa wycieczek</span>
                             <button type="button" onclick="closeMapFullscreen()" class="bg-white text-slate-800 hover:bg-orange-100 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 active:scale-95 shadow-sm" title="Zamknij mapę">
                                 <i class="fa-solid fa-xmark"></i> Zamknij
                             </button>
@@ -1490,8 +1492,11 @@
                 `;
                 const todayBadge = isToday ? '<span class="shrink-0 bg-bari-accent text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide shadow-sm">Dziś</span>' : '';
                 const locMeta = PLAN_DAY_LOC[day.id];
-                const locBadge = locMeta ? `<span class="inline-flex items-center gap-1 text-[10px] font-bold mt-1 ${locMeta.inBari ? 'text-emerald-700' : 'text-amber-700'}"><i class="fa-solid fa-location-dot"></i> ${locMeta.label}${locMeta.inBari ? '' : ' · poza Bari'}</span>` : '';
-                const mapDayNotice = locMeta ? `<p class="text-[10px] rounded-lg p-2.5 mb-3 leading-snug ${locMeta.inBari ? 'bg-emerald-50 border border-emerald-200 text-emerald-900' : 'bg-amber-50 border border-amber-200 text-amber-900'}"><i class="fa-solid fa-map"></i> ${locMeta.mapHint}</p>` : '';
+                const locBadge = locMeta ? `<span class="inline-flex items-center gap-1 text-[10px] font-bold mt-1 text-sky-700"><i class="fa-solid fa-location-dot"></i> ${locMeta.label}</span>` : '';
+                const mapZoneBtns = locMeta && locMeta.mapZones ? locMeta.mapZones.map(zid =>
+                    `<button type="button" onclick="openMapZone('${zid}')" class="inline-flex items-center gap-1 text-[10px] font-bold bg-blue-600 text-white px-2 py-1 rounded-lg ml-1 active:scale-95"><i class="fa-solid fa-map-pin"></i> ${MAP_ZONE_LABELS[zid] || zid}</button>`
+                ).join('') : '';
+                const mapDayNotice = locMeta ? `<p class="text-[10px] rounded-lg p-2.5 mb-3 leading-snug bg-sky-50 border border-sky-200 text-sky-900"><i class="fa-solid fa-map"></i> ${locMeta.mapHint}${mapZoneBtns ? ' ' + mapZoneBtns : ''}</p>` : '';
                 dayDiv.innerHTML = `
                     <button type="button" onclick="toggleSectionPanel('${panelKey}')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50/80 transition-colors">
                         <div class="flex justify-between items-start gap-3 flex-1 min-w-0">
@@ -2033,6 +2038,7 @@
             const spot = (state.foodSpots || []).find(s => s.id === spotId);
             const marker = bariMapFoodMarkers[spotId];
             if (!spot || spot.lat == null || !marker || !bariMap) return;
+            if (spot.lng != null) setMapZone(detectMapZoneFromCoords(spot.lat, spot.lng), false);
             bariMap.flyTo([spot.lat, spot.lng], 17, { duration: 0.6 });
             setTimeout(() => marker.openPopup(), 400);
         }
@@ -2447,6 +2453,7 @@
             } else {
                 initBariMap();
             }
+            setMapZone(getDefaultMapZone(), true);
             toggleMapFullscreen(true);
         }
 
@@ -2466,33 +2473,21 @@
         };
 
         const PLAN_DAY_LOC = {
-            pb1: { label: 'Bari', inBari: true, mapHint: 'Przylot · pinezki mapy (apartament, dworce) działają dziś.' },
-            pb2: { label: 'Alberobello', inBari: false, mapHint: 'Wyjazd z Bari Centrale. Mapa apki = Bari (baza), nie Alberobello.' },
-            pb3: { label: 'Polignano & Monopoli', inBari: false, mapHint: 'Nad morze poza Bari. Pinezki Dario i tipy na mapie tego nie obejmują.' },
-            pb4: { label: 'Bari Vecchia', inBari: true, mapHint: 'Slow day w Bari · zielone tipy Dario i atrakcje są na mapie.' },
-            pb5: { label: 'Trani lub Matera', inBari: false, mapHint: 'Poza Bari. Stacja FAL (start do Matery) jest na mapie — reszta w Google Maps.' },
-            pb6: { label: 'Bari → lotnisko', inBari: true, mapHint: 'Powrót · Quintino Sella i lotnisko są na mapie Bari.' }
+            pb1: { label: 'Bari', mapZones: ['bari'], mapHint: 'Przylot · apartament i dworce na mapie Bari.' },
+            pb2: { label: 'Alberobello', mapZones: ['alberobello'], mapHint: 'Wyjazd z Bari Centrale · stacja, trulli i atrakcje na mapie Alberobello.' },
+            pb3: { label: 'Polignano & Monopoli', mapZones: ['polignano', 'monopoli'], mapHint: 'Dwa miasta nad morze · przełącz strefę na mapie.' },
+            pb4: { label: 'Bari Vecchia', mapZones: ['bari'], mapHint: 'Slow day w Bari · zielone tipy Dario i atrakcje na mapie.' },
+            pb5: { label: 'Trani lub Matera', mapZones: ['trani', 'bari'], mapHint: 'Trani na mapie · stacja FAL (Matera) w strefie Bari.' },
+            pb6: { label: 'Bari → lotnisko', mapZones: ['bari'], mapHint: 'Powrót · Quintino Sella i lotnisko na mapie Bari.' }
         };
 
-        function updateMapScopeNotice() {
-            const el = document.getElementById('map-today-notice');
-            if (!el) return;
-            const todayId = getTodayPlanDayId();
-            const loc = todayId && PLAN_DAY_LOC[todayId];
-            if (!loc) {
-                el.classList.add('hidden');
-                el.innerHTML = '';
-                return;
-            }
-            el.classList.remove('hidden');
-            if (loc.inBari) {
-                el.className = 'rounded-xl p-3 mb-3 text-[10px] font-bold leading-snug bg-green-50 border border-green-200 text-green-800';
-                el.innerHTML = '<i class="fa-solid fa-check-circle"></i> Dziś: <b>' + escapeHtml(loc.label) + '</b> — pinezki na tej mapie są aktualne.';
-            } else {
-                el.className = 'rounded-xl p-3 mb-3 text-[10px] font-bold leading-snug bg-orange-50 border border-orange-300 text-orange-900';
-                el.innerHTML = '<i class="fa-solid fa-route"></i> Dziś: <b>' + escapeHtml(loc.label) + '</b> — ta mapa to <b>Bari (baza)</b>, nie dzisiejsza destynacja.';
-            }
-        }
+        const MAP_ZONE_LABELS = {
+            bari: 'Bari',
+            alberobello: 'Alberobello',
+            polignano: 'Polignano',
+            monopoli: 'Monopoli',
+            trani: 'Trani'
+        };
 
         function wmoToIcon(code) {
             if (code === 0) return '☀️';
@@ -2866,15 +2861,141 @@
             await runMorningBriefingCheck();
         }
 
-        /* --- INTERAKTYWNA MAPA BARI (Leaflet + OpenStreetMap) --- */
-        const BARI_MAP_POIS = [
-            { id: 'home', lat: 41.11987, lng: 16.86204, title: 'Apartament', desc: 'Via Trevisani 236 — check-in 12:00', icon: 'fa-house', color: '#e74c3c' },
-            { id: 'quintino', lat: 41.11056, lng: 16.87222, title: 'Via Quintino Sella', desc: 'Wyjazd FR2 → Aeroporto (5.30€). ~15 min pieszo z apartamentu.', icon: 'fa-train-subway', color: '#2563eb' },
-            { id: 'centrale', lat: 41.1176, lng: 16.8698, title: 'Bari Centrale', desc: 'Główny dworzec — pociągi nad morze', icon: 'fa-train', color: '#dc2626' },
-            { id: 'fal', lat: 41.1175, lng: 16.8678, title: 'Stacja FAL (Matera)', desc: 'Osobny budynek po lewej od pl. Aldo Moro', icon: 'fa-train-tram', color: '#7c3aed' },
-            { id: 'airport', lat: 41.1386, lng: 16.7606, title: 'Bari Aeroporto (stacja)', desc: 'Koniec FR2. Tunel ~300 m do terminala. Piętro 1 = odloty.', icon: 'fa-plane', color: '#0ea5e9' },
-            { id: 'vecchia', lat: 41.1278, lng: 16.8717, title: 'Bari Vecchia', desc: 'Stare Miasto — wejście od Zamku', icon: 'fa-landmark', color: '#d97706' }
+        /* --- INTERAKTYWNA MAPA WYCIECZEK (Leaflet + OpenStreetMap) --- */
+        const MAP_ZONES = {
+            bari: { id: 'bari', label: 'Bari', center: [41.122, 16.865], zoom: 13 },
+            alberobello: { id: 'alberobello', label: 'Alberobello', center: [40.7865, 17.2375], zoom: 16 },
+            polignano: { id: 'polignano', label: 'Polignano', center: [40.996, 17.219], zoom: 15 },
+            monopoli: { id: 'monopoli', label: 'Monopoli', center: [40.949, 17.298], zoom: 15 },
+            trani: { id: 'trani', label: 'Trani', center: [41.227, 16.607], zoom: 15 }
+        };
+
+        const TRIP_MAP_POIS = [
+            { id: 'home', zone: 'bari', cat: 'transport', lat: 41.11987, lng: 16.86204, title: 'Apartament', desc: 'Via Trevisani 236 — check-in 12:00', icon: 'fa-house', color: '#e74c3c' },
+            { id: 'quintino', zone: 'bari', cat: 'transport', lat: 41.11056, lng: 16.87222, title: 'Via Quintino Sella', desc: 'Wyjazd FR2 → Aeroporto (5.30€). ~15 min pieszo z apartamentu.', icon: 'fa-train-subway', color: '#2563eb' },
+            { id: 'centrale', zone: 'bari', cat: 'transport', lat: 41.1176, lng: 16.8698, title: 'Bari Centrale', desc: 'Główny dworzec — pociągi nad morze', icon: 'fa-train', color: '#dc2626' },
+            { id: 'fal', zone: 'bari', cat: 'transport', lat: 41.1175, lng: 16.8678, title: 'Stacja FAL (Matera)', desc: 'Osobny budynek po lewej od pl. Aldo Moro', icon: 'fa-train-tram', color: '#7c3aed' },
+            { id: 'airport', zone: 'bari', cat: 'transport', lat: 41.1386, lng: 16.7606, title: 'Bari Aeroporto (stacja)', desc: 'Koniec FR2. Tunel ~300 m do terminala. Piętro 1 = odloty.', icon: 'fa-plane', color: '#0ea5e9' },
+            { id: 'vecchia', zone: 'bari', cat: 'attraction', lat: 41.1278, lng: 16.8717, title: 'Bari Vecchia', desc: 'Stare Miasto — wejście od Zamku', icon: 'fa-landmark', color: '#d97706' },
+            { id: 'alb-stazione', zone: 'alberobello', cat: 'transport', lat: 40.7853, lng: 17.2361, title: 'Stacja Alberobello', desc: 'Dworzec kolejowy — 15 min pieszo do trulli', icon: 'fa-train', color: '#dc2626' },
+            { id: 'alb-santa-lucia', zone: 'alberobello', cat: 'attraction', lat: 40.7836, lng: 17.2378, title: 'Chiesa di Santa Lucia', desc: 'Punkt startowy spaceru — widok na miasto trulli', icon: 'fa-church', color: '#d97706' },
+            { id: 'alb-rione-monti', zone: 'alberobello', cat: 'attraction', lat: 40.7865, lng: 17.2372, title: 'Rione Monti', desc: 'Główna dzielnica trulli — labirynt białych domków', icon: 'fa-house-chimney', color: '#ca8a04' },
+            { id: 'alb-aia-piccola', zone: 'alberobello', cat: 'attraction', lat: 40.7848, lng: 17.2395, title: 'Aia Piccola', desc: 'Spokojniejsza dzielnica trulli, mniej turystów', icon: 'fa-house-chimney', color: '#ca8a04' },
+            { id: 'pol-stazione', zone: 'polignano', cat: 'transport', lat: 40.9946, lng: 17.2214, title: 'Stacja Polignano a Mare', desc: 'Dworzec — centrum ~10 min pieszo', icon: 'fa-train', color: '#dc2626' },
+            { id: 'pol-lama', zone: 'polignano', cat: 'attraction', lat: 40.9981, lng: 17.2200, title: 'Lama Monachile', desc: 'Calanque / plaża pod skałami — ikona Polignano', icon: 'fa-water', color: '#0284c7' },
+            { id: 'pol-centro', zone: 'polignano', cat: 'attraction', lat: 40.9964, lng: 17.2175, title: 'Centro storico', desc: 'Stare Miasto na klifie — ulice, widoki, gelato', icon: 'fa-landmark', color: '#d97706' },
+            { id: 'pol-modugno', zone: 'polignano', cat: 'attraction', lat: 40.9955, lng: 17.2190, title: 'Punto panoramico', desc: 'Punkt widokowy nad zatoką Lama Monachile', icon: 'fa-binoculars', color: '#6366f1' },
+            { id: 'mon-stazione', zone: 'monopoli', cat: 'transport', lat: 40.9489, lng: 17.2971, title: 'Stacja Monopoli', desc: 'Dworzec — centro storico ~8 min pieszo', icon: 'fa-train', color: '#dc2626' },
+            { id: 'mon-porto', zone: 'monopoli', cat: 'attraction', lat: 40.9508, lng: 17.2994, title: 'Porto Antico', desc: 'Stary port rybacki — spacery i restauracje', icon: 'fa-anchor', color: '#0284c7' },
+            { id: 'mon-centro', zone: 'monopoli', cat: 'attraction', lat: 40.9493, lng: 17.2980, title: 'Centro storico', desc: 'Białe uliczki, katedra, mury miejskie', icon: 'fa-landmark', color: '#d97706' },
+            { id: 'tra-stazione', zone: 'trani', cat: 'transport', lat: 41.2257, lng: 16.6075, title: 'Stacja Trani', desc: 'Dworzec — katedra nad morzem ~12 min pieszo', icon: 'fa-train', color: '#dc2626' },
+            { id: 'tra-cattedrale', zone: 'trani', cat: 'attraction', lat: 41.2271, lng: 16.6068, title: 'Cattedrale di Trani', desc: 'Katedra św. Mikołaja — na klifie nad morzem', icon: 'fa-church', color: '#d97706' },
+            { id: 'tra-porto', zone: 'trani', cat: 'attraction', lat: 41.2278, lng: 16.6045, title: 'Porto & lungomare', desc: 'Port rybacki i promenada nad Adriatykiem', icon: 'fa-anchor', color: '#0284c7' }
         ];
+
+        let activeMapZone = (() => {
+            try { return localStorage.getItem('bariApp_map_zone') || 'bari'; } catch(e) { return 'bari'; }
+        })();
+        if (!MAP_ZONES[activeMapZone]) activeMapZone = 'bari';
+
+        function getDefaultMapZone() {
+            const todayId = getTodayPlanDayId();
+            const loc = todayId && PLAN_DAY_LOC[todayId];
+            if (loc && loc.mapZones && loc.mapZones.length) return loc.mapZones[0];
+            return activeMapZone || 'bari';
+        }
+
+        function detectMapZoneFromCoords(lat, lng) {
+            let best = 'bari';
+            let bestDist = Infinity;
+            Object.values(MAP_ZONES).forEach(z => {
+                const d = Math.hypot(lat - z.center[0], lng - z.center[1]);
+                if (d < bestDist) { bestDist = d; best = z.id; }
+            });
+            return best;
+        }
+
+        function renderMapZonePicker() {
+            const el = document.getElementById('map-zone-picker');
+            if (!el) return;
+            el.innerHTML = Object.values(MAP_ZONES).map(z => {
+                const active = activeMapZone === z.id;
+                return `<button type="button" onclick="setMapZone('${z.id}')" class="px-3 py-1.5 rounded-full text-[10px] font-bold border-2 transition-all active:scale-95 ${active ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'}">${z.label}</button>`;
+            }).join('');
+        }
+
+        function applyMapZoneVisibility() {
+            if (!bariMap) return;
+            TRIP_MAP_POIS.forEach(poi => {
+                const m = bariMapMarkers[poi.id];
+                if (!m) return;
+                if (poi.zone === activeMapZone) { if (!bariMap.hasLayer(m)) m.addTo(bariMap); }
+                else { if (bariMap.hasLayer(m)) bariMap.removeLayer(m); }
+            });
+            DARIO_TIPS.forEach(tip => {
+                const m = bariMapDarioMarkers[tip.id];
+                if (!m) return;
+                if (activeMapZone === 'bari') { if (!bariMap.hasLayer(m)) m.addTo(bariMap); }
+                else { if (bariMap.hasLayer(m)) bariMap.removeLayer(m); }
+            });
+            (state.foodSpots || []).forEach(spot => {
+                const m = bariMapFoodMarkers[spot.id];
+                if (!m || spot.lat == null || spot.lng == null) return;
+                const z = detectMapZoneFromCoords(spot.lat, spot.lng);
+                if (z === activeMapZone) { if (!bariMap.hasLayer(m)) m.addTo(bariMap); }
+                else { if (bariMap.hasLayer(m)) bariMap.removeLayer(m); }
+            });
+            (state.customMapPins || []).forEach(pin => {
+                const m = bariMapCustomMarkers[pin.id];
+                if (!m) return;
+                const z = detectMapZoneFromCoords(pin.lat, pin.lng);
+                if (z === activeMapZone) { if (!bariMap.hasLayer(m)) m.addTo(bariMap); }
+                else { if (bariMap.hasLayer(m)) bariMap.removeLayer(m); }
+            });
+        }
+
+        function setMapZone(zoneId, flyToCenter) {
+            if (!MAP_ZONES[zoneId]) return;
+            activeMapZone = zoneId;
+            try { localStorage.setItem('bariApp_map_zone', zoneId); } catch(e) {}
+            renderMapZonePicker();
+            applyMapZoneVisibility();
+            renderBariMapLegend();
+            if (bariMap && flyToCenter !== false) {
+                const z = MAP_ZONES[zoneId];
+                bariMap.flyTo(z.center, z.zoom, { duration: 0.5 });
+            }
+        }
+
+        function openMapZone(zoneId) {
+            switchToBazaTab();
+            if (!bazaMapPanelOpen) {
+                bazaMapPanelOpen = true;
+                updateBazaMapPanelUI();
+            } else {
+                initBariMap();
+            }
+            setMapZone(zoneId, true);
+        }
+
+        function updateMapScopeNotice() {
+            const el = document.getElementById('map-today-notice');
+            if (!el) return;
+            const todayId = getTodayPlanDayId();
+            const loc = todayId && PLAN_DAY_LOC[todayId];
+            if (!loc) {
+                el.classList.add('hidden');
+                el.innerHTML = '';
+                return;
+            }
+            el.classList.remove('hidden');
+            const zoneLabels = (loc.mapZones || []).map(z => MAP_ZONE_LABELS[z] || z).join(' · ');
+            const primary = loc.mapZones && loc.mapZones[0];
+            el.className = 'rounded-xl p-3 mb-3 text-[10px] font-bold leading-snug bg-sky-50 border border-sky-300 text-sky-900';
+            el.innerHTML = '<i class="fa-solid fa-calendar-day"></i> Dziś: <b>' + escapeHtml(loc.label) + '</b>'
+                + (zoneLabels ? ' — mapa: ' + escapeHtml(zoneLabels) + '.' : '.')
+                + (primary ? ' <button type="button" onclick="openMapZone(\'' + primary + '\')" class="underline text-blue-700 ml-1">Pokaż na mapie</button>' : '');
+        }
 
         const DARIO_TIP_COLOR = '#22c55e';
         const DARIO_TIPS = [
@@ -3144,9 +3265,10 @@
             bariMapFoodMarkers = {};
             (state.foodSpots || []).forEach(spot => {
                 if (spot.lat == null || spot.lng == null) return;
-                const marker = L.marker([spot.lat, spot.lng], { icon: createFoodMapMarkerIcon() }).addTo(bariMap);
+                const marker = L.marker([spot.lat, spot.lng], { icon: createFoodMapMarkerIcon() });
                 marker.bindPopup(buildFoodSpotPopup(spot));
                 bariMapFoodMarkers[spot.id] = marker;
+                if (detectMapZoneFromCoords(spot.lat, spot.lng) === activeMapZone) marker.addTo(bariMap);
             });
         }
 
@@ -3167,6 +3289,24 @@
             const legend = document.getElementById('bari-map-legend');
             if (!legend) return;
 
+            const zoneLabel = MAP_ZONES[activeMapZone]?.label || activeMapZone;
+            const zonePois = TRIP_MAP_POIS.filter(p => p.zone === activeMapZone);
+            const transportPois = zonePois.filter(p => p.cat === 'transport');
+            const attractionPois = zonePois.filter(p => p.cat === 'attraction');
+
+            const poiRow = (poi) => `
+                <button type="button" onclick="focusMapPoi('${poi.id}')" class="w-full flex items-center gap-3 bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-left active:scale-[0.98] transition-transform hover:bg-blue-50">
+                    <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm" style="background:${poi.color}20;color:${poi.color};border:2px solid ${poi.color}">
+                        <i class="fa-solid ${poi.icon} text-xs"></i>
+                    </span>
+                    <span class="min-w-0">
+                        <span class="block text-sm font-bold text-slate-800">${poi.title}</span>
+                        <span class="block text-[10px] text-slate-500 truncate">${poi.desc}</span>
+                    </span>
+                    <i class="fa-solid fa-location-arrow text-blue-500 ml-auto shrink-0 text-xs"></i>
+                </button>
+            `;
+
             const darioAttractions = DARIO_TIPS.filter(t => t.cat === 'attraction');
             const darioFood = DARIO_TIPS.filter(t => t.cat === 'food');
             const darioTipRow = (tip) => `
@@ -3182,33 +3322,22 @@
                     <i class="fa-solid fa-location-arrow text-green-600 ml-auto shrink-0 text-xs"></i>
                 </button>
             `;
-            const darioHtml = `
-                <p class="text-[10px] uppercase font-bold text-green-700 pt-3 pb-1 flex items-center gap-1"><i class="fa-solid fa-star"></i> Tip od Dario 🇮🇹 — tylko Bari Vecchia</p>
+            const darioHtml = activeMapZone === 'bari' ? `
+                <p class="text-[10px] uppercase font-bold text-green-700 pt-3 pb-1 flex items-center gap-1"><i class="fa-solid fa-star"></i> Tip od Dario 🇮🇹 — atrakcje</p>
                 ${darioAttractions.map(darioTipRow).join('')}
-                <p class="text-[10px] uppercase font-bold text-green-700 pt-3 pb-1">Tip od Dario 🇮🇹 — jedzenie (Bari)</p>
+                <p class="text-[10px] uppercase font-bold text-green-700 pt-3 pb-1">Tip od Dario 🇮🇹 — jedzenie</p>
                 ${darioFood.map(darioTipRow).join('')}
-            `;
+            ` : '';
 
             const builtinHtml = `
-                <p class="text-[10px] text-slate-500 pb-2 mb-2 leading-snug border-b border-slate-100">Lista poniżej: wyłącznie <b>Bari</b> (baza, dworce, Stare Miasto).</p>
-                <p class="text-[10px] uppercase font-bold text-slate-500 pb-1">Transport & baza — Bari</p>
-                ${BARI_MAP_POIS.map(poi => `
-                <button type="button" onclick="focusMapPoi('${poi.id}')" class="w-full flex items-center gap-3 bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-left active:scale-[0.98] transition-transform hover:bg-blue-50">
-                    <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm" style="background:${poi.color}20;color:${poi.color};border:2px solid ${poi.color}">
-                        <i class="fa-solid ${poi.icon} text-xs"></i>
-                    </span>
-                    <span class="min-w-0">
-                        <span class="block text-sm font-bold text-slate-800">${poi.title}</span>
-                        <span class="block text-[10px] text-slate-500 truncate">${poi.desc}</span>
-                    </span>
-                    <i class="fa-solid fa-location-arrow text-blue-500 ml-auto shrink-0 text-xs"></i>
-                </button>
-            `).join('')}
+                <p class="text-[10px] text-slate-500 pb-2 mb-2 leading-snug border-b border-slate-100">Strefa: <b>${escapeHtml(zoneLabel)}</b></p>
+                ${transportPois.length ? `<p class="text-[10px] uppercase font-bold text-slate-500 pb-1">Przystanki & transport</p>${transportPois.map(poiRow).join('')}` : ''}
+                ${attractionPois.length ? `<p class="text-[10px] uppercase font-bold text-slate-500 pt-3 pb-1">Atrakcje & lokale</p>${attractionPois.map(poiRow).join('')}` : ''}
             `;
 
-            const foodOnMap = (state.foodSpots || []).filter(s => s.lat != null && s.lng != null);
+            const foodOnMap = (state.foodSpots || []).filter(s => s.lat != null && s.lng != null && detectMapZoneFromCoords(s.lat, s.lng) === activeMapZone);
             const foodHtml = foodOnMap.length ? `
-                <p class="text-[10px] uppercase font-bold text-slate-400 pt-3 pb-1">Restauracje & Gelato (Bari)</p>
+                <p class="text-[10px] uppercase font-bold text-slate-400 pt-3 pb-1">Restauracje & Gelato (${escapeHtml(zoneLabel)})</p>
                 ${foodOnMap.map(spot => `
                     <button type="button" onclick="focusFoodSpot('${spot.id}')" class="w-full flex items-center gap-3 bg-orange-50 border border-orange-100 p-2.5 rounded-lg text-left active:scale-[0.98] transition-transform hover:bg-orange-100">
                         <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm bg-orange-100 text-orange-600 border-2 border-orange-400">
@@ -3222,9 +3351,9 @@
                 `).join('')}
             ` : '';
 
-            const customPins = state.customMapPins || [];
+            const customPins = (state.customMapPins || []).filter(pin => detectMapZoneFromCoords(pin.lat, pin.lng) === activeMapZone);
             const customHtml = customPins.length ? `
-                <p class="text-[10px] uppercase font-bold text-slate-400 pt-3 pb-1">Twoje pinezki (Bari)</p>
+                <p class="text-[10px] uppercase font-bold text-slate-400 pt-3 pb-1">Twoje pinezki (${escapeHtml(zoneLabel)})</p>
                 ${customPins.map(pin => `
                     <div class="flex items-center gap-2">
                         <button type="button" onclick="focusCustomMapPin('${pin.id}')" class="flex-1 flex items-center gap-3 bg-indigo-50 border border-indigo-100 p-2.5 rounded-lg text-left active:scale-[0.98] transition-transform min-w-0">
@@ -3250,9 +3379,10 @@
             Object.values(bariMapDarioMarkers).forEach(m => bariMap.removeLayer(m));
             bariMapDarioMarkers = {};
             DARIO_TIPS.forEach(tip => {
-                const marker = L.marker([tip.lat, tip.lng], { icon: createDarioTipMarkerIcon(tip), zIndexOffset: 200 }).addTo(bariMap);
+                const marker = L.marker([tip.lat, tip.lng], { icon: createDarioTipMarkerIcon(tip), zIndexOffset: 200 });
                 marker.bindPopup(buildDarioTipPopup(tip));
                 bariMapDarioMarkers[tip.id] = marker;
+                if (activeMapZone === 'bari') marker.addTo(bariMap);
             });
         }
 
@@ -3264,6 +3394,7 @@
             } else {
                 initBariMap();
             }
+            setMapZone('bari', false);
             const tip = DARIO_TIPS.find(t => t.id === tipId);
             const marker = bariMapDarioMarkers[tipId];
             if (!tip || !marker || !bariMap) return;
@@ -3276,9 +3407,10 @@
             Object.values(bariMapCustomMarkers).forEach(m => bariMap.removeLayer(m));
             bariMapCustomMarkers = {};
             (state.customMapPins || []).forEach(pin => {
-                const marker = L.marker([pin.lat, pin.lng], { icon: createCustomMapMarkerIcon() }).addTo(bariMap);
+                const marker = L.marker([pin.lat, pin.lng], { icon: createCustomMapMarkerIcon() });
                 marker.bindPopup(buildCustomPinPopup(pin));
                 bariMapCustomMarkers[pin.id] = marker;
+                if (detectMapZoneFromCoords(pin.lat, pin.lng) === activeMapZone) marker.addTo(bariMap);
             });
         }
 
@@ -3383,6 +3515,7 @@
             const pin = (state.customMapPins || []).find(p => p.id === pinId);
             const marker = bariMapCustomMarkers[pinId];
             if (!pin || !marker || !bariMap) return;
+            setMapZone(detectMapZoneFromCoords(pin.lat, pin.lng), false);
             bariMap.flyTo([pin.lat, pin.lng], 17, { duration: 0.6 });
             setTimeout(() => marker.openPopup(), 400);
         }
@@ -3392,20 +3525,24 @@
             const el = document.getElementById('bari-map');
             if (!el) return;
 
-            bariMap = L.map('bari-map', { zoomControl: true, scrollWheelZoom: true }).setView([41.122, 16.865], 13);
+            if (!MAP_ZONES[activeMapZone]) activeMapZone = getDefaultMapZone();
+            const startZone = MAP_ZONES[activeMapZone] || MAP_ZONES.bari;
+
+            bariMap = L.map('bari-map', { zoomControl: true, scrollWheelZoom: true }).setView(startZone.center, startZone.zoom);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
             }).addTo(bariMap);
 
-            BARI_MAP_POIS.forEach(poi => {
-                const marker = L.marker([poi.lat, poi.lng], { icon: createMapMarkerIcon(poi) }).addTo(bariMap);
+            TRIP_MAP_POIS.forEach(poi => {
+                const marker = L.marker([poi.lat, poi.lng], { icon: createMapMarkerIcon(poi) });
                 marker.bindPopup(`
                     <p class="font-bold text-slate-800 mb-1">${poi.title}</p>
                     <p class="text-slate-600 text-xs mb-2">${poi.desc}</p>
                     <a href="${mapsNavUrl(poi)}" target="_blank" class="inline-block bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Nawiguj <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                 `);
                 bariMapMarkers[poi.id] = marker;
+                if (poi.zone === activeMapZone) marker.addTo(bariMap);
             });
 
             bariMap.on('click', (e) => {
@@ -3417,11 +3554,13 @@
                 promptAddCustomPin(e.latlng.lat, e.latlng.lng);
             });
 
+            renderMapZonePicker();
             renderCustomMapPins();
             renderFoodMapMarkers();
             renderDarioTips();
             renderLiveLocationMarkers();
             renderBariMapLegend();
+            updateMapScopeNotice();
             setTimeout(() => bariMap.invalidateSize(), 100);
         }
 
@@ -3512,6 +3651,8 @@
                 body.classList.remove('hidden');
                 if (chevron) chevron.classList.add('rotate-180');
                 initBariMap();
+                renderMapZonePicker();
+                updateMapScopeNotice();
                 updateLiveShareUI();
                 setTimeout(invalidateBariMap, 200);
             } else {
@@ -3534,9 +3675,10 @@
             } else {
                 initBariMap();
             }
-            const poi = BARI_MAP_POIS.find(p => p.id === poiId);
+            const poi = TRIP_MAP_POIS.find(p => p.id === poiId);
             const marker = bariMapMarkers[poiId];
             if (!poi || !marker || !bariMap) return;
+            setMapZone(poi.zone, false);
             bariMap.flyTo([poi.lat, poi.lng], 16, { duration: 0.6 });
             setTimeout(() => marker.openPopup(), 400);
         }
