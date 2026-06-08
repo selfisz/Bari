@@ -1542,46 +1542,61 @@
                 const div = document.createElement('div');
                 const isTempBag = parentId === 'bagTemp';
                 const itemStyle = item.siesta ? 'bg-orange-50 border-orange-200' : (item.magnet ? 'bg-purple-50 border-purple-200' : (item.checkin ? 'bg-red-50 border-red-200' : (isTempBag ? 'bg-amber-50/80 border-amber-200' : 'bg-white border-slate-200')));
-                div.className = 'flex justify-between items-center p-3 rounded-lg border shadow-sm mb-2 ' + itemStyle;
+                const isBagItem = stateKey === 'bagsData' && parentId;
+                div.className = (isBagItem ? 'flex flex-col' : 'flex justify-between items-center') + ' p-3 rounded-lg border shadow-sm mb-2 ' + itemStyle;
 
                 const onChangeStr = parentId ? `toggleNestedItem('${stateKey}', '${parentId}', '${item.id}')` : `toggleItem('${stateKey}', '${item.id}')`;
                 const editStr = parentId ? `editItemPrompt('${stateKey}', '${item.id}', '${parentId}')` : `editItemPrompt('${stateKey}', '${item.id}')`;
                 const deleteStr = parentId ? `deleteItem('${stateKey}', '${item.id}', '${parentId}')` : `deleteItem('${stateKey}', '${item.id}')`;
                 const qty = item.qty != null ? item.qty : 1;
-                const qtyStepper = (stateKey === 'bagsData' && parentId) ? `
-                    <div class="flex items-center gap-0.5 shrink-0 mr-1">
-                        <button type="button" onclick="adjustBagItemQty('${parentId}','${item.id}', -1)" class="w-7 h-7 rounded-lg border border-slate-200 text-slate-600 font-bold text-sm leading-none active:scale-90 hover:bg-slate-50" title="Mniej">−</button>
-                        <span class="text-xs font-bold text-slate-700 min-w-[1.25rem] text-center tabular-nums">${qty}</span>
-                        <button type="button" onclick="adjustBagItemQty('${parentId}','${item.id}', 1)" class="w-7 h-7 rounded-lg border border-slate-200 text-slate-600 font-bold text-sm leading-none active:scale-90 hover:bg-slate-50" title="Więcej">+</button>
-                    </div>
-                ` : '';
-                const moveSelect = (stateKey === 'bagsData' && parentId && state.bagsData.length > 1) ? (() => {
+                const moveSelect = (isBagItem && state.bagsData.length > 1) ? (() => {
                     const opts = state.bagsData.filter(b => b.id !== parentId).map(b =>
                         `<option value="${b.id}">${escapeHtml(b.name.replace(/ \(.*\)/, ''))}</option>`
                     ).join('');
                     return `<select onchange="moveBagItem('${parentId}','${item.id}', this.value); this.value=''" class="text-[9px] font-bold border border-slate-200 rounded-lg px-1 py-1 text-slate-600 max-w-[5.5rem] shrink-0" title="Przenieś do innego bagażu"><option value="">→ bagaż</option>${opts}</select>`;
                 })() : '';
-                const pocketBtn = stateKey === 'bagsData' && parentId ? `
-                    <button type="button" onclick="toggleBagItemPocket('${parentId}','${item.id}')" class="rounded-lg px-1.5 py-1 border active:scale-90 transition-colors ${item.pocket ? 'text-violet-700 bg-violet-100 border-violet-300' : 'text-slate-400 border-slate-200 hover:text-violet-600 hover:bg-violet-50'}" title="Przy sobie / w kieszeni">
+                const pocketBtn = isBagItem ? `
+                    <button type="button" onclick="toggleBagItemPocket('${parentId}','${item.id}')" class="rounded-lg px-2 py-1.5 border active:scale-90 transition-colors ${item.pocket ? 'text-violet-700 bg-violet-100 border-violet-300' : 'text-slate-400 border-slate-200 hover:text-violet-600 hover:bg-violet-50'}" title="Przy sobie / w kieszeni">
                         <i class="fa-solid fa-mobile-screen-button text-xs"></i>
                     </button>
                 ` : '';
                 const pocketBadge = item.pocket ? ' <span class="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase text-violet-700 bg-violet-100 border border-violet-200 rounded px-1.5 py-0.5 ml-1 align-middle"><i class="fa-solid fa-mobile-screen-button"></i> przy sobie</span>' : '';
+                const badges = `${item.siesta ? '<i class="fa-solid fa-sun text-orange-500 ml-1 text-xs"></i>' : ''} ${item.magnet ? '<i class="fa-solid fa-magnet text-purple-500 ml-1 text-xs"></i>' : ''} ${item.checkin ? '<i class="fa-solid fa-ticket text-red-500 ml-1 text-xs"></i>' : ''} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}${isTempBag && !item.pocket ? ' <span class="text-[9px] text-amber-600 font-bold uppercase">tymczasowo</span>' : ''}`;
 
-                div.innerHTML = `
-                    <label class="cb-container ${item.checked ? 'crossed' : ''} flex-1 m-0 min-w-0">
-                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="${onChangeStr}">
-                        <span class="checkmark mt-[-10px]"></span>
-                        <span class="ml-2 text-sm leading-tight pr-2 block">${item.text}${pocketBadge} ${item.siesta ? '<i class="fa-solid fa-sun text-orange-500 ml-1 text-xs"></i>' : ''} ${item.magnet ? '<i class="fa-solid fa-magnet text-purple-500 ml-1 text-xs"></i>' : ''} ${item.checkin ? '<i class="fa-solid fa-ticket text-red-500 ml-1 text-xs"></i>' : ''} ${item.sec ? '<i class="fa-solid fa-shield-halved text-red-500 ml-1 text-xs"></i>' : ''}${isTempBag && !item.pocket ? ' <span class="text-[9px] text-amber-600 font-bold uppercase">tymczasowo</span>' : ''}</span>
-                    </label>
-                    <div class="flex gap-1.5 ml-2 text-slate-300 shrink-0 items-center">
-                        ${qtyStepper}
-                        ${pocketBtn}
-                        ${moveSelect}
-                        <button onclick="${editStr}" class="hover:text-bari-primary active:scale-90"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="${deleteStr}" class="hover:text-red-500 active:scale-90"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                `;
+                if (isBagItem) {
+                    div.innerHTML = `
+                        <label class="cb-container ${item.checked ? 'crossed' : ''} w-full m-0 min-w-0 mb-2">
+                            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="${onChangeStr}">
+                            <span class="checkmark mt-[-10px]"></span>
+                            <span class="ml-2 text-sm leading-tight block">${item.text}${pocketBadge}${badges}</span>
+                        </label>
+                        <div class="flex items-center justify-between gap-2 pl-7">
+                            <div class="flex items-center gap-1">
+                                <button type="button" onclick="adjustBagItemQty('${parentId}','${item.id}', -1)" class="w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 font-bold text-base leading-none active:scale-90" title="Mniej">−</button>
+                                <span class="text-sm font-bold text-slate-800 min-w-[2rem] text-center tabular-nums">${qty} szt.</span>
+                                <button type="button" onclick="adjustBagItemQty('${parentId}','${item.id}', 1)" class="w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 font-bold text-base leading-none active:scale-90" title="Więcej">+</button>
+                            </div>
+                            <div class="flex gap-2 text-slate-300 items-center">
+                                ${pocketBtn}
+                                ${moveSelect}
+                                <button onclick="${editStr}" class="hover:text-bari-primary active:scale-90 p-1"><i class="fa-solid fa-pen text-xs"></i></button>
+                                <button onclick="${deleteStr}" class="hover:text-red-500 active:scale-90 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <label class="cb-container ${item.checked ? 'crossed' : ''} flex-1 m-0 min-w-0">
+                            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="${onChangeStr}">
+                            <span class="checkmark mt-[-10px]"></span>
+                            <span class="ml-2 text-sm leading-tight pr-2 block">${item.text}${badges}</span>
+                        </label>
+                        <div class="flex gap-1.5 ml-2 text-slate-300 shrink-0 items-center">
+                            <button onclick="${editStr}" class="hover:text-bari-primary active:scale-90"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="${deleteStr}" class="hover:text-red-500 active:scale-90"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    `;
+                }
                 container.appendChild(div);
             });
         }
