@@ -436,7 +436,7 @@
 
                     <div id="map-scope-notice" class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-2 text-[10px] text-blue-900 leading-snug">
                         <p class="font-bold mb-1"><i class="fa-solid fa-map text-blue-600"></i> Strefy na mapie</p>
-                        <p>Przystanki, atrakcje i lokale + <b>tipy od Dario</b> dla każdej strefy (Bari, Alberobello, Polignano, Monopoli, Trani, Matera, Ostuni, Locorotondo).</p>
+                        <p>Przystanki, atrakcje, <b>tanie sklepy</b> (Lidl, Eurospin, Penny) + tipy od Dario dla każdej strefy.</p>
                     </div>
                     <div id="map-today-notice" class="hidden rounded-xl p-3 mb-3 text-[10px] font-bold leading-snug"></div>
 
@@ -3393,10 +3393,10 @@
             { id: 'airport', zone: 'bari', cat: 'transport', lat: 41.1386, lng: 16.7606, title: 'Bari Aeroporto (stacja)', desc: 'Koniec FR2. Tunel ~300 m do terminala. Piętro 1 = odloty.', icon: 'fa-plane', color: '#0ea5e9' },
             { id: 'vecchia', zone: 'bari', cat: 'attraction', lat: 41.1278, lng: 16.8717, title: 'Bari Vecchia', desc: 'Stare Miasto — wejście od Zamku', icon: 'fa-landmark', color: '#d97706' },
             { id: 'kiko-sparano', zone: 'bari', cat: 'attraction', lat: 41.12394, lng: 16.86965, title: 'KIKO Milano', desc: 'Via Sparano 53 — grawer laser 2€ (gratis KIKO ME od 30€) · pn–so 9–21:00, nd 10–20:30 · tel. 080 573 9849', icon: 'fa-spray-can-sparkles', color: '#c026d3' },
-            { id: 'penny-napoletana', zone: 'bari', cat: 'attraction', lat: 41.12312, lng: 16.85103, title: 'Penny Market', desc: 'Via Repubblica Napoletana 7 — ~900m od apt · pn–so 8:00–20:30, nd 8:30–13:00', icon: 'fa-basket-shopping', color: '#dc2626' },
-            { id: 'eurospin-napoli', zone: 'bari', cat: 'attraction', lat: 41.12370, lng: 16.85270, title: 'Eurospin', desc: 'Via Napoli / Via Ravanas 157 — ~1km od apt · pn–so 8:00–20:30, nd 8:30–13:30 · najtańszy w Italii (Altroconsumo)', icon: 'fa-basket-shopping', color: '#16a34a' },
-            { id: 'lidl-maratona', zone: 'bari', cat: 'attraction', lat: 41.12860, lng: 16.83820, title: 'Lidl', desc: 'Via di Maratona 3 — ~2km od apt (autobus lub rower) · pn–so 8:00–21:00, nd 8:00–13:30 · parking, ładowanie EV', icon: 'fa-basket-shopping', color: '#fbbf24' },
-            { id: 'penny-maratona', zone: 'bari', cat: 'attraction', lat: 41.12480, lng: 16.83900, title: 'Penny Market (Maratona)', desc: 'Via di Maratona 20 — ~2km od apt, tuż obok Lidla · pn–so 8:00–21:00, nd 8:30–13:30 i 17:00–20:00', icon: 'fa-basket-shopping', color: '#dc2626' },
+            { id: 'penny-napoletana', zone: 'bari', cat: 'shop', dist: 1, lat: 41.12312, lng: 16.85103, title: 'Penny Market', desc: 'Via Repubblica Napoletana 7', note: '★ Najbliżej apt (~900m pieszo). Jak pl. Penny/Biedronka. pn–so 8–20:30, nd 8:30–13:00', icon: 'fa-basket-shopping', color: '#dc2626' },
+            { id: 'eurospin-napoli', zone: 'bari', cat: 'shop', dist: 2, lat: 41.12370, lng: 16.85270, title: 'Eurospin', desc: 'Via Napoli / Via Ravanas 157', note: '★ Najtańszy sklep w Italii (Altroconsumo). ~1km pieszo. Nd do 13:30!', icon: 'fa-basket-shopping', color: '#16a34a' },
+            { id: 'lidl-maratona', zone: 'bari', cat: 'shop', dist: 3, lat: 41.12860, lng: 16.83820, title: 'Lidl', desc: 'Via di Maratona 3', note: '~2km · autobus z Crisanzio (03/16/19). Ten sam Lidl co w PL. Nd do 13:30. Parking.', icon: 'fa-basket-shopping', color: '#fbbf24' },
+            { id: 'penny-maratona', zone: 'bari', cat: 'shop', dist: 4, lat: 41.12480, lng: 16.83900, title: 'Penny Market (Maratona)', desc: 'Via di Maratona 20', note: '~2km, tuż obok Lidla — warto do obu. Nd też wieczorem 17–20.', icon: 'fa-basket-shopping', color: '#dc2626' },
             { id: 'alb-stazione', zone: 'alberobello', cat: 'transport', lat: 40.7853, lng: 17.2361, title: 'Stacja Alberobello', desc: 'Dworzec kolejowy — 15 min pieszo do trulli', icon: 'fa-train', color: '#dc2626' },
             { id: 'alb-santa-lucia', zone: 'alberobello', cat: 'attraction', lat: 40.7836, lng: 17.2378, title: 'Chiesa di Santa Lucia', desc: 'Punkt startowy spaceru — widok na miasto trulli', icon: 'fa-church', color: '#d97706' },
             { id: 'alb-rione-monti', zone: 'alberobello', cat: 'attraction', lat: 40.7865, lng: 17.2372, title: 'Rione Monti', desc: 'Główna dzielnica trulli — labirynt białych domków', icon: 'fa-house-chimney', color: '#ca8a04' },
@@ -3416,6 +3416,14 @@
             { id: 'ost-centro', zone: 'ostuni', cat: 'attraction', lat: 40.7340, lng: 17.5772, title: 'Centro storico Ostuni', desc: '„Città Bianca” — białe miasto na wzgórzu', icon: 'fa-landmark', color: '#64748b' },
             { id: 'loco-centro', zone: 'locorotondo', cat: 'attraction', lat: 40.7532, lng: 17.3285, title: 'Centro storico Locorotondo', desc: 'Okrągłe historyczne centrum — Valle d\'Itria', icon: 'fa-landmark', color: '#d97706' }
         ];
+
+        const POI_POPUP_EXTRA = {
+            'kiko-sparano': '<p class="text-pink-800 text-xs font-bold mb-1">✅ Grawer laserowy potwierdzony!</p><p class="text-slate-600 text-xs mb-1"><b>IT:</b> „Posso avere un\'incisione laser su questo prodotto?”</p><p class="text-slate-600 text-xs mb-2"><b>EN:</b> „Can I get a laser engraving on this product?”</p><p class="text-slate-500 text-xs mb-2">Cena: <b>2€</b> (gratis przy zakupie 30€+ z kartą KIKO ME)</p>',
+            'penny-napoletana': '<p class="text-slate-600 text-xs mb-1"><b>Po polsku:</b> jak mała Biedronka/Penny. Woda, napoje, pieczywo, wędliny, podstawy.</p><p class="text-amber-700 text-xs mb-1">Dojazd: ~12 min pieszo z Via Trevisani 236 (Via Crisanzio → Repubblica Napoletana).</p>',
+            'eurospin-napoli': '<p class="text-slate-600 text-xs mb-1"><b>Po polsku:</b> najbliższy odpowiednik taniej Biedronki — <b>najniższe ceny w IT</b>.</p><p class="text-amber-700 text-xs mb-1">Dojazd: ~15 min pieszo lub autobus z Crisanzio. <b>Uwaga: nd zamknięte po 13:30!</b></p>',
+            'lidl-maratona': '<p class="text-slate-600 text-xs mb-1"><b>Po polsku:</b> ten sam Lidl co w Polsce — pełna oferta, dobre pieczywo i mięso.</p><p class="text-amber-700 text-xs mb-1">Dojazd: autobus AMTAB z Crisanzio (linie 03/16/19) w stronę Via Napoli. Nd do 13:30.</p>',
+            'penny-maratona': '<p class="text-slate-600 text-xs mb-1"><b>Po polsku:</b> tani discount obok Lidla — można zrobić zakupy w obu naraz.</p><p class="text-amber-700 text-xs mb-1">Dojazd: jak do Lidla. <b>Plus:</b> w nd otwarty też wieczorem (17–20).</p>'
+        };
 
         let activeMapZone = (() => {
             try { return localStorage.getItem('bariApp_map_zone') || 'bari'; } catch(e) { return 'bari'; }
@@ -3891,6 +3899,7 @@
             const zoneLabel = MAP_ZONES[activeMapZone]?.label || activeMapZone;
             const zonePois = TRIP_MAP_POIS.filter(p => p.zone === activeMapZone);
             const transportPois = zonePois.filter(p => p.cat === 'transport');
+            const shopPois = zonePois.filter(p => p.cat === 'shop').sort((a, b) => (a.dist || 99) - (b.dist || 99));
             const attractionPois = zonePois.filter(p => p.cat === 'attraction');
 
             const poiRow = (poi) => `
@@ -3905,6 +3914,25 @@
                     <i class="fa-solid fa-location-arrow text-blue-500 ml-auto shrink-0 text-xs"></i>
                 </button>
             `;
+
+            const shopRow = (poi) => `
+                <button type="button" onclick="focusMapPoi('${poi.id}')" class="w-full flex items-center gap-3 bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-left active:scale-[0.98] transition-transform hover:bg-emerald-100">
+                    <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm" style="background:${poi.color}20;color:${poi.color};border:2px solid ${poi.color}">
+                        <i class="fa-solid ${poi.icon} text-xs"></i>
+                    </span>
+                    <span class="min-w-0">
+                        <span class="block text-sm font-bold text-slate-800">${poi.title}</span>
+                        <span class="block text-[10px] text-slate-500">${poi.desc}</span>
+                        ${poi.note ? `<span class="block text-[10px] text-emerald-800 font-bold mt-0.5 leading-snug">${poi.note}</span>` : ''}
+                    </span>
+                    <i class="fa-solid fa-location-arrow text-emerald-600 ml-auto shrink-0 text-xs"></i>
+                </button>
+            `;
+            const shopInner = shopPois.length ? `
+                <p class="text-[9px] text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2 leading-snug"><b>Po polsku:</b> Eurospin ≈ tania Biedronka, Lidl = Lidl, Penny ≈ mała Biedronka. <b>Sjesta 13–17</b> — kupuj rano lub po 17:00. <b>Niedziela</b> — większość do 13:30 (Penny Maratona też 17–20).</p>
+                ${shopPois.map(shopRow).join('')}
+            ` : '';
+            const shopsHtml = mapLegendPanel('map-shops-' + activeMapZone, 'Tanie sklepy 🛒', shopPois.length, shopInner, 'text-emerald-700');
 
             const darioZoneTips = DARIO_TIPS.filter(t => (t.zone || 'bari') === activeMapZone);
             const darioDestinations = darioZoneTips.filter(t => t.cat === 'destination');
@@ -3992,8 +4020,9 @@
             };
             const otherPinsHtml = mapLegendPanel('map-pins-' + activeMapZone, 'Inne pinezki', otherCustomPins.length, otherCustomPins.map(otherPinRow).join(''));
 
-            legend.innerHTML = builtinHtml + darioHtml + foodHtml + visitedHtml + otherPinsHtml;
+            legend.innerHTML = builtinHtml + shopsHtml + darioHtml + foodHtml + visitedHtml + otherPinsHtml;
 
+            if (shopPois.length) initSectionPanel('map-shops-' + activeMapZone, activeMapZone === 'bari');
             if (darioZoneTips.length) initSectionPanel('map-dario-' + activeMapZone, false);
             if (visitedPins.length) initSectionPanel('map-visited-' + activeMapZone, false);
             if (otherCustomPins.length) initSectionPanel('map-pins-' + activeMapZone, false);
@@ -4172,15 +4201,7 @@
 
             TRIP_MAP_POIS.forEach(poi => {
                 const marker = L.marker([poi.lat, poi.lng], { icon: createMapMarkerIcon(poi) });
-                const shopIds = ['penny-napoletana', 'penny-maratona', 'eurospin-napoli', 'lidl-maratona'];
-                const shopExtraMap = {
-                    'kiko-sparano': '<p class="text-pink-800 text-xs font-bold mb-1">✅ Grawer laserowy potwierdzony!</p><p class="text-slate-600 text-xs mb-1"><b>IT:</b> „Posso avere un\'incisione laser su questo prodotto?”</p><p class="text-slate-600 text-xs mb-2"><b>EN:</b> „Can I get a laser engraving on this product?”</p><p class="text-slate-500 text-xs mb-2">Cena: <b>2€</b> (gratis przy zakupie 30€+ z kartą KIKO ME)</p>',
-                    'penny-napoletana': '<p class="text-slate-600 text-xs mb-1">Tani discount (jak pl. Penny). Podstawy, napoje, wędliny, pieczywo.</p>',
-                    'penny-maratona': '<p class="text-slate-600 text-xs mb-1">Tani discount. Blisko Lidla — warto wpaść do obu. Nd czynny też wieczorem 17–20.</p>',
-                    'eurospin-napoli': '<p class="text-slate-600 text-xs mb-1"><b>Najtańszy sklep w Italii</b> (ranking Altroconsumo). Własna marka. Uwaga: nd do 13:30!</p>',
-                    'lidl-maratona': '<p class="text-slate-600 text-xs mb-1">Lidl — znany z Polski. Pieczywo, owoce, mięso. Nd do 13:30. Parking + ładowanie EV.</p>'
-                };
-                const extraHtml = shopExtraMap[poi.id] || '';
+                const extraHtml = POI_POPUP_EXTRA[poi.id] || '';
                 marker.bindPopup(`
                     <p class="font-bold text-slate-800 mb-1">${poi.title}</p>
                     <p class="text-slate-600 text-xs mb-2">${poi.desc}</p>
