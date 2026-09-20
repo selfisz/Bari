@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bari Autopilot</title>
+    <title>Autopilot — wyjazdy</title>
     <script>
         window.__BARI_BASE__ = (function() {
             var path = location.pathname;
@@ -14,7 +14,7 @@
     <meta name="theme-color" content="#009246">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Bari">
+    <meta name="apple-mobile-web-app-title" content="Autopilot">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -113,9 +113,10 @@
     <!-- HEADER -->
     <header class="bg-gradient-to-br from-bari-dark to-bari-primary text-white p-5 sticky top-0 z-50 rounded-b-3xl shadow-lg">
         <div class="flex justify-between items-center">
-            <div>
-                <h1 id="dynamic-greeting" class="text-xl font-bold tracking-tight">Bari Autopilot ✈️</h1>
-            </div>
+            <button type="button" onclick="openTripSwitcher()" class="text-left active:scale-95 transition-transform" title="Zmień wyjazd">
+                <h1 id="dynamic-greeting" class="text-xl font-bold tracking-tight">Autopilot ✈️</h1>
+                <p id="trip-header-sub" class="text-[10px] uppercase tracking-wider text-white/70 font-bold"></p>
+            </button>
         </div>
         <div class="mt-4 bg-white/10 rounded-xl p-3 flex items-center justify-between backdrop-blur-sm border border-white/20">
             <div id="countdown" class="text-sm font-bold text-orange-200">⏳ Obliczanie...</div>
@@ -190,6 +191,19 @@
         </div>
     </div>
 
+    <!-- LISTA WYJAZDÓW -->
+    <div id="trip-switcher" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[210] hidden flex items-end transition-opacity opacity-0" onclick="if(event.target===this) closeTripSwitcher()">
+        <div class="bg-white w-full rounded-t-3xl p-5 transform translate-y-full slide-panel shadow-[0_-10px_40px_rgba(0,0,0,0.3)] max-h-[85vh] overflow-y-auto" id="trip-switcher-sheet">
+            <div class="flex justify-between items-center mb-1">
+                <h3 class="font-bold text-xl text-bari-dark"><i class="fa-solid fa-suitcase-rolling text-bari-accent"></i> Moje wyjazdy</h3>
+                <button onclick="closeTripSwitcher()" class="text-slate-400 hover:text-slate-700 text-2xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-[11px] text-slate-500 mb-4 leading-snug">Każdy wyjazd ma własny plan, bagaż, mapę, dziennik i rozliczenia. Dane nie mieszają się między wyjazdami.</p>
+            <div id="trip-list" class="space-y-3"></div>
+            <p class="text-[10px] text-slate-400 mt-4 leading-snug"><i class="fa-solid fa-circle-info"></i> Zakończone wyjazdy zostają w apce jako wspomnienia — dziennik, zdjęcia, pinezki „Byłem tu” i rozliczenia są nienaruszone.</p>
+        </div>
+    </div>
+
     <!-- SETTINGS OVERLAY -->
     <div id="settings-panel" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-end transition-opacity opacity-0" onclick="if(event.target===this) closeSettings()">
         <div class="bg-white w-full rounded-t-3xl p-6 transform translate-y-full slide-panel shadow-[0_-10px_40px_rgba(0,0,0,0.3)] max-h-[85vh] overflow-y-auto" id="settings-sheet">
@@ -198,10 +212,19 @@
                 <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-700 text-2xl"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
+            <!-- Wyjazd -->
+            <div class="bg-orange-50 rounded-xl p-4 border border-orange-200 mb-4">
+                <h4 class="font-bold text-bari-primary mb-1 flex items-center gap-2"><i class="fa-solid fa-suitcase-rolling text-bari-accent"></i> Wyjazd</h4>
+                <p id="settings-trip-name" class="text-[11px] text-orange-900 mb-3"></p>
+                <button type="button" onclick="closeSettings(); setTimeout(openTripSwitcher, 320);" class="w-full bg-bari-accent text-white py-2.5 rounded-lg font-bold text-sm active:scale-95">
+                    <i class="fa-solid fa-right-left"></i> Zmień wyjazd
+                </button>
+            </div>
+
             <!-- Przypomnienia -->
             <div class="bg-purple-50 rounded-xl p-4 border border-purple-200 mb-4">
                 <h4 class="font-bold text-bari-primary mb-2 flex items-center gap-2"><i class="fa-solid fa-bell text-purple-600"></i> Przypomnienia</h4>
-                <p class="text-[10px] text-purple-800 mb-3">9.06 o 8:00 — przypomnienie przed wylotem (&lt;24h). W Bari: briefing codziennie o 8:00. Magnesy (dz. 3 i 6), sjesta. Popup zawsze; push po włączeniu.</p>
+                <p id="notif-description" class="text-[10px] text-purple-800 mb-3"></p>
                 <button type="button" onclick="enableTripNotifications()" id="notif-enable-btn" class="w-full bg-purple-600 text-white py-2.5 rounded-lg font-bold text-sm active:scale-95">
                     <i class="fa-solid fa-bell"></i> Włącz powiadomienia
                 </button>
@@ -283,7 +306,7 @@
 
         <!-- ZAKŁADKA 1: PROCEDURA STARTOWA -->
         <section id="tab-start" class="tab-content">
-            <h2 class="text-2xl font-bold text-bari-primary mb-4 flex items-center gap-2"><i class="fa-solid fa-plane-departure text-bari-accent"></i> Start (10 Czerwca)</h2>
+            <h2 class="text-2xl font-bold text-bari-primary mb-4 flex items-center gap-2"><i class="fa-solid fa-plane-departure text-bari-accent"></i> <span id="start-tab-title">Start</span></h2>
             <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
                 <button type="button" onclick="toggleSectionPanel('start')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
                     <h3 class="font-bold text-bari-primary flex items-center gap-2"><i class="fa-solid fa-list-check text-bari-accent"></i> Procedura startowa</h3>
@@ -323,7 +346,7 @@
                 <!-- Check-out Via Trevisani -->
                 <div id="checkout-section" class="hidden mb-6 bg-orange-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden">
                     <button type="button" onclick="toggleSectionPanel('checkout')" class="w-full p-4 flex items-center justify-between text-left active:bg-orange-100/50 transition-colors">
-                        <h3 class="font-bold text-orange-800 flex items-center gap-2"><i class="fa-solid fa-door-open"></i> Check-out Via Trevisani (Kaucja!)</h3>
+                        <h3 class="font-bold text-orange-800 flex items-center gap-2"><i class="fa-solid fa-door-open"></i> <span id="checkout-section-title">Check-out</span></h3>
                         <i id="section-checkout-chevron" class="fa-solid fa-chevron-down text-orange-400 transition-transform duration-200"></i>
                     </button>
                     <div id="section-checkout-body" class="hidden px-4 pb-4 border-t border-orange-200">
@@ -340,7 +363,7 @@
             <h2 class="text-2xl font-bold text-bari-primary mb-4"><i class="fa-regular fa-calendar-check text-bari-accent"></i> Harmonogram</h2>
 
             <div class="bg-orange-50 text-orange-800 p-3 rounded-xl mb-4 text-sm font-medium border border-orange-200">
-                <i class="fa-solid fa-clock text-orange-500"></i> Sjesta w Bari: <b>13:00 - 17:00</b>. Sklepy i restauracje mogą być zamknięte.
+                <i class="fa-solid fa-clock text-orange-500"></i> <span id="plan-siesta-note"></span>
             </div>
 
             <div id="checkout-video-alert" class="hidden bg-red-50 border-2 border-red-400 text-red-800 p-3 rounded-xl mb-4 text-sm font-bold flex items-start gap-2">
@@ -349,7 +372,7 @@
             </div>
 
             <div class="bg-slate-100 border border-slate-200 rounded-xl p-3 mb-4 text-xs text-slate-700 leading-snug">
-                <i class="fa-solid fa-route text-bari-accent"></i> <b>Różne dni = różne miejsca.</b> Pogoda przy każdym dniu jest lokalna. <b>Mapa w Bazie</b> ma strefy m.in. Bari, Alberobello, Trani, Matera, Ostuni, Locorotondo — przełącz nad mapą.
+                <i class="fa-solid fa-route text-bari-accent"></i> <span id="plan-zones-note"></span>
             </div>
 
             <div id="plan-container" class="space-y-4"></div>
@@ -357,13 +380,13 @@
 
         <!-- ZAKŁADKA 4: BAZA -->
         <section id="tab-baza" class="tab-content">
-            <h2 class="text-2xl font-bold text-bari-primary mb-4"><i class="fa-solid fa-house-flag text-bari-accent"></i> Via Trevisani 236</h2>
+            <h2 class="text-2xl font-bold text-bari-primary mb-4"><i class="fa-solid fa-house-flag text-bari-accent"></i> <span id="baza-tab-title">Baza</span></h2>
 
             <!-- WhatsApp do Dario -->
             <a id="dario-whatsapp-btn" href="https://wa.me/?text=Ciao%20Dario%2C%20siamo%20al%20appartamento%20Via%20Trevisani%20236.%20" target="_blank" rel="noopener" class="w-full bg-[#25D366] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 mb-2 shadow-lg active:scale-95 transition-transform text-sm">
-                <i class="fa-brands fa-whatsapp text-2xl"></i> Kontakt z Dario (WhatsApp)
+                <i class="fa-brands fa-whatsapp text-2xl"></i> <span id="host-whatsapp-btn-label">Kontakt z gospodarzem (WhatsApp)</span>
             </a>
-            <p class="text-[10px] text-slate-500 text-center mb-4 leading-snug">Numer WhatsApp Dario jest zapisany — możesz go zmienić w sekcji Apartament poniżej.</p>
+            <p id="host-whatsapp-hint" class="text-[10px] text-slate-500 text-center mb-4 leading-snug"></p>
 
             <div class="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
                 <button type="button" onclick="toggleSectionPanel('baza-apartament')" class="w-full p-4 flex items-center justify-between text-left active:bg-slate-50 transition-colors">
@@ -373,17 +396,15 @@
                 <div id="section-baza-apartament-body" class="hidden px-4 pb-4 border-t border-slate-100">
                     <div class="flex items-start justify-between pt-4">
                         <div>
-                            <p class="text-xs text-slate-400 font-bold uppercase tracking-wide">Twój Apartament</p>
-                            <p class="font-bold text-lg text-bari-dark">Via Trevisani 236, Bari</p>
+                            <p id="apartment-name" class="text-xs text-slate-400 font-bold uppercase tracking-wide">Twój Apartament</p>
+                            <p id="apartment-address" class="font-bold text-lg text-bari-dark"></p>
                         </div>
-                        <a href="https://maps.google.com/?q=Via+Trevisani+236,+Bari" target="_blank" class="bg-blue-100 text-blue-600 w-10 h-10 flex items-center justify-center rounded-full hover:bg-blue-200"><i class="fa-solid fa-location-arrow"></i></a>
+                        <a id="apartment-maps-link" href="https://maps.google.com/" target="_blank" class="bg-blue-100 text-blue-600 w-10 h-10 flex items-center justify-center rounded-full hover:bg-blue-200"><i class="fa-solid fa-location-arrow"></i></a>
                     </div>
 
                     <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg mb-3">
-                        <p class="text-xs font-bold text-blue-800 uppercase mb-1"><i class="fa-solid fa-key"></i> Instrukcja Wejścia (12:00)</p>
-                        <p class="text-sm text-blue-900">1. Domofon: <b>Liddi CUTRIGNELLI</b> lub <b>Art Nouveau</b>.</p>
-                        <p class="text-sm text-blue-900">2. Piętro: <b>2 (Second floor)</b>.</p>
-                        <p class="text-sm text-blue-900">3. Czeka Katia: Dać <b>21€ w gotówce</b>, zapytać jak włączyć prąd!</p>
+                        <p class="text-xs font-bold text-blue-800 uppercase mb-1"><i class="fa-solid fa-key"></i> <span id="apartment-checkin-title"></span></p>
+                        <div id="apartment-checkin-lines" class="space-y-1"></div>
                     </div>
 
                     <div class="space-y-3">
@@ -396,7 +417,7 @@
                         </div>
                         <div class="bg-green-50 p-3 rounded-lg border border-green-200 flex justify-between items-center cursor-pointer hover:bg-green-100" onclick="editInline('dario_whatsapp', 'WhatsApp Dario — numer (np. 393xxxxxxxx)')">
                             <div>
-                                <p class="text-[10px] uppercase text-green-700 font-bold"><i class="fa-brands fa-whatsapp"></i> WhatsApp Dario</p>
+                                <p class="text-[10px] uppercase text-green-700 font-bold"><i class="fa-brands fa-whatsapp"></i> <span id="host-field-label">WhatsApp gospodarza</span></p>
                                 <p class="font-mono font-bold text-sm" id="dario_whatsapp">_Wpisz numer_</p>
                             </div>
                             <i class="fa-solid fa-pen text-green-400"></i>
@@ -489,7 +510,7 @@
             <h2 class="text-2xl font-bold text-bari-primary mb-4 flex items-center gap-2"><i class="fa-solid fa-bus-simple text-blue-500"></i> Transport & Bilety</h2>
 
             <!-- Alert FAL (przeniesiony z Bazy) -->
-            <div class="bg-red-600 text-white p-4 rounded-xl shadow-md mb-4 flex items-start gap-3">
+            <div id="transport-fal-alert" class="bg-red-600 text-white p-4 rounded-xl shadow-md mb-4 flex items-start gap-3">
                 <i class="fa-solid fa-triangle-exclamation text-2xl mt-1 text-yellow-300"></i>
                 <div>
                     <p class="font-bold text-lg mb-1">PUŁAPKA: Pociągi do Matery!</p>
@@ -508,10 +529,10 @@
                         <div class="bg-red-100 text-red-600 w-10 h-10 rounded-full flex items-center justify-center shrink-0"><i class="fa-solid fa-train"></i></div>
                         <div>
                             <p class="font-bold text-sm text-slate-800">Trenitalia (Pociągi)</p>
-                            <p class="text-[10px] text-slate-500">Wycieczki: Polignano, Monopoli, Trani</p>
+                            <p id="transport-train-note" class="text-[10px] text-slate-500"></p>
                         </div>
                     </a>
-                    <a href="https://www.amtab.it/it/muvt" target="_blank" class="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3 rounded-lg hover:bg-slate-100 active:scale-95 transition-transform">
+                    <a id="transport-muvt-card" href="https://www.amtab.it/it/muvt" target="_blank" class="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3 rounded-lg hover:bg-slate-100 active:scale-95 transition-transform">
                         <div class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center shrink-0"><i class="fa-solid fa-bus"></i></div>
                         <div>
                             <p class="font-bold text-sm text-slate-800">MUVT App</p>
@@ -664,7 +685,7 @@
                         <input type="number" id="cash-start-gosia" step="0.01" min="0" placeholder="np. 40" class="w-full mt-1 p-2 bg-slate-50 border border-pink-200 rounded-lg text-sm font-bold outline-none focus:border-pink-400" oninput="saveCashStart()">
                     </div>
                 </div>
-                <p class="text-[9px] text-slate-400">Odejmuje tylko wydatki <b>Gotówka</b> tej osoby z rozliczeń. Pamiętaj: 21€ na Katię!</p>
+                <p id="cash-note" class="text-[9px] text-slate-400"></p>
                 </div>
             </div>
 
@@ -780,15 +801,17 @@
                         </button>
                         <div id="section-awaria-polisa-body" class="hidden px-3 pb-3 border-t border-emerald-200">
                             <button type="button" onclick="editInline('awaria_polisa', 'Numer polisy turystycznej')" class="w-full mt-2 text-[10px] text-emerald-700 font-bold py-1.5 rounded-lg border border-dashed border-emerald-300 active:bg-emerald-100"><i class="fa-solid fa-pen"></i> Edytuj numer polisy</button>
-                            <p class="text-[10px] text-emerald-800 mt-2 mb-2 leading-snug">10.06–16.06.2026 · Europa · wariant Podstawowy · 77 PLN</p>
+                            <p id="insurance-note" class="text-[10px] text-emerald-800 mt-2 mb-2 leading-snug"></p>
                             <a href="tel:+48225999185" class="block w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-bold text-center mb-3 active:scale-95 shadow-sm">
                                 <i class="fa-solid fa-phone"></i> UNIQA Pomoc 24h: +48 22 599 91 85
                             </a>
                             <a href="sms:+48661001601" class="block w-full bg-white border border-emerald-300 text-emerald-800 py-2 rounded-xl text-xs font-bold text-center mb-3 active:scale-95">
                                 <i class="fa-solid fa-comment-sms"></i> SMS: +48 661 001 601
                             </a>
-                            <img src="assets/polisa-uniqa-1.png" alt="Polisa UNIQA strona 1" class="w-full rounded-xl border border-emerald-200 shadow-sm mb-2" loading="lazy">
-                            <img src="assets/polisa-uniqa-2.png" alt="Polisa UNIQA strona 2" class="w-full rounded-xl border border-emerald-200 shadow-sm" loading="lazy">
+                            <div id="insurance-images">
+                                <img src="assets/polisa-uniqa-1.png" alt="Polisa UNIQA strona 1" class="w-full rounded-xl border border-emerald-200 shadow-sm mb-2" loading="lazy">
+                                <img src="assets/polisa-uniqa-2.png" alt="Polisa UNIQA strona 2" class="w-full rounded-xl border border-emerald-200 shadow-sm" loading="lazy">
+                            </div>
                         </div>
                     </div>
 
@@ -888,14 +911,15 @@
         function appUrl(path) { return APP_BASE + String(path || '').replace(/^\//, ''); }
         const SUPABASE_URL = 'https://ygjqkxtbchoinixwamip.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_rHv90qDmFYzmTJUKlKwlew_g49KAFZW';
-        const ROOM_ID = 'bari'; // wspólny "pokój" – oba telefony używają tego samego, więc widzą te same dane
+        // ROOM_ID ustawiany jest niżej na podstawie aktywnego wyjazdu (TRIP.roomId).
+        // Oba telefony w tym samym pokoju widzą te same dane; każdy wyjazd ma własny pokój.
         const supabaseClient = (window.supabase && SUPABASE_URL && SUPABASE_KEY)
             ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
             : null;
         let lastWritten = {};
 
         /* --- STATE & DATA --- */
-        let state = {
+        const BARI_SEED = {
             targetDate: "2026-06-10T03:15",
             isReturnMode: false,
             splitExpenses: [],
@@ -1045,6 +1069,328 @@
             }
         };
 
+        const MONOPOLI_SEED = {
+            targetDate: "2026-09-30T06:00",
+            isReturnMode: false,
+            splitExpenses: [],
+            removedBagSeedIds: [],
+            startBari: [
+                {id: 'ms1', text: '<b>Loty:</b> wpisz numer rejsu i godziny (edytuj ten punkt), gdy kupicie bilety.', checked: false},
+                {id: 'ms2', text: 'Online check-in w apce linii (otwiera się 24h przed lotem) — boarding pass na telefon.', checked: false},
+                {id: 'ms3', text: 'Transport na lotnisko w Krakowie — zamów z zapasem (bramki zamykają się 30 min przed odlotem).', checked: false},
+                {id: 'ms4', text: 'Dokumenty: dowód/paszport, EKUZ, polisa. Powerbank i płyny 100ml do <b>podręcznego</b>.', checked: false},
+                {id: 'ms5', text: 'Po wylądowaniu w Bari: <b>Ferrotramviaria FR2</b> z lotniska → <b>Bari Centrale</b> (5.30€, QR na bramce).', checked: false},
+                {id: 'ms6', text: 'Z Bari Centrale: <b>Trenitalia regionale → Monopoli</b> (~30–40 min, ok. 3–5€). Check-in w apce, jeśli bilet elektroniczny.', checked: false},
+                {id: 'ms7', text: 'Z dworca w Monopoli do apartamentu <b>Via Fiume 19</b> — ~8 min pieszo.', checked: false}
+            ],
+            shopData: [
+                {id: 'msh1', text: 'Zgrzewka wody mineralnej', checked: false},
+                {id: 'msh2', text: 'Śniadania: pieczywo, owoce, kawa', checked: false},
+                {id: 'msh3', text: 'Lokalne wino (Primitivo / Verdeca z Valle d\'Itria)', checked: false},
+                {id: 'msh4', text: '🧲 Magnesy na pamiątkę (Polignano — dzień 3)', checked: false},
+                {id: 'msh5', text: '🧲 Magnesy — ostatnia szansa (Monopoli — dzień 6/7)', checked: false}
+            ],
+            checkoutData: [
+                {id: 'mco1', text: 'Wyrzucone śmieci', checked: false},
+                {id: 'mco2', text: 'Sprawdzone szuflady i sejf (dokumenty!)', checked: false},
+                {id: 'mco3', text: 'Ładowarki z gniazdek', checked: false},
+                {id: 'mco4', text: '<b>NAGRAĆ WIDEO CAŁEGO MIESZKANIA</b> przy wyjściu', checked: false},
+                {id: 'mco5', text: 'Klucze zwrócone według instrukcji gospodarza', checked: false}
+            ],
+            bagsData: [
+                {
+                    id: 'bagTemp', name: 'Tymczasowa', icon: 'fa-hourglass-half', color: 'text-amber-600', temp: true,
+                    items: []
+                },
+                {
+                    id: 'bag1', name: 'Walizka 10kg (Główna)', icon: 'fa-suitcase', color: 'text-slate-600',
+                    items: []
+                },
+                {
+                    id: 'bag2', name: 'Plecak Dawida (Pod fotel)', icon: 'fa-backpack', color: 'text-blue-600',
+                    items: []
+                },
+                {
+                    id: 'bag3', name: 'Plecak Gosi (Pod fotel)', icon: 'fa-backpack', color: 'text-pink-600',
+                    items: []
+                }
+            ],
+            planBari: [
+                {
+                    id: 'mp1', date: 'Dzień 1 (30.09) - Przylot i check-in w Monopoli',
+                    items: [
+                        {id: 'mp1i1', text: '<b>Lot do Bari</b> — wpisz godziny i numer rejsu po zakupie biletów.', checked: false},
+                        {id: 'mp1i2', text: 'Bari Aeroporto: idź za <b>niebieską linią</b> do stacji kolejowej (tunel ~300 m). Bilet <b>FR2 → Bari Centrale (5.30€)</b> z automatu, <b>QR skanuj na bramce</b>.', checked: false},
+                        {id: 'mp1i3', text: '<b>Bari Centrale → Monopoli</b> — Trenitalia regionale, ~30–40 min. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
+                        {id: 'mp1checkin', text: '⚠️ <b>CHECK-IN Trenitalia</b> w apce przed odjazdem (bilet elektroniczny)!', checked: false, checkin: true},
+                        {id: 'mp1i4', text: 'Ze stacji Monopoli pieszo do <b>Via Fiume 19</b> (~8 min). <a href="https://maps.google.com/?q=Via+Fiume+19,+70043+Monopoli+BA" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Apartament</a>', checked: false},
+                        {id: 'mp1i5', text: '<b>16:00–19:00 CHECK-IN</b> — „La casa di Gio Mar”, Via Fiume 19. Napisz gospodarzowi godzinę przyjazdu z wyprzedzeniem!', checked: false},
+                        {id: 'mp1i6', text: 'Pierwsze zakupy: woda, śniadanie na jutro. <b>Sklepy zamykają ok. 20:30</b>, w niedzielę krócej.', checked: false},
+                        {id: 'mp1i7', text: 'Kolacja przy <b>Porto Antico</b> — świeże ryby i spacer po nabrzeżu.', checked: false}
+                    ]
+                },
+                {
+                    id: 'mp2', date: 'Dzień 2 (01.10) - Monopoli na spokojnie',
+                    items: [
+                        {id: 'mp2i1', text: 'Poranna <b>focaccia barese</b> w piekarni przy starówce (kilka euro, must-have).', checked: false},
+                        {id: 'mp2i2', text: '<b>Centro storico</b> — białe uliczki, Cattedrale Maria SS. della Madia, mury nad morzem.', checked: false},
+                        {id: 'mp2i3', text: '<b>Castello Carlo V</b> i <b>Porto Antico</b> — kolorowe łodzie gozzi, najlepsze zdjęcia późnym popołudniem.', checked: false},
+                        {id: 'mp2siesta', text: '13:00–17:00 — <b>SIESTA</b>: Sklepy i większość lokali zamknięta. Jedz i rób zakupy rano lub po 17:00.', checked: false, siesta: true},
+                        {id: 'mp2i4', text: '<b>Cala Porta Vecchia</b> — miejska plaża pod murami. Na początku października woda wciąż ciepła!', checked: false},
+                        {id: 'mp2i5', text: 'Gelato na deptaku i kolacja w starym mieście.', checked: false}
+                    ]
+                },
+                {
+                    id: 'mp3', date: 'Dzień 3 (02.10) - Polignano a Mare',
+                    items: [
+                        {id: 'mp3i1', text: '<b>Pociąg Monopoli → Polignano a Mare</b> — regionale, ~10–12 min. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
+                        {id: 'mp3checkin', text: '⚠️ <b>CHECK-IN Trenitalia</b> w apce przed odjazdem!', checked: false, checkin: true},
+                        {id: 'mp3i2', text: '<b>Lama Monachile</b> — plaża w wąwozie pod mostem, ikona Polignano.', checked: false},
+                        {id: 'mp3i3', text: 'Punkty widokowe na klifach i pomnik <b>Domenico Modugno</b>.', checked: false},
+                        {id: 'mp3siesta', text: '13:00–17:00 — <b>SIESTA</b>: Plaże OK, ale sklepy zamknięte. Lunch przed 13:00 lub po 17:00.', checked: false, siesta: true},
+                        {id: 'mp3magnet', text: '🧲 <b>Magnesy na pamiątkę!</b> Stragany przy starym mieście i nad plażą.', checked: false, magnet: true},
+                        {id: 'mp3i4', text: 'Kawa z widokiem na klify, powrót pociągiem do Monopoli przed kolacją.', checked: false}
+                    ]
+                },
+                {
+                    id: 'mp4', date: 'Dzień 4 (03.10) - Alberobello & Valle d\'Itria',
+                    items: [
+                        {id: 'mp4i1', text: '⚠️ <b>Sprawdź dojazd dzień wcześniej.</b> Z Monopoli do Alberobello nie ma bezpośredniego pociągu — opcje: autobus regionalny, pociąg przez Bari (FSE) albo auto na jeden dzień.', checked: false},
+                        {id: 'mp4i2', text: '<b>Alberobello</b> — Rione Monti i Aia Piccola, punkt widokowy przy Chiesa di Santa Lucia.', checked: false},
+                        {id: 'mp4siesta', text: '13:00–17:00 — <b>SIESTA</b>: W miasteczkach część lokali zamknięta. Lunch przed 13:00.', checked: false, siesta: true},
+                        {id: 'mp4i3', text: '<b>Locorotondo</b> — okrągłe białe miasteczko nad Valle d\'Itria. Tip od Dario: winnica <b>Bufano Sirose</b>.', checked: false},
+                        {id: 'mp4i4', text: 'Powrót do Monopoli przed zmrokiem — sprawdź godzinę ostatniego kursu!', checked: false}
+                    ]
+                },
+                {
+                    id: 'mp5', date: 'Dzień 5 (04.10) - Bari Vecchia (powrót do znajomych miejsc)',
+                    items: [
+                        {id: 'mp5i1', text: '<b>Pociąg Monopoli → Bari Centrale</b> (~30–40 min). <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
+                        {id: 'mp5checkin', text: '⚠️ <b>CHECK-IN Trenitalia</b> w apce przed odjazdem!', checked: false, checkin: true},
+                        {id: 'mp5i2', text: '<b>Bari Vecchia</b> — Via dell\'Arco Basso (ulica orecchiette), Bazylika św. Mikołaja, Castello Svevo. Wszystkie <b>tipy od Dario</b> masz na mapie w strefie Bari.', checked: false},
+                        {id: 'mp5siesta', text: '13:00–17:00 — <b>SIESTA</b>: Sklepy w Bari zamknięte. Lunch rano lub po 17:00.', checked: false, siesta: true},
+                        {id: 'mp5i3', text: 'Opcjonalnie: <b>KIKO Milano</b>, Via Sparano 53 — grawer laserowy 2€ (gratis w KIKO ME od ~30€).', checked: false},
+                        {id: 'mp5i4', text: 'Powrót pociągiem do Monopoli wieczorem.', checked: false}
+                    ]
+                },
+                {
+                    id: 'mp6', date: 'Dzień 6 (05.10) - Ostuni albo plaża',
+                    items: [
+                        {id: 'mp6i1', text: '<b>Opcja 1 (Ostuni):</b> pociąg Monopoli → Ostuni (~20 min) + autobus/taxi ze stacji na wzgórze. „Città Bianca” i widok na gaje oliwne.', checked: false},
+                        {id: 'mp6checkin', text: '⚠️ Bilet/check-in przed odjazdem (jeśli jedziecie pociągiem).', checked: false, checkin: true},
+                        {id: 'mp6i2', text: '<b>Opcja 2 (leniwy dzień):</b> plaże na północ od Monopoli — Cala Porta Vecchia, Porto Bianco, Lido Sabbiadoro.', checked: false},
+                        {id: 'mp6siesta', text: '13:00–17:00 — <b>SIESTA</b>: Zaplanuj lunch przed 13:00.', checked: false, siesta: true},
+                        {id: 'mp6magnet', text: '🧲 <b>Magnesy — ostatnia szansa</b>, jeśli jeszcze nie kupiliście.', checked: false, magnet: true},
+                        {id: 'mp6i3', text: 'Wieczorem: pakowanie na spokojnie + ostatnia kolacja w porcie.', checked: false}
+                    ]
+                },
+                {
+                    id: 'mp7', date: 'Dzień 7 (06.10) - Check-out i powrót ✈️',
+                    items: [
+                        {id: 'mp7i1', text: '<b>CHECK-OUT 8:00–10:00</b> — Via Fiume 19. <b>NAGRAJ WIDEO</b> całego mieszkania, wyrzuć śmieci, klucze wg instrukcji gospodarza.', checked: false, sec: true},
+                        {id: 'mp7i2', text: 'Pieszo na <b>stację Monopoli</b> (~8 min z bagażami) — bilet do <b>Bari Centrale</b>.', checked: false},
+                        {id: 'mp7i3', text: 'W Bari Centrale przesiadka na <b>Ferrotramviaria FR2 → Bari Aeroporto</b> (5.30€, QR na bramce przed peronem).', checked: false},
+                        {id: 'mp7i4', text: 'Na stacji lotniskowej: <b>tunel ~300 m</b> do terminala, potem <b>piętro 1 — Partenze</b>.', checked: false},
+                        {id: 'mp7i5', text: 'Bag drop zamyka się <b>60 min przed odlotem</b>. Tylko plecaki? Od razu na security.', checked: false},
+                        {id: 'mp7i6', text: '<b>KONTROLA BEZPIECZEŃSTWA</b>: płyny 100ml w worku, elektronika i powerbank osobno.', checked: false, sec: true},
+                        {id: 'mp7i7', text: '🇪🇺 Włochy → Polska = <b>Schengen</b>, bez kontroli granicznej. Dowód/paszport do linii i przy bramce.', checked: false},
+                        {id: 'mp7i8', text: 'Sprawdź tablicę odlotów — <b>numer gate</b> pojawia się ~40–60 min przed odlotem.', checked: false}
+                    ]
+                }
+            ],
+            transportStopPhotos: [],
+            ticketPhotos: [],
+            customMapPins: [],
+            foodSpots: [],
+            journalEntries: [],
+            cashStart: { dawid: 40, gosia: 40 },
+            planDayMeta: {
+                mp1: { outbound: '', return: '' },
+                mp2: { outbound: '', return: '' },
+                mp3: { outbound: '', return: '' },
+                mp4: { outbound: '', return: '' },
+                mp5: { outbound: '', return: '' },
+                mp6: { outbound: '', return: '' },
+                mp7: { outbound: '', return: '' }
+            }
+        };
+
+        /* --- REJESTR WYJAZDÓW ---
+           Każdy wyjazd ma własny pokój w Supabase i własny prefiks w localStorage,
+           więc dane i historia jednego wyjazdu nigdy nie mieszają się z drugim.
+           Bari celowo zachowuje stare nazwy (pokój "bari", prefiks "bariApp_") — dzięki temu
+           cała historia z czerwca 2026 wczytuje się bez żadnej migracji. */
+        const TRIP_DEFS = {
+            monopoli: {
+                id: 'monopoli',
+                roomId: 'monopoli-2026',
+                lsPrefix: 'monopoliApp_',
+                name: 'Monopoli 2026',
+                short: 'Monopoli',
+                subtitle: 'Apulia · Via Fiume 19',
+                icon: 'fa-umbrella-beach',
+                appTitle: 'Monopoli Autopilot ✈️',
+                greetings: {
+                    morning: 'Buongiorno Dawid! ☕',
+                    afternoon: 'Buon pomeriggio! Uwaga na sjestę 🌞',
+                    evening: 'Buonasera! Czas na winko 🍷'
+                },
+                start: '2026-09-30',
+                end: '2026-10-06',
+                departureAt: '2026-09-30T06:00:00',
+                returnLabel: 'do Krakowa',
+                seed: MONOPOLI_SEED,
+                magnetDays: ['2026-10-02', '2026-10-05'],
+                checkoutVideoDate: '2026-10-06',
+                startTabTitle: 'Start (30 września)',
+                siestaNote: 'Sjesta w Apulii: <b>13:00 - 17:00</b>. Sklepy i restauracje mogą być zamknięte.',
+                planZonesNote: '<b>Różne dni = różne miejsca.</b> Pogoda przy każdym dniu jest lokalna. <b>Mapa w Bazie</b> ma strefy m.in. Monopoli, Polignano, Alberobello, Bari, Ostuni — przełącz nad mapą.',
+                apartment: {
+                    title: 'Via Fiume 19',
+                    name: 'La casa di Gio Mar',
+                    address: 'Via Fiume 19, 70043 Monopoli (BA)',
+                    mapsQuery: 'Via+Fiume+19,+70043+Monopoli+BA',
+                    checkinTitle: 'Check-in 16:00–19:00',
+                    checkinLines: [
+                        'Rezerwacja <b>Booking.com — opłacona</b> (2 574,78 zł). Nie płaćcie nic dodatkowo poza taksą klimatyczną, jeśli jest.',
+                        'Napisz gospodarzowi <b>godzinę przyjazdu</b> — check-in tylko 16:00–19:00.',
+                        'Check-out: <b>8:00–10:00</b> w dniu 06.10. Nagraj wideo mieszkania!'
+                    ],
+                    hostLabel: 'Gospodarz (WhatsApp)',
+                    hostDefaultPhone: '',
+                    hostMessage: 'Buongiorno, siamo la prenotazione Booking per La casa di Gio Mar, Via Fiume 19. '
+                },
+                transportNotesDefault: 'Monopoli ↔ Bari / Polignano — wpisz godziny pociągów',
+                insuranceNote: '30.09–06.10.2026 · Europa — uzupełnij dane polisy na ten wyjazd',
+                cashNote: 'Odejmuje tylko wydatki <b>Gotówka</b> tej osoby z rozliczeń.',
+                trainLinkNote: 'Wycieczki: Polignano, Bari, Ostuni, Alberobello',
+                features: { aptBus: false, falAlert: false, muvt: false, insuranceImages: false },
+                bagSeedItems: {
+                    bagTemp: [],
+                    bag1: [
+                        { id: 'mb1i1', text: 'Wygodne buty na zwiedzanie', qty: 1, checked: false },
+                        { id: 'mb1i2', text: 'Klapki / sandały', qty: 2, checked: false },
+                        { id: 'mb1i3', text: 'Stroje kąpielowe (woda jeszcze ciepła!)', qty: 2, checked: false },
+                        { id: 'mb1i4', text: 'Bluza / lekka kurtka na wieczory', qty: 2, checked: false },
+                        { id: 'mb1i5', text: 'Piżamy', qty: 2, checked: false },
+                        { id: 'mb1i6', text: 'Ręcznik plażowy (szybkoschnący)', qty: 2, checked: false }
+                    ],
+                    bag2: [
+                        { id: 'mb2i1', text: 'Paszporty / Dowody', sec: true, pocket: true, qty: 1, checked: false },
+                        { id: 'mb2i2', text: 'Portfel (karty, EKUZ)', sec: true, pocket: true, qty: 1, checked: false },
+                        { id: 'mb2i3', text: 'Powerbank (tylko w podręcznym!)', sec: true, pocket: true, qty: 1, checked: false },
+                        { id: 'mb2i4', text: 'Kosmetyczka z płynami (worek 100ml!)', sec: true, qty: 1, checked: false },
+                        { id: 'mb2i5', text: 'Gotówka na start (taksa klimatyczna, targ)', qty: 1, checked: false }
+                    ],
+                    bag3: [
+                        { id: 'mb3i1', text: 'Okulary przeciwsłoneczne', qty: 1, checked: false },
+                        { id: 'mb3i2', text: 'Płyny/kosmetyki Gosi (worek 100ml!)', sec: true, qty: 1, checked: false },
+                        { id: 'mb3i3', text: 'Krem z filtrem', sec: true, qty: 1, checked: false }
+                    ]
+                }
+            },
+            bari: {
+                id: 'bari',
+                roomId: 'bari',
+                lsPrefix: 'bariApp_',
+                legacy: true,
+                name: 'Bari 2026',
+                short: 'Bari',
+                subtitle: 'Apulia · Via Trevisani 236',
+                icon: 'fa-city',
+                appTitle: 'Bari Autopilot ✈️',
+                greetings: {
+                    morning: 'Buongiorno Dawid! ☕',
+                    afternoon: 'Buon pomeriggio! Uwaga na sjestę 🌞',
+                    evening: 'Buonasera! Czas na winko 🍷'
+                },
+                start: '2026-06-10',
+                end: '2026-06-15',
+                departureAt: '2026-06-10T03:15:00',
+                returnLabel: 'do Krakowa',
+                seed: BARI_SEED,
+                magnetDays: ['2026-06-12', '2026-06-15'],
+                checkoutVideoDate: '2026-06-15',
+                startTabTitle: 'Start (10 Czerwca)',
+                siestaNote: 'Sjesta w Bari: <b>13:00 - 17:00</b>. Sklepy i restauracje mogą być zamknięte.',
+                planZonesNote: '<b>Różne dni = różne miejsca.</b> Pogoda przy każdym dniu jest lokalna. <b>Mapa w Bazie</b> ma strefy m.in. Bari, Alberobello, Trani, Matera, Ostuni, Locorotondo — przełącz nad mapą.',
+                apartment: {
+                    title: 'Via Trevisani 236',
+                    name: 'Apartament Dario',
+                    address: 'Via Trevisani 236, Bari',
+                    mapsQuery: 'Via+Trevisani+236,+Bari',
+                    checkinTitle: 'Instrukcja Wejścia (12:00)',
+                    checkinLines: [
+                        '1. Domofon: <b>Liddi CUTRIGNELLI</b> lub <b>Art Nouveau</b>.',
+                        '2. Piętro: <b>2 (Second floor)</b>.',
+                        '3. Czeka Katia: Dać <b>21€ w gotówce</b>, zapytać jak włączyć prąd!'
+                    ],
+                    hostLabel: 'WhatsApp Dario',
+                    hostDefaultPhone: '393476106295',
+                    hostMessage: 'Ciao Dario, siamo al appartamento Via Trevisani 236. '
+                },
+                transportNotesDefault: 'Via Trevisani ↔ Centrum — wpisz numery linii',
+                insuranceNote: '10.06–16.06.2026 · Europa · wariant Podstawowy · 77 PLN',
+                cashNote: 'Odejmuje tylko wydatki <b>Gotówka</b> tej osoby z rozliczeń. Pamiętaj: 21€ na Katię!',
+                trainLinkNote: 'Wycieczki: Polignano, Monopoli, Trani',
+                features: { aptBus: true, falAlert: true, muvt: true, insuranceImages: true }
+            }
+        };
+
+        const TRIP_ORDER = ['monopoli', 'bari'];
+        const ACTIVE_TRIP_LS = 'tripsApp_active_trip';
+
+        function todayISO() {
+            return new Date().toLocaleDateString('sv-SE');
+        }
+
+        function isoDaysDiff(fromIso, toIso) {
+            const a = new Date(fromIso + 'T00:00:00');
+            const b = new Date(toIso + 'T00:00:00');
+            return Math.round((b - a) / 86400000);
+        }
+
+        function getTripStatus(trip) {
+            const today = todayISO();
+            if (today > trip.end) return 'archived';
+            if (today >= trip.start) return 'ongoing';
+            return 'upcoming';
+        }
+
+        function pickDefaultTripId() {
+            const today = todayISO();
+            const ongoing = TRIP_ORDER.find(id => today >= TRIP_DEFS[id].start && today <= TRIP_DEFS[id].end);
+            if (ongoing) return ongoing;
+            const upcoming = TRIP_ORDER
+                .filter(id => TRIP_DEFS[id].start > today)
+                .sort((a, b) => TRIP_DEFS[a].start.localeCompare(TRIP_DEFS[b].start))[0];
+            if (upcoming) return upcoming;
+            return TRIP_ORDER
+                .slice()
+                .sort((a, b) => TRIP_DEFS[b].end.localeCompare(TRIP_DEFS[a].end))[0];
+        }
+
+        const ACTIVE_TRIP_ID = (() => {
+            let fromUrl = null;
+            try { fromUrl = new URLSearchParams(location.search).get('trip'); } catch (e) {}
+            if (fromUrl && TRIP_DEFS[fromUrl]) {
+                try { localStorage.setItem(ACTIVE_TRIP_LS, fromUrl); } catch (e) {}
+                return fromUrl;
+            }
+            let stored = null;
+            try { stored = localStorage.getItem(ACTIVE_TRIP_LS); } catch (e) {}
+            if (stored && TRIP_DEFS[stored]) return stored;
+            return pickDefaultTripId();
+        })();
+
+        const TRIP = TRIP_DEFS[ACTIVE_TRIP_ID];
+        TRIP.status = getTripStatus(TRIP);
+        const TRIP_ARCHIVED = TRIP.status === 'archived';
+        const LS_PREFIX = TRIP.lsPrefix;
+        const ROOM_ID = TRIP.roomId;
+
+        let state = JSON.parse(JSON.stringify(TRIP.seed));
+
         let inlineFields = {};
         let saveTimer = null;
 
@@ -1176,8 +1522,12 @@
             return changed;
         }
 
+        function getBagSeedItems() {
+            return TRIP.legacy ? BAG_SEED_ITEMS : (TRIP.bagSeedItems || {});
+        }
+
         function isBagSeedItemId(itemId) {
-            return Object.values(BAG_SEED_ITEMS).some(seeds => seeds.some(s => s.id === itemId));
+            return Object.values(getBagSeedItems()).some(seeds => seeds.some(s => s.id === itemId));
         }
 
         function markBagSeedRemoved(itemId) {
@@ -1190,7 +1540,7 @@
             if (!state.bagsData) return false;
             if (!state.removedBagSeedIds) state.removedBagSeedIds = [];
             let changed = false;
-            Object.entries(BAG_SEED_ITEMS).forEach(([bagId, seeds]) => {
+            Object.entries(getBagSeedItems()).forEach(([bagId, seeds]) => {
                 const bag = state.bagsData.find(b => b.id === bagId);
                 if (!bag) return;
                 seeds.forEach(seed => {
@@ -1222,7 +1572,6 @@
             after: 'pb1siesta',
             text: '💄 <b>KIKO Milano — grawer laserowy</b> (Via Sparano 53). <b>TAK, robią!</b> Cena: <b>2€</b> (oficjalnie, "in 10 secondi"); <b>gratis</b> w programie <b>KIKO ME</b> przy zakupie od ~30€ (rejestracja darmowa w sklepie). <b>Jak poprosić — IT:</b> „<i>Posso avere un\'incisione laser su questo prodotto?</i>” · „<i>Vorrei incidere un nome, per favore</i>”. <b>EN:</b> „<i>Can I get a laser engraving on this product?</i>” · „<i>I\'d like to engrave a name, please</i>”. Rossetti, gloss, perfumy — max ok. 15 znaków. Godz.: pn–sb 9:00–20:30, nd 10:00–20:30 · tel. 080 573 9849. <b>Dojazd (~20 min pieszo):</b> Via Trevisani 236 → Corso Cavour → Via Sparano 53 (Murat, przy dworcu). Autobus AMTAB z Crisanzio (linie 03/16/19) w stronę centrum. <a href="https://maps.google.com/?q=Via+Trevisani+236+Bari+to+Via+Sparano+53+Bari" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-person-walking"></i> Trasa pieszo</a> <a href="https://maps.google.com/?q=KIKO+Milano+Via+Sparano+53+Bari" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-fuchsia-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> KIKO na mapie</a> <button type="button" onclick="event.stopPropagation();focusMapPoi(\'kiko-sparano\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Pinezka w apce</button>'
         };
-        const TRIP_YEAR = 2026;
         const SIESTA_AFTER = { pb1: 'pb1i4', pb2: 'pb2checkin', pb3: 'pb3checkin', pb4: 'pb4i3', pb5: 'pb5checkin', pb6: 'pb6magnet' };
         const CHECKIN_ITEMS = {
             pb2: { id: 'pb2checkin', after: 'pb2i1' },
@@ -1264,6 +1613,7 @@
         }
 
         function ensureDay6PlanRefresh() {
+            if (!TRIP.legacy) return false;
             if (!state.planBari) return false;
             const day = state.planBari.find(d => d.id === 'pb6');
             if (!day || day.items.some(i => i.id === 'pb6schengen')) return false;
@@ -1279,6 +1629,7 @@
         }
 
         function ensureDay6ReturnPlan() {
+            if (!TRIP.legacy) return false;
             if (!state.planBari) return false;
             const day = state.planBari.find(d => d.id === 'pb6');
             if (!day || day.items.some(i => i.id === 'pb6terminal')) return false;
@@ -1301,10 +1652,11 @@
         }
 
         // Migawka stanu "fabrycznego" – kopia domyślnych danych zanim cokolwiek wczytamy
-        state.planBari.find(d => d.id === 'pb6').items = getDay6ReturnItems();
+        if (TRIP.legacy) state.planBari.find(d => d.id === 'pb6').items = getDay6ReturnItems();
         const FACTORY_STATE = JSON.parse(JSON.stringify(state));
 
         function ensureCheckinItems() {
+            if (!TRIP.legacy) return false;
             if (!state.planBari) return false;
             let changed = false;
             const checkinHtml = '⚠️ <b>CHECK-IN Trenitalia</b> w apce przed odjazdem! <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-mobile-screen"></i> Otwórz apę</a>';
@@ -1319,15 +1671,17 @@
         }
 
         function ensurePlanDayMeta() {
-            if (!state.planDayMeta) state.planDayMeta = JSON.parse(JSON.stringify(DEFAULT_PLAN_META));
+            const defaults = TRIP.seed.planDayMeta || {};
+            if (!state.planDayMeta) state.planDayMeta = JSON.parse(JSON.stringify(defaults));
             let changed = false;
-            Object.keys(DEFAULT_PLAN_META).forEach(k => {
-                if (!state.planDayMeta[k]) { state.planDayMeta[k] = { ...DEFAULT_PLAN_META[k] }; changed = true; }
+            Object.keys(defaults).forEach(k => {
+                if (!state.planDayMeta[k]) { state.planDayMeta[k] = { ...defaults[k] }; changed = true; }
             });
             return changed;
         }
 
         function ensureSiestaItems() {
+            if (!TRIP.legacy) return false;
             if (!state.planBari) return false;
             let changed = false;
             state.planBari.forEach(day => {
@@ -1342,6 +1696,7 @@
         }
 
         function ensureMagnetItems() {
+            if (!TRIP.legacy) return false;
             if (!state.planBari) return false;
             let changed = false;
             Object.entries(MAGNET_ITEMS).forEach(([dayId, cfg]) => {
@@ -1355,6 +1710,7 @@
         }
 
         function ensureKikoPlanItem() {
+            if (!TRIP.legacy) return false;
             if (!state.planBari) return false;
             const day = state.planBari.find(d => d.id === 'pb1');
             if (!day) return false;
@@ -1370,20 +1726,17 @@
         }
 
         function isMagnetReminderDay() {
-            const now = new Date();
-            return now.getFullYear() === TRIP_YEAR && now.getMonth() === 5 && (now.getDate() === 12 || now.getDate() === 15);
+            return (TRIP.magnetDays || []).includes(todayISO());
         }
 
         function isDuringTrip() {
-            const now = new Date();
-            return now.getFullYear() === TRIP_YEAR && now.getMonth() === 5
-                && now.getDate() >= 10 && now.getDate() <= 15;
+            const today = todayISO();
+            return today >= TRIP.start && today <= TRIP.end;
         }
 
         function getTodayPlanDayId() {
-            const now = new Date();
-            if (now.getFullYear() !== TRIP_YEAR || now.getMonth() !== 5) return null;
-            const entry = Object.entries(PLAN_DAY_DATES).find(([, d]) => d === now.getDate());
+            const today = todayISO();
+            const entry = Object.entries(PLAN_DAYS).find(([, cfg]) => cfg.date === today);
             return entry ? entry[0] : null;
         }
 
@@ -1397,6 +1750,7 @@
         }
 
         function ensureMagnetShopItems() {
+            if (!TRIP.legacy) return false;
             if (!state.shopData) state.shopData = [];
             let changed = false;
             MAGNET_SHOP_ITEMS.forEach(item => {
@@ -1413,21 +1767,21 @@
             if (lastWritten[key] === value) return; // echo własnej zmiany – pomiń
             if (key === 'main') {
                 applyMain(value);
-                try { localStorage.setItem('bariApp_stateV6', JSON.stringify(state)); } catch(e) {}
+                try { localStorage.setItem(LS_PREFIX + 'stateV6', JSON.stringify(state)); } catch(e) {}
                 renderAll();
             } else if (key === 'baza_wifi' || key === 'ekuz_dawid' || key === 'ekuz_gosia' || key === 'awaria_polisa' || key === 'transport_bus' || key === 'dario_whatsapp') {
                 inlineFields[key] = value;
-                try { localStorage.setItem('bariApp_' + key, value); } catch(e) {}
+                try { localStorage.setItem(LS_PREFIX + '' + key, value); } catch(e) {}
                 renderAll();
             } else if (key === 'transport_notes') {
                 inlineFields.transport_notes = value;
-                try { localStorage.setItem('bariApp_transport_notes', value); } catch(e) {}
+                try { localStorage.setItem(LS_PREFIX + 'transport_notes', value); } catch(e) {}
                 const notesEl = document.getElementById('transport-notes');
                 if (notesEl && notesEl.value !== value) notesEl.value = value || '';
             } else if (key === 'loc_dawid' || key === 'loc_gosia') {
                 const who = key.slice(4);
                 liveLocations[who] = value ? parseLiveLocation(value) : null;
-                try { localStorage.setItem('bariApp_' + key, value || ''); } catch(e) {}
+                try { localStorage.setItem(LS_PREFIX + '' + key, value || ''); } catch(e) {}
                 renderLiveLocationMarkers();
                 updateLiveShareUI();
             } else if (key.indexOf('img_') === 0) {
@@ -1472,11 +1826,11 @@
                 setSyncStatus('offline');
             }
 
-            const mainJson = (serverData && serverData.main) ? serverData.main : localStorage.getItem('bariApp_stateV6');
+            const mainJson = (serverData && serverData.main) ? serverData.main : localStorage.getItem(LS_PREFIX + 'stateV6');
             if (mainJson) {
                 applyMain(mainJson);
             } else {
-                const oldState = localStorage.getItem('bariApp_stateV5');
+                const oldState = localStorage.getItem(LS_PREFIX + 'stateV5');
                 if(oldState) {
                     try {
                         const parsedOld = JSON.parse(oldState);
@@ -1488,28 +1842,28 @@
                 saveState();
             }
 
-            inlineFields.baza_wifi = (serverData && serverData.baza_wifi !== undefined) ? serverData.baza_wifi : (localStorage.getItem('bariApp_baza_wifi') || '');
-            inlineFields.ekuz_dawid = (serverData && serverData.ekuz_dawid !== undefined) ? serverData.ekuz_dawid : (localStorage.getItem('bariApp_ekuz_dawid') || '');
-            inlineFields.ekuz_gosia = (serverData && serverData.ekuz_gosia !== undefined) ? serverData.ekuz_gosia : (localStorage.getItem('bariApp_ekuz_gosia') || '');
+            inlineFields.baza_wifi = (serverData && serverData.baza_wifi !== undefined) ? serverData.baza_wifi : (localStorage.getItem(LS_PREFIX + 'baza_wifi') || '');
+            inlineFields.ekuz_dawid = (serverData && serverData.ekuz_dawid !== undefined) ? serverData.ekuz_dawid : (localStorage.getItem(LS_PREFIX + 'ekuz_dawid') || '');
+            inlineFields.ekuz_gosia = (serverData && serverData.ekuz_gosia !== undefined) ? serverData.ekuz_gosia : (localStorage.getItem(LS_PREFIX + 'ekuz_gosia') || '');
             if (!inlineFields.ekuz_dawid) {
-                const legacyEkuz = (serverData && serverData.awaria_ekuz) || localStorage.getItem('bariApp_awaria_ekuz') || '';
+                const legacyEkuz = (serverData && serverData.awaria_ekuz) || localStorage.getItem(LS_PREFIX + 'awaria_ekuz') || '';
                 if (legacyEkuz) inlineFields.ekuz_dawid = legacyEkuz;
             }
-            inlineFields.transport_notes = (serverData && serverData.transport_notes !== undefined) ? serverData.transport_notes : (localStorage.getItem('bariApp_transport_notes') || '');
-            inlineFields.transport_bus = (serverData && serverData.transport_bus !== undefined) ? serverData.transport_bus : (localStorage.getItem('bariApp_transport_bus') || 'Via Trevisani ↔ Centrum — wpisz numery linii');
-            inlineFields.awaria_polisa = (serverData && serverData.awaria_polisa !== undefined) ? serverData.awaria_polisa : (localStorage.getItem('bariApp_awaria_polisa') || '');
-            inlineFields.dario_whatsapp = (serverData && serverData.dario_whatsapp !== undefined && serverData.dario_whatsapp !== '') ? serverData.dario_whatsapp : (localStorage.getItem('bariApp_dario_whatsapp') || '393476106295');
-            if (!localStorage.getItem('bariApp_dario_whatsapp')) {
-                try { localStorage.setItem('bariApp_dario_whatsapp', inlineFields.dario_whatsapp); } catch(e) {}
+            inlineFields.transport_notes = (serverData && serverData.transport_notes !== undefined) ? serverData.transport_notes : (localStorage.getItem(LS_PREFIX + 'transport_notes') || '');
+            inlineFields.transport_bus = (serverData && serverData.transport_bus !== undefined) ? serverData.transport_bus : (localStorage.getItem(LS_PREFIX + 'transport_bus') || TRIP.transportNotesDefault);
+            inlineFields.awaria_polisa = (serverData && serverData.awaria_polisa !== undefined) ? serverData.awaria_polisa : (localStorage.getItem(LS_PREFIX + 'awaria_polisa') || '');
+            inlineFields.dario_whatsapp = (serverData && serverData.dario_whatsapp !== undefined && serverData.dario_whatsapp !== '') ? serverData.dario_whatsapp : (localStorage.getItem(LS_PREFIX + 'dario_whatsapp') || TRIP.apartment.hostDefaultPhone);
+            if (inlineFields.dario_whatsapp && !localStorage.getItem(LS_PREFIX + 'dario_whatsapp')) {
+                try { localStorage.setItem(LS_PREFIX + 'dario_whatsapp', inlineFields.dario_whatsapp); } catch(e) {}
                 if (!serverData || !serverData.dario_whatsapp) syncToServer('dario_whatsapp', inlineFields.dario_whatsapp);
             }
 
             ensureInsuranceDefaults();
 
-            liveLocations.dawid = parseLiveLocation((serverData && serverData.loc_dawid) || localStorage.getItem('bariApp_loc_dawid'));
-            liveLocations.gosia = parseLiveLocation((serverData && serverData.loc_gosia) || localStorage.getItem('bariApp_loc_gosia'));
-            myLiveUser = localStorage.getItem('bariApp_live_user') || '';
-            if (localStorage.getItem('bariApp_live_share') === '1' && myLiveUser) liveShareActive = true;
+            liveLocations.dawid = parseLiveLocation((serverData && serverData.loc_dawid) || localStorage.getItem(LS_PREFIX + 'loc_dawid'));
+            liveLocations.gosia = parseLiveLocation((serverData && serverData.loc_gosia) || localStorage.getItem(LS_PREFIX + 'loc_gosia'));
+            myLiveUser = localStorage.getItem(LS_PREFIX + 'live_user') || '';
+            if (localStorage.getItem(LS_PREFIX + 'live_share') === '1' && myLiveUser) liveShareActive = true;
 
             // Zdjęcia z serwera (klucze img_*)
             if (serverData) {
@@ -1530,7 +1884,7 @@
         }
 
         function saveState() {
-            localStorage.setItem('bariApp_stateV6', JSON.stringify(state));
+            localStorage.setItem(LS_PREFIX + 'stateV6', JSON.stringify(state));
             clearTimeout(saveTimer);
             saveTimer = setTimeout(() => syncToServer('main', JSON.stringify(state)), 800);
         }
@@ -1848,7 +2202,7 @@
             updateNotifStatus();
 
             const busEl = document.getElementById('transport_bus');
-            if (busEl) busEl.textContent = inlineFields.transport_bus || 'Via Trevisani ↔ Centrum — wpisz numery linii';
+            if (busEl) busEl.textContent = inlineFields.transport_bus || TRIP.transportNotesDefault;
             renderApartmentBusSchedule();
             const polisaEl = document.getElementById('awaria_polisa');
             if (polisaEl) polisaEl.textContent = inlineFields.awaria_polisa || '_Wpisz numer polisy_';
@@ -1866,7 +2220,7 @@
 
         function getDarioWhatsAppUrl() {
             const raw = (inlineFields.dario_whatsapp || '').replace(/\D/g, '');
-            const text = encodeURIComponent('Ciao Dario, siamo al appartamento Via Trevisani 236. ');
+            const text = encodeURIComponent(TRIP.apartment.hostMessage);
             return raw ? 'https://wa.me/' + raw + '?text=' + text : 'https://wa.me/?text=' + text;
         }
 
@@ -1971,7 +2325,7 @@
             renderAll();
         }
         /* --- ZWIJANE SEKCJE (wspólny mechanizm) --- */
-        const SECTION_PANEL_PREFIX = 'bariApp_section_';
+        const SECTION_PANEL_PREFIX = LS_PREFIX + 'section_';
 
         function getSectionPanelStored(key) {
             try {
@@ -2047,7 +2401,7 @@
         }
 
         /* --- TRANSPORT: NOTATKI & PRZYSTANKI --- */
-        let transportPanelOpen = localStorage.getItem('bariApp_transport_panel_open') === '1';
+        let transportPanelOpen = localStorage.getItem(LS_PREFIX + 'transport_panel_open') === '1';
         let transportNotesTimer = null;
 
         function updateTransportPanelUI() {
@@ -2066,12 +2420,12 @@
         function toggleTransportPanel() {
             transportPanelOpen = !transportPanelOpen;
             updateTransportPanelUI();
-            try { localStorage.setItem('bariApp_transport_panel_open', transportPanelOpen ? '1' : '0'); } catch(e) {}
+            try { localStorage.setItem(LS_PREFIX + 'transport_panel_open', transportPanelOpen ? '1' : '0'); } catch(e) {}
         }
 
         function saveTransportNotes(val) {
             inlineFields.transport_notes = val;
-            try { localStorage.setItem('bariApp_transport_notes', val); } catch(e) {}
+            try { localStorage.setItem(LS_PREFIX + 'transport_notes', val); } catch(e) {}
             clearTimeout(transportNotesTimer);
             transportNotesTimer = setTimeout(() => syncToServer('transport_notes', val), 800);
         }
@@ -2138,6 +2492,7 @@
         }
 
         function renderApartmentBusSchedule() {
+            if (!TRIP.features.aptBus) return;
             const panel = document.getElementById('apt-bus-panel');
             if (!panel || typeof APT_BUS_SCHEDULES === 'undefined') return;
 
@@ -2205,7 +2560,7 @@
         }
 
         function getStopPhotoData(imgId) {
-            try { return localStorage.getItem('bariApp_' + imgId) || ''; } catch(e) { return ''; }
+            try { return localStorage.getItem(LS_PREFIX + '' + imgId) || ''; } catch(e) { return ''; }
         }
 
         function renderTransportStops() {
@@ -2237,8 +2592,8 @@
 
         function applyStopPhoto(imgId, dataUrl) {
             try {
-                if (dataUrl) localStorage.setItem('bariApp_' + imgId, dataUrl);
-                else localStorage.removeItem('bariApp_' + imgId);
+                if (dataUrl) localStorage.setItem(LS_PREFIX + '' + imgId, dataUrl);
+                else localStorage.removeItem(LS_PREFIX + '' + imgId);
             } catch(e) {}
             renderTransportStops();
         }
@@ -2282,7 +2637,7 @@
         function clearAllStopPhotos() {
             (state.transportStopPhotos || []).forEach(p => {
                 const imgId = 'stop-' + p.id;
-                try { localStorage.removeItem('bariApp_' + imgId); } catch(e) {}
+                try { localStorage.removeItem(LS_PREFIX + '' + imgId); } catch(e) {}
                 syncToServer('img_' + imgId, '');
             });
             state.transportStopPhotos = [];
@@ -2291,7 +2646,7 @@
 
         /* --- BILETY QR --- */
         function getTicketPhotoData(imgId) {
-            try { return localStorage.getItem('bariApp_' + imgId) || ''; } catch(e) { return ''; }
+            try { return localStorage.getItem(LS_PREFIX + '' + imgId) || ''; } catch(e) { return ''; }
         }
 
         function renderTicketPhotos() {
@@ -2323,8 +2678,8 @@
 
         function applyTicketPhoto(imgId, dataUrl) {
             try {
-                if (dataUrl) localStorage.setItem('bariApp_' + imgId, dataUrl);
-                else localStorage.removeItem('bariApp_' + imgId);
+                if (dataUrl) localStorage.setItem(LS_PREFIX + '' + imgId, dataUrl);
+                else localStorage.removeItem(LS_PREFIX + '' + imgId);
             } catch(e) {}
             renderTicketPhotos();
         }
@@ -2366,7 +2721,7 @@
         function clearAllTicketPhotos() {
             (state.ticketPhotos || []).forEach(p => {
                 const imgId = 'ticket-' + p.id;
-                try { localStorage.removeItem('bariApp_' + imgId); } catch(e) {}
+                try { localStorage.removeItem(LS_PREFIX + '' + imgId); } catch(e) {}
                 syncToServer('img_' + imgId, '');
             });
             state.ticketPhotos = [];
@@ -2588,7 +2943,7 @@
             Object.entries(INSURANCE_DEFAULTS).forEach(([key, val]) => {
                 if (inlineFields[key]) return;
                 inlineFields[key] = val;
-                try { localStorage.setItem('bariApp_' + key, val); } catch (e) {}
+                try { localStorage.setItem(LS_PREFIX + '' + key, val); } catch (e) {}
                 syncToServer(key, val);
                 changed = true;
             });
@@ -2605,7 +2960,7 @@
             const el = document.getElementById('siesta-alert');
             if (!el) return;
             const h = new Date().getHours();
-            el.classList.toggle('hidden', !(h >= 12 && h < 13));
+            el.classList.toggle('hidden', !isDuringTrip() || !(h >= 12 && h < 13));
         }
 
         function updateNotifStatus() {
@@ -2635,7 +2990,7 @@
             const perm = await Notification.requestPermission();
             updateNotifStatus();
             if (perm === 'granted') {
-                try { localStorage.setItem('bariApp_notif_enabled', '1'); } catch(e) {}
+                try { localStorage.setItem(LS_PREFIX + 'notif_enabled', '1'); } catch(e) {}
                 showToast('Przypomnienia włączone!');
                 runTripNotifications();
             } else {
@@ -2644,16 +2999,17 @@
         }
 
         function runTripNotifications() {
+            if (TRIP_ARCHIVED) return;
             if (!('Notification' in window) || Notification.permission !== 'granted') return;
             const now = new Date();
             const todayKey = now.toISOString().slice(0, 10);
             const hour = now.getHours();
 
             if (isMagnetReminderDay() && hour >= 9 && hour < 21) {
-                const mKey = 'bariApp_notif_magnet_' + todayKey;
+                const mKey = LS_PREFIX + 'notif_magnet_' + todayKey;
                 if (!localStorage.getItem(mKey)) {
                     const dayLabel = now.getDate() === 12 ? 'Dzień 3' : 'Dzień 6';
-                    new Notification('Bari Autopilot 🧲', {
+                    new Notification(TRIP.short + ' Autopilot 🧲', {
                         body: dayLabel + ': Kup magnesy na pamiątkę! Stragany i sklepy turystyczne.',
                         icon: appUrl('icons/icon-192.png'),
                         tag: 'magnet-' + todayKey
@@ -2663,9 +3019,9 @@
             }
 
             if (hour >= 12 && hour < 13) {
-                const sKey = 'bariApp_notif_siesta_' + todayKey;
+                const sKey = LS_PREFIX + 'notif_siesta_' + todayKey;
                 if (!localStorage.getItem(sKey)) {
-                    new Notification('Bari Autopilot ☀️', {
+                    new Notification(TRIP.short + ' Autopilot ☀️', {
                         body: 'Za chwilę sjesta (13:00)! Zjedz i zrób zakupy teraz.',
                         icon: appUrl('icons/icon-192.png'),
                         tag: 'siesta-' + todayKey
@@ -2678,10 +3034,9 @@
         function updateCheckoutVideoAlert() {
             const el = document.getElementById('checkout-video-alert');
             if (!el) return;
-            const today = new Date();
-            const isDay6 = today.getMonth() === 5 && today.getDate() === 15;
+            const isCheckoutDay = todayISO() === TRIP.checkoutVideoDate;
             const isReturn = state.isReturnMode;
-            el.classList.toggle('hidden', !(isDay6 || isReturn));
+            el.classList.toggle('hidden', TRIP_ARCHIVED || !(isCheckoutDay || isReturn));
         }
 
         function editInline(elId, title) {
@@ -2692,9 +3047,9 @@
                 onConfirm: (val) => {
                     if(val !== null) {
                         inlineFields[elId] = val;
-                        const placeholders = { baza_wifi: '_Wpisz Wi-Fi_', ekuz_dawid: '_Wpisz numer_', ekuz_gosia: '_Wpisz numer_', awaria_polisa: '_Wpisz numer polisy_', transport_bus: 'Via Trevisani ↔ Centrum — wpisz numery linii', dario_whatsapp: '_Wpisz numer_' };
+                        const placeholders = { baza_wifi: '_Wpisz Wi-Fi_', ekuz_dawid: '_Wpisz numer_', ekuz_gosia: '_Wpisz numer_', awaria_polisa: '_Wpisz numer polisy_', transport_bus: TRIP.transportNotesDefault, dario_whatsapp: '_Wpisz numer_' };
                         el.innerText = val || placeholders[elId] || '_Wpisz tutaj_';
-                        localStorage.setItem('bariApp_' + elId, val);
+                        localStorage.setItem(LS_PREFIX + '' + elId, val);
                         syncToServer(elId, val);
                         if (elId === 'dario_whatsapp') {
                             const darioBtn = document.getElementById('dario-whatsapp-btn');
@@ -2952,7 +3307,7 @@
             mapFsRestoreTab = getActiveTabId();
             if (!bazaMapPanelOpen) {
                 bazaMapPanelOpen = true;
-                try { localStorage.setItem('bariApp_baza_map_panel_open', '1'); } catch(e) {}
+                try { localStorage.setItem(LS_PREFIX + 'baza_map_panel_open', '1'); } catch(e) {}
                 const body = document.getElementById('baza-map-panel-body');
                 const chevron = document.getElementById('baza-map-chevron');
                 if (body) body.classList.remove('hidden');
@@ -2972,23 +3327,29 @@
         }
 
         /* --- POGODA W PLANIE (10–15.06) --- */
-        const PLAN_WEATHER_LOC = {
-            pb1: { date: '2026-06-10', lat: 41.117, lng: 16.871, label: 'Bari' },
-            pb2: { date: '2026-06-11', lat: 40.784, lng: 17.237, label: 'Alberobello' },
-            pb3: { date: '2026-06-12', lat: 40.995, lng: 17.217, label: 'Polignano' },
-            pb4: { date: '2026-06-13', lat: 41.127, lng: 16.872, label: 'Bari' },
-            pb5: { date: '2026-06-14', lat: 41.248, lng: 16.420, label: 'Trani' },
-            pb6: { date: '2026-06-15', lat: 41.117, lng: 16.871, label: 'Bari' }
+        const PLAN_DAYS_BY_TRIP = {
+            bari: {
+                pb1: { date: '2026-06-10', lat: 41.117, lng: 16.871, label: 'Bari', mapZones: ['bari'], mapHint: 'Przylot · apartament i dworce na mapie Bari.' },
+                pb2: { date: '2026-06-11', lat: 40.784, lng: 17.237, label: 'Alberobello', mapZones: ['alberobello'], mapHint: 'Wyjazd z Bari Centrale · stacja, trulli i atrakcje na mapie Alberobello.' },
+                pb3: { date: '2026-06-12', lat: 40.995, lng: 17.217, label: 'Polignano & Monopoli', mapZones: ['polignano', 'monopoli'], mapHint: 'Dwa miasta nad morze · przełącz strefę na mapie.' },
+                pb4: { date: '2026-06-13', lat: 41.127, lng: 16.872, label: 'Bari Vecchia', mapZones: ['bari'], mapHint: 'Slow day w Bari · zielone tipy Dario i atrakcje na mapie.' },
+                pb5: { date: '2026-06-14', lat: 41.248, lng: 16.420, label: 'Trani lub Matera', mapZones: ['trani', 'matera', 'bari'], mapHint: 'Trani i Matera na mapie · stacja FAL (start do Matery) w strefie Bari.' },
+                pb6: { date: '2026-06-15', lat: 41.117, lng: 16.871, label: 'Bari → lotnisko', mapZones: ['bari'], mapHint: 'Powrót · Quintino Sella i lotnisko na mapie Bari.' }
+            },
+            monopoli: {
+                mp1: { date: '2026-09-30', lat: 40.951, lng: 17.297, label: 'Bari → Monopoli', mapZones: ['monopoli', 'bari'], mapHint: 'Przylot · lotnisko i dworce w strefie Bari, apartament w strefie Monopoli.' },
+                mp2: { date: '2026-10-01', lat: 40.951, lng: 17.297, label: 'Monopoli', mapZones: ['monopoli'], mapHint: 'Cały dzień w Monopoli · starówka, port i plaża na mapie.' },
+                mp3: { date: '2026-10-02', lat: 40.995, lng: 17.217, label: 'Polignano a Mare', mapZones: ['polignano', 'monopoli'], mapHint: 'Pociąg 10 min · Lama Monachile i klify na mapie Polignano.' },
+                mp4: { date: '2026-10-03', lat: 40.784, lng: 17.237, label: 'Alberobello & Locorotondo', mapZones: ['alberobello', 'locorotondo'], mapHint: 'Valle d\'Itria · trulli i białe miasteczka. Sprawdź dojazd dzień wcześniej!' },
+                mp5: { date: '2026-10-04', lat: 41.127, lng: 16.872, label: 'Bari Vecchia', mapZones: ['bari', 'monopoli'], mapHint: 'Wypad do Bari · wszystkie tipy od Dario w strefie Bari.' },
+                mp6: { date: '2026-10-05', lat: 40.734, lng: 17.577, label: 'Ostuni albo plaża', mapZones: ['ostuni', 'monopoli'], mapHint: 'Ostuni na wzgórzu albo leniwy dzień na plażach Monopoli.' },
+                mp7: { date: '2026-10-06', lat: 40.951, lng: 17.297, label: 'Monopoli → lotnisko', mapZones: ['monopoli', 'bari'], mapHint: 'Powrót · stacja Monopoli, Bari Centrale i lotnisko na mapie.' }
+            }
         };
 
-        const PLAN_DAY_LOC = {
-            pb1: { label: 'Bari', mapZones: ['bari'], mapHint: 'Przylot · apartament i dworce na mapie Bari.' },
-            pb2: { label: 'Alberobello', mapZones: ['alberobello'], mapHint: 'Wyjazd z Bari Centrale · stacja, trulli i atrakcje na mapie Alberobello.' },
-            pb3: { label: 'Polignano & Monopoli', mapZones: ['polignano', 'monopoli'], mapHint: 'Dwa miasta nad morze · przełącz strefę na mapie.' },
-            pb4: { label: 'Bari Vecchia', mapZones: ['bari'], mapHint: 'Slow day w Bari · zielone tipy Dario i atrakcje na mapie.' },
-            pb5: { label: 'Trani lub Matera', mapZones: ['trani', 'matera', 'bari'], mapHint: 'Trani i Matera na mapie · stacja FAL (start do Matery) w strefie Bari.' },
-            pb6: { label: 'Bari → lotnisko', mapZones: ['bari'], mapHint: 'Powrót · Quintino Sella i lotnisko na mapie Bari.' }
-        };
+        const PLAN_DAYS = PLAN_DAYS_BY_TRIP[TRIP.id] || {};
+        const PLAN_WEATHER_LOC = PLAN_DAYS;
+        const PLAN_DAY_LOC = PLAN_DAYS;
 
         const MAP_ZONE_LABELS = {
             bari: 'Bari',
@@ -3031,7 +3392,7 @@
         }
 
         async function fetchPlanWeather() {
-            const cacheKey = 'bariApp_plan_weather_v1';
+            const cacheKey = LS_PREFIX + 'plan_weather_v1';
             try {
                 const cached = localStorage.getItem(cacheKey);
                 if (cached) {
@@ -3071,27 +3432,28 @@
         }
 
         /* --- PORANNY BRIEFING (8:00) --- */
-        const RETURN_DAY = 15;
-        const PREDEPARTURE_BRIEFING_KEY = 'bariApp_predeparture_briefing_2026-06-09';
-        const DEPARTURE_TARGET = new Date('2026-06-10T03:15:00');
+        const PREDEPARTURE_DATE = (() => {
+            const d = new Date(TRIP.start + 'T00:00:00');
+            d.setDate(d.getDate() - 1);
+            return d.toLocaleDateString('sv-SE');
+        })();
+        const PREDEPARTURE_BRIEFING_KEY = LS_PREFIX + 'predeparture_briefing_' + PREDEPARTURE_DATE;
+        const DEPARTURE_TARGET = new Date(TRIP.departureAt);
 
         function stripHtmlText(html) {
             return String(html || '').replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
         }
 
         function getDaysUntilReturn() {
-            const now = new Date();
-            if (now.getFullYear() !== TRIP_YEAR || now.getMonth() !== 5) return null;
-            const today = now.getDate();
-            if (today < 10 || today > RETURN_DAY) return null;
-            return RETURN_DAY - today;
+            if (!isDuringTrip()) return null;
+            return isoDaysDiff(todayISO(), TRIP.end);
         }
 
         function formatDaysUntilReturn(daysLeft) {
             if (daysLeft === null) return '';
-            if (daysLeft === 0) return '✈️ Dziś wylot do Krakowa (23:05)!';
+            if (daysLeft === 0) return '✈️ Dziś powrót ' + TRIP.returnLabel + '!';
             if (daysLeft === 1) return '⏳ Do powrotu: 1 dzień';
-            return '⏳ Do powrotu do Krakowa: ' + daysLeft + ' dni';
+            return '⏳ Do powrotu ' + TRIP.returnLabel + ': ' + daysLeft + ' dni';
         }
 
         function getMorningBriefingTodayKey() {
@@ -3100,13 +3462,13 @@
 
         function wasMorningBriefingShownToday() {
             try {
-                return !!localStorage.getItem('bariApp_morning_briefing_' + getMorningBriefingTodayKey());
+                return !!localStorage.getItem(LS_PREFIX + 'morning_briefing_' + getMorningBriefingTodayKey());
             } catch (e) { return true; }
         }
 
         function markMorningBriefingShown() {
             try {
-                localStorage.setItem('bariApp_morning_briefing_' + getMorningBriefingTodayKey(), '1');
+                localStorage.setItem(LS_PREFIX + 'morning_briefing_' + getMorningBriefingTodayKey(), '1');
             } catch (e) {}
         }
 
@@ -3117,8 +3479,7 @@
         }
 
         function isPreDepartureBriefingDay() {
-            const now = new Date();
-            return now.getFullYear() === TRIP_YEAR && now.getMonth() === 5 && now.getDate() === 9;
+            return todayISO() === PREDEPARTURE_DATE;
         }
 
         function shouldShowPreDepartureBriefing() {
@@ -3185,7 +3546,7 @@
             const loc = PLAN_WEATHER_LOC[dayId];
             if (!loc) return null;
             try {
-                const cached = localStorage.getItem('bariApp_plan_weather_v1');
+                const cached = localStorage.getItem(LS_PREFIX + 'plan_weather_v1');
                 if (cached) {
                     const { ts, data } = JSON.parse(cached);
                     if (data && data[dayId] && Date.now() - ts < 3600000) return data[dayId];
@@ -3206,7 +3567,7 @@
                     rain: json.daily.precipitation_probability_max[0] ?? '—'
                 };
                 try {
-                    const cached = localStorage.getItem('bariApp_plan_weather_v1');
+                    const cached = localStorage.getItem(LS_PREFIX + 'plan_weather_v1');
                     let store = { ts: Date.now(), data: {} };
                     if (cached) {
                         const parsed = JSON.parse(cached);
@@ -3214,7 +3575,7 @@
                     }
                     store.data[dayId] = w;
                     store.ts = Date.now();
-                    localStorage.setItem('bariApp_plan_weather_v1', JSON.stringify(store));
+                    localStorage.setItem(LS_PREFIX + 'plan_weather_v1', JSON.stringify(store));
                 } catch (e) {}
                 return w;
             } catch (e) {
@@ -3237,7 +3598,7 @@
                 countdown,
                 weatherHtml: wx.html,
                 notificationBody,
-                notificationTitle: 'Bari Autopilot ☀️',
+                notificationTitle: TRIP.short + ' Autopilot ☀️',
                 tag: 'morning-' + getMorningBriefingTodayKey()
             };
         }
@@ -3245,17 +3606,18 @@
         async function buildPreDepartureBriefingContent() {
             const until = getHoursUntilDeparture();
             if (!until) return null;
-            const weather = await fetchWeatherForDay('pb1');
-            const wx = formatWeatherBlock(weather, 'Jutro w Bari');
+            const firstDayId = Object.keys(PLAN_DAYS)[0];
+            const weather = await fetchWeatherForDay(firstDayId);
+            const wx = formatWeatherBlock(weather, 'Jutro w ' + TRIP.short);
             const countdown = until.lessThan24h
-                ? '⏰ Zostało mniej niż 24h do wyjazdu! Uber o 03:15 · Lot FR2722'
-                : '⏰ Do wyjazdu: ' + until.hours + 'h ' + until.minutes + 'min · Uber 03:15';
-            const items = [
-                'Sprawdź bagaże — walizka 10kg + plecaki pod fotele (zakładka Bagaż)',
+                ? '⏰ Zostało mniej niż 24h do wyjazdu!'
+                : '⏰ Do wyjazdu: ' + until.hours + 'h ' + until.minutes + 'min';
+            const items = TRIP.preDepartureChecklist || [
+                'Sprawdź bagaże — walizka i plecaki pod fotele (zakładka Bagaż)',
                 'Paszporty / dowody w podręcznym plecaku — nie w walizce!',
-                'Bilety Ryanair w apce · miejsca: Dawid 26E, Gosia 26F',
-                '21€ gotówki na Katię · powerbank i płyny 100ml do kuwety',
-                'Bramki zamykają się 05:20 — wyjście z domu ok. 03:15'
+                'Boarding passy w apce linii lotniczej',
+                'Powerbank i płyny 100ml do kuwety — nie do walizki nadanej',
+                'Zamów transport na lotnisko z zapasem'
             ];
             const notificationBody = [
                 'Mniej niż 24h do wylotu! Sprawdź bagaże i dokumenty.',
@@ -3263,13 +3625,13 @@
             ].join(' · ');
             return {
                 mode: 'predeparture',
-                title: 'Jutro lecicie do Bari! ✈️',
+                title: 'Jutro lecicie do ' + TRIP.short + '! ✈️',
                 items,
                 countdown,
                 weatherHtml: wx.html,
                 notificationBody,
-                notificationTitle: 'Bari Autopilot ✈️',
-                tag: 'predeparture-2026-06-09'
+                notificationTitle: TRIP.short + ' Autopilot ✈️',
+                tag: 'predeparture-' + PREDEPARTURE_DATE
             };
         }
 
@@ -3369,12 +3731,13 @@
         }
 
         async function runDailyBriefingChecks() {
+            if (TRIP_ARCHIVED) return;
             await runPreDepartureBriefingCheck();
             await runMorningBriefingCheck();
         }
 
         /* --- INTERAKTYWNA MAPA WYCIECZEK (Leaflet + OpenStreetMap) --- */
-        const MAP_ZONES = {
+        const ALL_MAP_ZONES = {
             bari: { id: 'bari', label: 'Bari', center: [41.122, 16.865], zoom: 13 },
             alberobello: { id: 'alberobello', label: 'Alberobello', center: [40.7865, 17.2375], zoom: 16 },
             polignano: { id: 'polignano', label: 'Polignano', center: [40.996, 17.219], zoom: 15 },
@@ -3382,11 +3745,30 @@
             trani: { id: 'trani', label: 'Trani', center: [41.227, 16.607], zoom: 15 },
             matera: { id: 'matera', label: 'Matera', center: [40.667, 16.604], zoom: 15 },
             ostuni: { id: 'ostuni', label: 'Ostuni', center: [40.734, 17.577], zoom: 15 },
-            locorotondo: { id: 'locorotondo', label: 'Locorotondo', center: [40.753, 17.329], zoom: 16 }
+            locorotondo: { id: 'locorotondo', label: 'Locorotondo', center: [40.753, 17.329], zoom: 16 },
+            monopoli: { id: 'monopoli', label: 'Monopoli', center: [40.951, 17.297], zoom: 15 }
         };
 
-        const TRIP_MAP_POIS = [
-            { id: 'home', zone: 'bari', cat: 'transport', lat: 41.11987, lng: 16.86204, title: 'Apartament', desc: 'Via Trevisani 236 — check-in 12:00', icon: 'fa-house', color: '#e74c3c' },
+        const MAP_ZONE_ORDER_BY_TRIP = {
+            bari: ['bari', 'alberobello', 'polignano', 'monopoli', 'trani', 'matera', 'ostuni', 'locorotondo'],
+            monopoli: ['monopoli', 'polignano', 'alberobello', 'locorotondo', 'ostuni', 'bari', 'matera', 'trani']
+        };
+
+        const MAP_ZONES = (() => {
+            const order = MAP_ZONE_ORDER_BY_TRIP[TRIP.id] || Object.keys(ALL_MAP_ZONES);
+            const out = {};
+            order.forEach(id => { if (ALL_MAP_ZONES[id]) out[id] = ALL_MAP_ZONES[id]; });
+            return out;
+        })();
+
+        const HOME_MAP_ZONE = Object.keys(MAP_ZONES)[0];
+
+        const ALL_MAP_POIS = [
+            { id: 'home', trip: 'bari', zone: 'bari', cat: 'transport', lat: 41.11987, lng: 16.86204, title: 'Apartament', desc: 'Via Trevisani 236 — check-in 12:00', icon: 'fa-house', color: '#e74c3c' },
+            { id: 'home-monopoli', trip: 'monopoli', zone: 'monopoli', cat: 'transport', lat: 40.94990, lng: 17.29500, title: 'Apartament — La casa di Gio Mar', desc: 'Via Fiume 19 · check-in 16:00–19:00, check-out 8:00–10:00. Pinezka przybliżona — popraw ją po przyjeździe.', icon: 'fa-house', color: '#e74c3c' },
+            { id: 'mon-cattedrale', zone: 'monopoli', cat: 'attraction', lat: 40.95150, lng: 17.29860, title: 'Cattedrale della Madia', desc: 'Barokowa katedra Monopoli — serce starego miasta', icon: 'fa-church', color: '#d97706' },
+            { id: 'mon-castello', zone: 'monopoli', cat: 'attraction', lat: 40.95200, lng: 17.30050, title: 'Castello Carlo V', desc: 'Zamek nad morzem przy starym porcie', icon: 'fa-chess-rook', color: '#7c3aed' },
+            { id: 'mon-cala', zone: 'monopoli', cat: 'attraction', lat: 40.95230, lng: 17.30110, title: 'Cala Porta Vecchia', desc: 'Miejska plaża pod murami starówki — na początku października woda wciąż ciepła', icon: 'fa-umbrella-beach', color: '#0284c7' },
             { id: 'quintino', zone: 'bari', cat: 'transport', lat: 41.11056, lng: 16.87222, title: 'Via Quintino Sella', desc: 'Wyjazd FR2 → Aeroporto (5.30€). ~15 min pieszo z apartamentu.', icon: 'fa-train-subway', color: '#2563eb' },
             { id: 'centrale', zone: 'bari', cat: 'transport', lat: 41.1176, lng: 16.8698, title: 'Bari Centrale', desc: 'Główny dworzec — pociągi nad morze', icon: 'fa-train', color: '#dc2626' },
             { id: 'fal', zone: 'bari', cat: 'transport', lat: 41.1175, lng: 16.8678, title: 'Stacja FAL (Matera)', desc: 'Osobny budynek po lewej od pl. Aldo Moro', icon: 'fa-train-tram', color: '#7c3aed' },
@@ -3417,6 +3799,8 @@
             { id: 'loco-centro', zone: 'locorotondo', cat: 'attraction', lat: 40.7532, lng: 17.3285, title: 'Centro storico Locorotondo', desc: 'Okrągłe historyczne centrum — Valle d\'Itria', icon: 'fa-landmark', color: '#d97706' }
         ];
 
+        const TRIP_MAP_POIS = ALL_MAP_POIS.filter(p => !p.trip || p.trip === TRIP.id);
+
         const POI_POPUP_EXTRA = {
             'kiko-sparano': '<p class="text-pink-800 text-xs font-bold mb-1">✅ Grawer laserowy potwierdzony!</p><p class="text-slate-600 text-xs mb-1"><b>IT:</b> „Posso avere un\'incisione laser su questo prodotto?”</p><p class="text-slate-600 text-xs mb-2"><b>EN:</b> „Can I get a laser engraving on this product?”</p><p class="text-slate-500 text-xs mb-2">Cena: <b>2€</b> (gratis przy zakupie 30€+ z kartą KIKO ME)</p>',
             'penny-napoletana': '<p class="text-slate-600 text-xs mb-1"><b>Po polsku:</b> jak mała Biedronka/Penny. Woda, napoje, pieczywo, wędliny, podstawy.</p><p class="text-amber-700 text-xs mb-1">Dojazd: ~12 min pieszo z Via Trevisani 236 (Via Crisanzio → Repubblica Napoletana).</p>',
@@ -3426,19 +3810,19 @@
         };
 
         let activeMapZone = (() => {
-            try { return localStorage.getItem('bariApp_map_zone') || 'bari'; } catch(e) { return 'bari'; }
+            try { return localStorage.getItem(LS_PREFIX + 'map_zone') || HOME_MAP_ZONE; } catch(e) { return HOME_MAP_ZONE; }
         })();
-        if (!MAP_ZONES[activeMapZone]) activeMapZone = 'bari';
+        if (!MAP_ZONES[activeMapZone]) activeMapZone = HOME_MAP_ZONE;
 
         function getDefaultMapZone() {
             const todayId = getTodayPlanDayId();
             const loc = todayId && PLAN_DAY_LOC[todayId];
             if (loc && loc.mapZones && loc.mapZones.length) return loc.mapZones[0];
-            return activeMapZone || 'bari';
+            return activeMapZone || HOME_MAP_ZONE;
         }
 
         function detectMapZoneFromCoords(lat, lng) {
-            let best = 'bari';
+            let best = HOME_MAP_ZONE;
             let bestDist = Infinity;
             Object.values(MAP_ZONES).forEach(z => {
                 const d = Math.hypot(lat - z.center[0], lng - z.center[1]);
@@ -3489,7 +3873,7 @@
         function setMapZone(zoneId, flyToCenter) {
             if (!MAP_ZONES[zoneId]) return;
             activeMapZone = zoneId;
-            try { localStorage.setItem('bariApp_map_zone', zoneId); } catch(e) {}
+            try { localStorage.setItem(LS_PREFIX + 'map_zone', zoneId); } catch(e) {}
             renderMapZonePicker();
             applyMapZoneVisibility();
             renderBariMapLegend();
@@ -3569,7 +3953,7 @@
         let mapAddPinMode = false;
         let foodMapPickMode = false;
         let pendingFoodSpotId = null;
-        let bazaMapPanelOpen = localStorage.getItem('bariApp_baza_map_panel_open') === '1';
+        let bazaMapPanelOpen = localStorage.getItem(LS_PREFIX + 'baza_map_panel_open') === '1';
         let myLiveUser = '';
         let liveLocations = { dawid: null, gosia: null };
         let liveShareActive = false;
@@ -3699,7 +4083,7 @@
 
         function setLiveUser(who) {
             myLiveUser = who;
-            try { localStorage.setItem('bariApp_live_user', who); } catch(e) {}
+            try { localStorage.setItem(LS_PREFIX + 'live_user', who); } catch(e) {}
             updateLiveShareUI();
         }
 
@@ -3755,7 +4139,7 @@
         function publishMyLocation(lat, lng) {
             const payload = JSON.stringify({ lat, lng, ts: Date.now() });
             liveLocations[myLiveUser] = { lat, lng, ts: Date.now() };
-            try { localStorage.setItem('bariApp_loc_' + myLiveUser, payload); } catch(e) {}
+            try { localStorage.setItem(LS_PREFIX + 'loc_' + myLiveUser, payload); } catch(e) {}
             syncToServer('loc_' + myLiveUser, payload);
             renderLiveLocationMarkers();
             updateLiveShareUI();
@@ -3765,7 +4149,7 @@
             if (!navigator.geolocation) { showToast('Brak GPS'); return; }
             if (geoWatchId != null) return;
             liveShareActive = true;
-            try { localStorage.setItem('bariApp_live_share', '1'); } catch(e) {}
+            try { localStorage.setItem(LS_PREFIX + 'live_share', '1'); } catch(e) {}
             navigator.geolocation.getCurrentPosition(
                 (pos) => publishMyLocation(pos.coords.latitude, pos.coords.longitude),
                 () => showToast('Brak dostępu do lokalizacji'),
@@ -3782,7 +4166,7 @@
 
         function stopLiveShare() {
             liveShareActive = false;
-            try { localStorage.removeItem('bariApp_live_share'); } catch(e) {}
+            try { localStorage.removeItem(LS_PREFIX + 'live_share'); } catch(e) {}
             if (geoWatchId != null) { navigator.geolocation.clearWatch(geoWatchId); geoWatchId = null; }
             updateLiveShareUI();
             showToast('Wyłączono udostępnianie');
@@ -4022,7 +4406,7 @@
 
             legend.innerHTML = builtinHtml + shopsHtml + darioHtml + foodHtml + visitedHtml + otherPinsHtml;
 
-            if (shopPois.length) initSectionPanel('map-shops-' + activeMapZone, activeMapZone === 'bari');
+            if (shopPois.length) initSectionPanel('map-shops-' + activeMapZone, activeMapZone === HOME_MAP_ZONE);
             if (darioZoneTips.length) initSectionPanel('map-dario-' + activeMapZone, false);
             if (visitedPins.length) initSectionPanel('map-visited-' + activeMapZone, false);
             if (otherCustomPins.length) initSectionPanel('map-pins-' + activeMapZone, false);
@@ -4044,7 +4428,7 @@
             if (!bazaMapPanelOpen) {
                 bazaMapPanelOpen = true;
                 updateBazaMapPanelUI();
-                try { localStorage.setItem('bariApp_baza_map_panel_open', '1'); } catch(e) {}
+                try { localStorage.setItem(LS_PREFIX + 'baza_map_panel_open', '1'); } catch(e) {}
             } else {
                 initBariMap();
             }
@@ -4173,7 +4557,7 @@
             if (!bazaMapPanelOpen) {
                 bazaMapPanelOpen = true;
                 updateBazaMapPanelUI();
-                try { localStorage.setItem('bariApp_baza_map_panel_open', '1'); } catch(e) {}
+                try { localStorage.setItem(LS_PREFIX + 'baza_map_panel_open', '1'); } catch(e) {}
             } else {
                 initBariMap();
             }
@@ -4282,7 +4666,7 @@
             if (mapFullscreen) {
                 if (!bazaMapPanelOpen) {
                     bazaMapPanelOpen = true;
-                    try { localStorage.setItem('bariApp_baza_map_panel_open', '1'); } catch(e) {}
+                    try { localStorage.setItem(LS_PREFIX + 'baza_map_panel_open', '1'); } catch(e) {}
                     const body = document.getElementById('baza-map-panel-body');
                     const chevron = document.getElementById('baza-map-chevron');
                     if (body) body.classList.remove('hidden');
@@ -4331,14 +4715,14 @@
         function toggleBazaMapPanel() {
             bazaMapPanelOpen = !bazaMapPanelOpen;
             updateBazaMapPanelUI();
-            try { localStorage.setItem('bariApp_baza_map_panel_open', bazaMapPanelOpen ? '1' : '0'); } catch(e) {}
+            try { localStorage.setItem(LS_PREFIX + 'baza_map_panel_open', bazaMapPanelOpen ? '1' : '0'); } catch(e) {}
         }
 
         function focusMapPoi(poiId) {
             if (!bazaMapPanelOpen) {
                 bazaMapPanelOpen = true;
                 updateBazaMapPanelUI();
-                try { localStorage.setItem('bariApp_baza_map_panel_open', '1'); } catch(e) {}
+                try { localStorage.setItem(LS_PREFIX + 'baza_map_panel_open', '1'); } catch(e) {}
             } else {
                 initBariMap();
             }
@@ -4353,24 +4737,179 @@
         /* --- CZAS I POWITANIA --- */
         function updateDynamicGreeting() {
             const hour = new Date().getHours();
-            let greeting = "Bari Autopilot ✈️";
-            if (hour >= 5 && hour < 12) greeting = "Buongiorno Dawid! ☕";
-            else if (hour >= 12 && hour < 18) greeting = "Buon pomeriggio! Uwaga na sjestę 🌞";
-            else greeting = "Buonasera! Czas na winko 🍷";
-            document.getElementById('dynamic-greeting').innerText = greeting;
+            let greeting = TRIP.appTitle;
+            if (!TRIP_ARCHIVED) {
+                if (hour >= 5 && hour < 12) greeting = TRIP.greetings.morning;
+                else if (hour >= 12 && hour < 18) greeting = TRIP.greetings.afternoon;
+                else greeting = TRIP.greetings.evening;
+            }
+            const el = document.getElementById('dynamic-greeting');
+            if (el) el.innerHTML = escapeHtml(greeting) + ' <i class="fa-solid fa-chevron-down text-xs opacity-70"></i>';
         }
 
         function updateCountdown() {
             const el = document.getElementById('countdown');
             if(!el) return;
+            if (TRIP_ARCHIVED) {
+                el.innerHTML = '<i class="fa-solid fa-box-archive"></i> Wyjazd zakończony — tryb wspomnień';
+                return;
+            }
             const target = new Date(state.targetDate).getTime();
             const now = new Date().getTime();
             const diff = target - now;
 
-            if (diff < 0) { el.innerHTML = "Włochy Was witają! 🍕"; return; }
+            if (diff < 0) {
+                const daysLeft = getDaysUntilReturn();
+                el.innerHTML = daysLeft === null ? "Włochy Was witają! 🍕" : formatDaysUntilReturn(daysLeft);
+                return;
+            }
             const d = Math.floor(diff / (1000 * 60 * 60 * 24));
             const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             el.innerHTML = `⏳ Za ${d} dni i ${h} godz. wyjazd!`;
+        }
+
+        /* --- LISTA WYJAZDÓW --- */
+        function formatTripRange(trip) {
+            const fmt = (iso) => {
+                const [y, m, d] = iso.split('-');
+                return d + '.' + m;
+            };
+            return fmt(trip.start) + '–' + fmt(trip.end) + '.' + trip.end.slice(0, 4);
+        }
+
+        function readTripSummary(trip) {
+            try {
+                const raw = localStorage.getItem(trip.lsPrefix + 'stateV6');
+                if (!raw) return null;
+                const st = JSON.parse(raw);
+                return {
+                    journal: (st.journalEntries || []).length,
+                    pins: (st.customMapPins || []).length,
+                    spent: (st.splitExpenses || []).reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+                };
+            } catch (e) { return null; }
+        }
+
+        function tripStatusBadge(trip) {
+            const status = getTripStatus(trip);
+            if (status === 'archived') return '<span class="text-[9px] font-bold uppercase px-2 py-1 rounded-full bg-slate-100 text-slate-500">Zakończony</span>';
+            if (status === 'ongoing') return '<span class="text-[9px] font-bold uppercase px-2 py-1 rounded-full bg-green-100 text-green-700">Trwa teraz</span>';
+            const days = isoDaysDiff(todayISO(), trip.start);
+            const label = days === 0 ? 'Jutro wylot' : (days === 1 ? 'Za 1 dzień' : 'Za ' + days + ' dni');
+            return '<span class="text-[9px] font-bold uppercase px-2 py-1 rounded-full bg-orange-100 text-orange-700">' + label + '</span>';
+        }
+
+        function renderTripList() {
+            const list = document.getElementById('trip-list');
+            if (!list) return;
+            list.innerHTML = TRIP_ORDER.map(id => {
+                const trip = TRIP_DEFS[id];
+                const active = id === ACTIVE_TRIP_ID;
+                const summary = readTripSummary(trip);
+                const stats = summary
+                    ? [
+                        summary.journal ? summary.journal + ' wpisów w dzienniku' : '',
+                        summary.pins ? summary.pins + ' pinezek' : '',
+                        summary.spent ? summary.spent.toFixed(2) + ' € wydatków' : ''
+                      ].filter(Boolean).join(' · ')
+                    : 'Brak zapisanych danych na tym telefonie';
+                return `
+                    <button type="button" onclick="switchTrip('${id}')" class="w-full text-left p-4 rounded-2xl border-2 transition-all active:scale-[0.99] ${active ? 'border-bari-accent bg-orange-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'}">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="font-bold text-bari-dark leading-snug"><i class="fa-solid ${trip.icon} text-bari-accent"></i> ${escapeHtml(trip.name)}</p>
+                                <p class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(trip.subtitle)}</p>
+                                <p class="text-[11px] font-bold text-slate-600 mt-1"><i class="fa-regular fa-calendar"></i> ${formatTripRange(trip)}</p>
+                                <p class="text-[10px] text-slate-400 mt-1 leading-snug">${escapeHtml(stats)}</p>
+                            </div>
+                            <div class="flex flex-col items-end gap-1.5 shrink-0">
+                                ${tripStatusBadge(trip)}
+                                ${active ? '<span class="text-[9px] font-bold uppercase text-bari-accent">Otwarty</span>' : ''}
+                            </div>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function openTripSwitcher() {
+            const panel = document.getElementById('trip-switcher');
+            const sheet = document.getElementById('trip-switcher-sheet');
+            if (!panel) return;
+            renderTripList();
+            panel.classList.remove('hidden');
+            setTimeout(() => { panel.classList.remove('opacity-0'); if (sheet) sheet.classList.remove('translate-y-full'); }, 10);
+        }
+
+        function closeTripSwitcher() {
+            const panel = document.getElementById('trip-switcher');
+            const sheet = document.getElementById('trip-switcher-sheet');
+            if (!panel) return;
+            if (sheet) sheet.classList.add('translate-y-full');
+            panel.classList.add('opacity-0');
+            setTimeout(() => panel.classList.add('hidden'), 300);
+        }
+
+        function switchTrip(tripId) {
+            if (!TRIP_DEFS[tripId]) return;
+            if (tripId === ACTIVE_TRIP_ID) { closeTripSwitcher(); return; }
+            try { localStorage.setItem(ACTIVE_TRIP_LS, tripId); } catch (e) {}
+            showToast('Otwieram: ' + TRIP_DEFS[tripId].short);
+            setTimeout(() => window.location.reload(), 250);
+        }
+
+        /* --- TEKSTY ZALEŻNE OD WYJAZDU --- */
+        function applyTripChrome() {
+            const setText = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value;
+            };
+            const setHtml = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = value;
+            };
+            const setHidden = (id, hidden) => {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('hidden', hidden);
+            };
+
+            document.title = TRIP.appTitle.replace(' ✈️', '');
+            setText('trip-header-sub', TRIP.name + (TRIP_ARCHIVED ? ' · archiwum' : ''));
+            setText('start-tab-title', TRIP.startTabTitle);
+            setHtml('plan-siesta-note', TRIP.siestaNote);
+            setHtml('plan-zones-note', TRIP.planZonesNote);
+            setText('baza-tab-title', TRIP.apartment.title);
+            setText('apartment-name', TRIP.apartment.name);
+            setText('apartment-address', TRIP.apartment.address);
+            setText('checkout-section-title', 'Check-out ' + TRIP.apartment.title);
+            setText('apartment-checkin-title', TRIP.apartment.checkinTitle);
+            setHtml('apartment-checkin-lines', TRIP.apartment.checkinLines.map(l => '<p class="text-sm text-blue-900">' + l + '</p>').join(''));
+            setText('host-whatsapp-btn-label', TRIP.apartment.hostLabel);
+            setText('host-field-label', TRIP.apartment.hostLabel);
+            setText('host-whatsapp-hint', TRIP.apartment.hostDefaultPhone
+                ? 'Numer jest zapisany — możesz go zmienić w sekcji Apartament poniżej.'
+                : 'Wpisz numer gospodarza w sekcji Apartament poniżej, żeby przycisk działał.');
+            setHtml('cash-note', TRIP.cashNote);
+            setText('insurance-note', TRIP.insuranceNote);
+            setText('transport-train-note', TRIP.trainLinkNote);
+            setText('settings-trip-name', TRIP.name + ' · ' + formatTripRange(TRIP) + (TRIP_ARCHIVED ? ' · zakończony' : ''));
+            setText('notif-description', TRIP_ARCHIVED
+                ? 'Wyjazd zakończony — przypomnienia są wyłączone.'
+                : 'Dzień przed wylotem o 8:00 — przypomnienie (<24h). W trakcie wyjazdu: briefing codziennie o 8:00, magnesy i sjesta. Popup zawsze; push po włączeniu.');
+
+            const mapsLink = document.getElementById('apartment-maps-link');
+            if (mapsLink) mapsLink.href = 'https://maps.google.com/?q=' + TRIP.apartment.mapsQuery;
+
+            setHidden('transport-fal-alert', !TRIP.features.falAlert);
+            setHidden('transport-muvt-card', !TRIP.features.muvt);
+            setHidden('apt-bus-panel', !TRIP.features.aptBus);
+            setHidden('insurance-images', !TRIP.features.insuranceImages);
+
+            if (TRIP_ARCHIVED) {
+                setHidden('magnet-alert', true);
+                setHidden('siesta-alert', true);
+                setHidden('checkout-video-alert', true);
+            }
         }
 
         function openSettings() {
@@ -4394,12 +4933,12 @@
                 .then(data => {
                     if (data && data.rates && data.rates.PLN) {
                         EURO_RATE = data.rates.PLN;
-                        try { localStorage.setItem('bariApp_euroRate', EURO_RATE); } catch(e) {}
+                        try { localStorage.setItem(LS_PREFIX + 'euroRate', EURO_RATE); } catch(e) {}
                         updateRateInfo();
                     }
                 })
                 .catch(() => {
-                    const cached = localStorage.getItem('bariApp_euroRate');
+                    const cached = localStorage.getItem(LS_PREFIX + 'euroRate');
                     if (cached) EURO_RATE = parseFloat(cached);
                     updateRateInfo();
                 });
@@ -4588,11 +5127,11 @@
             if (dataUrl) {
                 img.src = dataUrl; img.classList.remove('hidden');
                 if (clearBtn) clearBtn.classList.remove('hidden');
-                try { localStorage.setItem('bariApp_' + imgId, dataUrl); } catch(e) {}
+                try { localStorage.setItem(LS_PREFIX + '' + imgId, dataUrl); } catch(e) {}
             } else {
                 img.src = ''; img.classList.add('hidden');
                 if (clearBtn) clearBtn.classList.add('hidden');
-                try { localStorage.removeItem('bariApp_' + imgId); } catch(e) {}
+                try { localStorage.removeItem(LS_PREFIX + '' + imgId); } catch(e) {}
             }
         }
 
@@ -4655,16 +5194,16 @@
                 clearAllStopPhotos();
                 clearAllTicketPhotos();
                 state = JSON.parse(JSON.stringify(FACTORY_STATE));
-                inlineFields = { baza_wifi: '', ekuz_dawid: '', ekuz_gosia: '', awaria_polisa: '', transport_notes: '', transport_bus: 'Via Trevisani ↔ Centrum — wpisz numery linii', dario_whatsapp: '393476106295' };
+                inlineFields = { baza_wifi: '', ekuz_dawid: '', ekuz_gosia: '', awaria_polisa: '', transport_notes: '', transport_bus: TRIP.transportNotesDefault, dario_whatsapp: TRIP.apartment.hostDefaultPhone };
                 try {
-                    localStorage.setItem('bariApp_stateV6', JSON.stringify(state));
-                    localStorage.setItem('bariApp_baza_wifi', '');
-                    localStorage.setItem('bariApp_ekuz_dawid', '');
-                    localStorage.setItem('bariApp_ekuz_gosia', '');
-                    localStorage.setItem('bariApp_awaria_polisa', '');
-                    localStorage.setItem('bariApp_transport_notes', '');
-                    localStorage.setItem('bariApp_transport_bus', inlineFields.transport_bus);
-                    localStorage.setItem('bariApp_dario_whatsapp', inlineFields.dario_whatsapp);
+                    localStorage.setItem(LS_PREFIX + 'stateV6', JSON.stringify(state));
+                    localStorage.setItem(LS_PREFIX + 'baza_wifi', '');
+                    localStorage.setItem(LS_PREFIX + 'ekuz_dawid', '');
+                    localStorage.setItem(LS_PREFIX + 'ekuz_gosia', '');
+                    localStorage.setItem(LS_PREFIX + 'awaria_polisa', '');
+                    localStorage.setItem(LS_PREFIX + 'transport_notes', '');
+                    localStorage.setItem(LS_PREFIX + 'transport_bus', inlineFields.transport_bus);
+                    localStorage.setItem(LS_PREFIX + 'dario_whatsapp', inlineFields.dario_whatsapp);
                 } catch(e) {}
                 syncToServer('main', JSON.stringify(state));
                 syncToServer('baza_wifi', '');
@@ -4687,21 +5226,21 @@
         function buildBackup() {
             const images = {};
             Object.keys(IMG_CLEAR_BTN).forEach(imgId => {
-                const data = localStorage.getItem('bariApp_' + imgId);
+                const data = localStorage.getItem(LS_PREFIX + '' + imgId);
                 if (data) images[imgId] = data;
             });
             (state.transportStopPhotos || []).forEach(p => {
                 const imgId = 'stop-' + p.id;
-                const data = localStorage.getItem('bariApp_' + imgId);
+                const data = localStorage.getItem(LS_PREFIX + '' + imgId);
                 if (data) images[imgId] = data;
             });
             (state.ticketPhotos || []).forEach(p => {
                 const imgId = 'ticket-' + p.id;
-                const data = localStorage.getItem('bariApp_' + imgId);
+                const data = localStorage.getItem(LS_PREFIX + '' + imgId);
                 if (data) images[imgId] = data;
             });
             return {
-                app: 'bari',
+                app: TRIP.id,
                 version: 3,
                 exportedAt: new Date().toISOString(),
                 main: JSON.stringify(state),
@@ -4724,17 +5263,17 @@
             inlineFields.ekuz_gosia = backup.ekuz_gosia || '';
             inlineFields.awaria_polisa = backup.awaria_polisa || '';
             inlineFields.transport_notes = backup.transport_notes || '';
-            inlineFields.transport_bus = backup.transport_bus || 'Via Trevisani ↔ Centrum — wpisz numery linii';
+            inlineFields.transport_bus = backup.transport_bus || TRIP.transportNotesDefault;
             inlineFields.dario_whatsapp = backup.dario_whatsapp || '';
             try {
-                localStorage.setItem('bariApp_stateV6', JSON.stringify(state));
-                localStorage.setItem('bariApp_baza_wifi', inlineFields.baza_wifi);
-                localStorage.setItem('bariApp_ekuz_dawid', inlineFields.ekuz_dawid);
-                localStorage.setItem('bariApp_ekuz_gosia', inlineFields.ekuz_gosia);
-                localStorage.setItem('bariApp_awaria_polisa', inlineFields.awaria_polisa);
-                localStorage.setItem('bariApp_transport_notes', inlineFields.transport_notes);
-                localStorage.setItem('bariApp_transport_bus', inlineFields.transport_bus);
-                localStorage.setItem('bariApp_dario_whatsapp', inlineFields.dario_whatsapp);
+                localStorage.setItem(LS_PREFIX + 'stateV6', JSON.stringify(state));
+                localStorage.setItem(LS_PREFIX + 'baza_wifi', inlineFields.baza_wifi);
+                localStorage.setItem(LS_PREFIX + 'ekuz_dawid', inlineFields.ekuz_dawid);
+                localStorage.setItem(LS_PREFIX + 'ekuz_gosia', inlineFields.ekuz_gosia);
+                localStorage.setItem(LS_PREFIX + 'awaria_polisa', inlineFields.awaria_polisa);
+                localStorage.setItem(LS_PREFIX + 'transport_notes', inlineFields.transport_notes);
+                localStorage.setItem(LS_PREFIX + 'transport_bus', inlineFields.transport_bus);
+                localStorage.setItem(LS_PREFIX + 'dario_whatsapp', inlineFields.dario_whatsapp);
             } catch(e) {}
             syncToServer('main', JSON.stringify(state));
             syncToServer('baza_wifi', inlineFields.baza_wifi);
@@ -4771,7 +5310,7 @@
             const a = document.createElement('a');
             const stamp = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
             a.href = url;
-            a.download = 'bari-backup-' + stamp + '.json';
+            a.download = TRIP.id + '-backup-' + stamp + '.json';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -4831,6 +5370,7 @@
         }
 
         window.onload = async () => {
+            applyTripChrome();
             await initStorage();
             subscribeRealtime();
             updateCountdown();
@@ -4847,7 +5387,7 @@
             updateSiestaAlert();
             updateMagnetAlert();
             setTimeout(() => runDailyBriefingChecks(), 900);
-            if (localStorage.getItem('bariApp_notif_enabled') === '1') runTripNotifications();
+            if (localStorage.getItem(LS_PREFIX + 'notif_enabled') === '1') runTripNotifications();
 
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register(appUrl('sw.js')).then((reg) => {
@@ -4871,12 +5411,12 @@
                 });
             }
 
-            const savedImg = localStorage.getItem('bariApp_saved-map');
+            const savedImg = localStorage.getItem(LS_PREFIX + 'saved-map');
             const mapImg = document.getElementById('saved-map');
             if (savedImg && mapImg && mapImg.classList.contains('hidden')) {
                 applyImage('saved-map', savedImg);
             }
-            const kasImg = localStorage.getItem('bariApp_kasownik-photo');
+            const kasImg = localStorage.getItem(LS_PREFIX + 'kasownik-photo');
             const kasEl = document.getElementById('kasownik-photo');
             if (kasImg && kasEl && kasEl.classList.contains('hidden')) {
                 applyImage('kasownik-photo', kasImg);
@@ -4892,6 +5432,14 @@
                 const planBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => (b.getAttribute('onclick') || '').includes("'plan'"));
                 if (planBtn) switchTab('plan', planBtn);
             }
+
+            // Po aktualizacji apki pokaż raz listę wyjazdów, żeby było wiadomo, gdzie jest Bari.
+            try {
+                if (!localStorage.getItem('tripsApp_seen_switcher')) {
+                    localStorage.setItem('tripsApp_seen_switcher', '1');
+                    setTimeout(openTripSwitcher, 900);
+                }
+            } catch (e) {}
         };
     </script>
 </body>
