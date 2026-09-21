@@ -1,4 +1,4 @@
-const CACHE = 'bari-autopilot-v23';
+const CACHE = 'bari-autopilot-v24';
 const CDN_CACHE = 'bari-autopilot-cdn-v2';
 
 const BASE = (() => {
@@ -18,6 +18,11 @@ const SHELL = [
   BASE + 'assets/polisa-uniqa-2.png',
   BASE + 'assets/ekuz-karty.png',
   BASE + 'assets/apt-bus-schedules.js',
+  BASE + 'data/trips.js',
+  BASE + 'data/trips/monopoli.js',
+  BASE + 'data/trips/katania.js',
+  BASE + 'data/trips/bari.js',
+  BASE + 'data/places.js',
 ];
 
 const CDN_ASSETS = [
@@ -50,6 +55,9 @@ function isAppShellRequest(url) {
   const baseNoSlash = BASE.replace(/\/$/, '');
   if (path === baseNoSlash || path === BASE + 'index.html' || path.endsWith('/sw.js')) return true;
   if (BASE === '/' && (path === '/' || path === '/index.html')) return true;
+  // Dane wyjazdów zmieniają się najczęściej i muszą się odświeżać razem z index.html,
+  // inaczej nowa apka dostałaby stary plan z cache.
+  if (path.startsWith(BASE + 'data/')) return true;
   return false;
 }
 
