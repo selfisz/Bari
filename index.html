@@ -399,6 +399,20 @@
             </div>
 
             <div id="normal-bags-view">
+                <!-- Walizka wysyłana InPostem (tylko wyjazdy z TRIP.inpost) -->
+                <div id="inpost-section" class="hidden mb-6 bg-white border-2 border-amber-300 rounded-xl shadow-sm overflow-hidden">
+                    <button type="button" onclick="toggleSectionPanel('inpost')" class="w-full p-4 flex items-center justify-between text-left active:bg-amber-50 transition-colors">
+                        <h3 class="font-bold text-amber-800 flex items-center gap-2"><i class="fa-solid fa-box-open"></i> Walizka InPostem</h3>
+                        <div class="flex items-center gap-2 shrink-0 ml-2">
+                            <span id="inpost-badge" class="text-[9px] font-bold uppercase px-2 py-1 rounded-full"></span>
+                            <i id="section-inpost-chevron" class="fa-solid fa-chevron-down text-amber-400 transition-transform duration-200"></i>
+                        </div>
+                    </button>
+                    <div id="section-inpost-body" class="hidden px-4 pb-4 border-t border-amber-200">
+                        <div id="inpost-panel" class="pt-3"></div>
+                    </div>
+                </div>
+
                 <p class="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 leading-snug"><i class="fa-solid fa-hourglass-half"></i> <b>Tymczasowa</b> — bez przypisanego bagażu. <i class="fa-solid fa-mobile-screen-button text-violet-600"></i> = przy sobie · <b>− / +</b> = ilość sztuk. <span class="text-amber-600">v12</span></p>
                 <!-- Check-out Via Trevisani -->
                 <div id="checkout-section" class="hidden mb-6 bg-orange-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden">
@@ -1132,6 +1146,10 @@
             splitExpenses: [],
             removedBagSeedIds: [],
             startBari: [
+                {id: 'ms0a', text: '📦 <b>InPost — nadaj walizkę 24–25.09.</b> Do Włoch jedzie <b>3–5 dni roboczych</b>: nadana w piątek 25.09 dotrze do Monopoli ok. <b>30.09–02.10</b>, czyli już po Waszym przylocie. <b>Nie nadawaj wcześniej</b> — punkt trzyma paczkę tylko ok. 3 dni i odsyła ją do nadawcy. <a href="https://inpost.pl/SzybkieNadania/pl/wysylam-za-granice" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-[#ffcc00] text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-box"></i> Szybkie Nadania</a>', checked: false},
+                {id: 'ms0b', text: '🖨️ <b>Wydrukuj DWIE etykiety: na wyjazd i na powrót.</b> We Włoszech InPost wymaga naklejonej, wydrukowanej etykiety, a w Monopoli nie będziecie mieć drukarki. Przesyłkę powrotną (Włochy → Polska) kup na SzybkieNadania.pl jeszcze w Krakowie i <b>weź wydruk ze sobą w plecaku</b>. Dorzuć taśmę klejącą.', checked: false},
+                {id: 'ms0c', text: '📏 <b>Zmierz walizkę: max 39 × 38 × 64 cm, do 25 kg.</b> Kółka i uchwyty wliczają się w wymiar — typowa kabinówka 55×40×20 jest o ~2 cm za szeroka w jednym boku. Sprawdź to <b>przed</b> opłaceniem etykiety.', checked: false},
+                {id: 'ms0d', text: '🚫 <b>Czego NIE wolno wysłać InPostem:</b> powerbank i luźne baterie, aerozole (dezodorant, lakier, pianka), alkohol, leki, szkło i ceramika, płyny powyżej 750 ml, gotówka i biżuteria. To jedzie w plecaku albo zostaje w domu.', checked: false},
                 {id: 'ms1', text: '<b>Lot tam: FR2722 · śr. 30.09 · 05:50 Kraków → 07:45 Bari</b> (1 godz. 55 min). Rezerwacja <b>RVI88V</b>.', checked: false},
                 {id: 'ms2', text: '<b>Lot powrotny: FR2723 · wt. 06.10 · 23:00 Bari → 00:55 Kraków</b> (lądowanie już 07.10).', checked: false},
                 {id: 'ms3', text: '⚠️ <b>CHECK-IN Ryanair</b> — otwiera się <b>29.09 o 05:50</b> (24h przed). Boarding passy na telefon! <a href="https://www.ryanair.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-yellow-400 text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-plane"></i> Ryanair</a>', checked: false},
@@ -1140,21 +1158,26 @@
                 {id: 'ms6', text: 'Po wylądowaniu (07:45): za <b>niebieską linią</b> do stacji, bilet <b>FR2 → Bari Centrale (5.30€)</b>, QR na bramce.', checked: false},
                 {id: 'ms7', text: '<b>Bari Centrale → Monopoli</b> — Trenitalia regionale, ~35–45 min, ok. 3–5€. Kursy mniej więcej co godzinę.', checked: false},
                 {id: 'ms8', text: '⚠️ <b>Check-in w Monopoli dopiero 16:00–19:00</b> — zaplanuj, gdzie zostawić bagaże na kilka godzin (patrz dzień 1).', checked: false},
-                {id: 'ms9', text: 'Z dworca w Monopoli do apartamentu <b>Via Fiume 19</b> — ~8 min pieszo.', checked: false}
+                {id: 'ms9', text: 'Z dworca w Monopoli do apartamentu <b>Via Fiume 19</b> — ~8 min pieszo.', checked: false},
+                {id: 'ms10', text: '📦 <b>Odbiór walizki: punkt InPost ITMON156755D</b>, Via Guglielmo Oberdan 39 — <b>2 min od stacji Monopoli</b>, po drodze do apartamentu. Czynne <b>pn–sb 7:30–13:00 i 16:30–20:00</b>, w niedzielę nieczynne. Kod odbioru przyjdzie SMS-em i mailem.', checked: false},
+                {id: 'ms11', text: '✈️ <b>Na oba loty tylko plecaki.</b> Walizka jedzie i wraca InPostem. Darmowy plecak Ryanaira pod fotel to <b>40 × 30 × 20 cm</b> (z kółkami i uchwytami) — nic więcej nie wnosicie na pokład.', checked: false}
             ],
             shopData: [
                 {id: 'msh1', text: 'Zgrzewka wody mineralnej', checked: false},
                 {id: 'msh2', text: 'Śniadania: pieczywo, owoce, kawa', checked: false},
                 {id: 'msh3', text: 'Lokalne wino (Primitivo / Verdeca z Valle d\'Itria)', checked: false},
                 {id: 'msh4', text: '🧲 Magnesy na pamiątkę (Polignano — dzień 3)', checked: false},
-                {id: 'msh5', text: '🧲 Magnesy — ostatnia szansa (Monopoli — dzień 6/7)', checked: false}
+                {id: 'msh5', text: '🧲 Magnesy — ostatnia szansa (Monopoli — dzień 6/7)', checked: false},
+                {id: 'msh6', text: '⚠️ <b>Wino i oliwa NIE pojadą walizką InPost</b> — alkohol i szkło są wyłączone z przewozu. Butelki bierzecie w plecaku (kupione po kontroli na lotnisku) albo odpuszczacie.', checked: false}
             ],
             checkoutData: [
                 {id: 'mco1', text: 'Wyrzucone śmieci', checked: false},
                 {id: 'mco2', text: 'Sprawdzone szuflady i sejf (dokumenty!)', checked: false},
                 {id: 'mco3', text: 'Ładowarki z gniazdek', checked: false},
                 {id: 'mco4', text: '<b>NAGRAĆ WIDEO CAŁEGO MIESZKANIA</b> przy wyjściu', checked: false},
-                {id: 'mco5', text: 'Klucze zwrócone według instrukcji gospodarza', checked: false}
+                {id: 'mco5', text: 'Klucze zwrócone według instrukcji gospodarza', checked: false},
+                {id: 'mco6', text: '📦 <b>Walizka InPost spakowana i zaklejona</b>, wydrukowana etykieta powrotna naklejona kodem do góry. Powerbank, płyny, leki i dokumenty <b>wyjęte do plecaka</b>.', checked: false},
+                {id: 'mco7', text: '📦 <b>Walizka nadana</b> w punkcie InPost przy Via Oberdan (przed 13:00!) — dalej idziecie już tylko z plecakami.', checked: false}
             ],
             bagsData: [
                 {
@@ -1190,6 +1213,8 @@
                         {id: 'mp1siesta', text: '13:00–17:00 — <b>SIESTA</b>: Sklepy zamknięte. Lunch przed 13:00 albo po 17:00.', checked: false, siesta: true},
                         {id: 'mp1i5', text: 'Ze stacji Monopoli pieszo do <b>Via Fiume 19</b> (~8 min). <a href="https://maps.google.com/?q=Via+Fiume+19,+70043+Monopoli+BA" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Apartament</a>', checked: false},
                         {id: 'mp1i6', text: '<b>16:00–19:00 CHECK-IN</b> — „La casa di Gio Mar”, Via Fiume 19. <b>Napisz gospodarzowi godzinę przyjazdu</b> jeszcze rano!', checked: false},
+                        {id: 'mp1inpost', text: '📦 <b>Odbierz walizkę z InPostu — po check-inie.</b> Punkt <b>ITMON156755D</b>, Via Guglielmo Oberdan 39, czynny 7:30–13:00 i <b>16:30–20:00</b> (w południe sjesta). Z Via Fiume 19 ~10 min pieszo. Kod odbioru masz w SMS-ie i mailu. <a href="https://maps.google.com/?q=Via+Guglielmo+Oberdan+39,+70043+Monopoli+BA" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Nawiguj</a> <button type="button" onclick="event.stopPropagation();focusMapPoi(\'mon-inpost\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Pinezka w apce</button>', checked: false},
+                        {id: 'mp1inpost2', text: '⏳ <b>Paczka czeka tylko ok. 3 dni</b> od powiadomienia, potem wraca do nadawcy. Jeśli 30.09 jeszcze nie dotarła (szacowane 30.09–02.10) — czekaj na SMS i odbierz <b>od razu następnego dnia</b>.', checked: false},
                         {id: 'mp1i7', text: 'Pierwsze zakupy: woda, śniadanie na jutro. <b>Sklepy zamykają ok. 20:30</b>.', checked: false},
                         {id: 'mp1i8', text: 'Kolacja przy <b>Porto Antico</b> — świeże ryby i spacer po nabrzeżu.', checked: false}
                     ]
@@ -1252,16 +1277,18 @@
                 {
                     id: 'mp7', date: 'Dzień 7 (06.10) - Check-out rano, wylot 23:00 ✈️',
                     items: [
+                        {id: 'mp7inpost0', text: '📦 <b>Rano spakuj walizkę do wysyłki</b> — zaklej taśmą, naklej <b>wydrukowaną etykietę powrotną</b> (kod dobrze widoczny). Powerbank, płyny, leki, dokumenty i wartościowe rzeczy <b>wyjmij do plecaka</b> — InPost ich nie przewozi.', checked: false, sec: true},
                         {id: 'mp7i1', text: '<b>CHECK-OUT 8:00–10:00</b> — Via Fiume 19. <b>NAGRAJ WIDEO</b> całego mieszkania, wyrzuć śmieci, klucze wg instrukcji gospodarza.', checked: false, sec: true},
-                        {id: 'mp7i2', text: '⏳ <b>Lot dopiero o 23:00</b> — po check-oucie macie cały dzień. Dogadaj z gospodarzem zostawienie bagaży albo skorzystaj z przechowalni w mieście (ok. 5€ za sztukę).', checked: false},
+                        {id: 'mp7inpost1', text: '📦 <b>Zaraz po check-oucie nadaj walizkę</b> w punkcie InPost, Via Guglielmo Oberdan 39 (~10 min pieszo). <b>Czynne do 13:00</b>, potem dopiero od 16:30 — zrób to rano. Pokaż paczkę obsłudze i poczekaj na skan etykiety. <a href="https://maps.google.com/?q=Via+Guglielmo+Oberdan+39,+70043+Monopoli+BA" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Nawiguj</a> <button type="button" onclick="event.stopPropagation();focusMapPoi(\'mon-inpost\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Pinezka w apce</button>', checked: false},
+                        {id: 'mp7i2', text: '✅ <b>Walizka nadana = problem z bagażem rozwiązany.</b> Lot jest dopiero o 23:00, ale przez cały dzień chodzicie już <b>tylko z plecakami</b> — żadnej przechowalni nie trzeba. Paczka dojedzie do Polski w 3–5 dni roboczych (ok. 12–13.10).', checked: false},
                         {id: 'mp7ryanair', text: '⚠️ <b>CHECK-IN Ryanair na powrót</b> — otwiera się <b>05.10 o 23:00</b>. Boarding passy w telefonie (FR2723). <a href="https://www.ryanair.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-yellow-400 text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-plane"></i> Ryanair</a>', checked: false, checkin: true},
                         {id: 'mp7i3', text: 'Ostatni dzień w Monopoli: kąpiel, starówka, gelato. <b>Lunch przed 13:00</b> — potem sjesta.', checked: false},
                         {id: 'mp7magnet', text: '🧲 <b>Ostatnia szansa na magnesy</b> i pamiątki — sklepy zamykają na sjestę i wieczorem.', checked: false, magnet: true},
-                        {id: 'mp7i4', text: '<b>Ok. 19:00</b> — odbierz bagaże, kolacja albo focaccia na drogę.', checked: false},
+                        {id: 'mp7i4', text: '<b>Ok. 19:00</b> — kolacja albo focaccia na drogę. Bagaży nie odbieracie — walizka jest już w drodze do Polski.', checked: false},
                         {id: 'mp7i5', text: '<b>~19:30–20:00</b> — pociąg <b>Monopoli → Bari Centrale</b> (~35–45 min). <b>Sprawdź dokładną godzinę rano</b> — wieczorem kursy są rzadsze! <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
                         {id: 'mp7i6', text: 'W Bari Centrale przesiadka na <b>Ferrotramviaria FR2 → Bari Aeroporto</b> (5.30€, ~15 min, QR na bramce przed peronem). <b>Ostatnie kursy ok. 22:30 — nie zostawiaj tego na ostatnią chwilę.</b>', checked: false},
                         {id: 'mp7i7', text: 'Cel: być na lotnisku <b>ok. 21:00</b>. Na stacji lotniskowej <b>tunel ~300 m</b> do terminala, potem <b>piętro 1 — Partenze</b>.', checked: false},
-                        {id: 'mp7i8', text: 'Walizka do nadania? <b>Bag drop zamyka się o 22:00</b> (60 min przed odlotem). Tylko plecaki? Od razu na security.', checked: false},
+                        {id: 'mp7i8', text: '<b>Tylko plecaki — omijacie bag drop</b> i idziecie prosto na security. Plecak musi zmieścić się pod fotel: <b>40 × 30 × 20 cm</b>.', checked: false},
                         {id: 'mp7i9', text: '<b>KONTROLA BEZPIECZEŃSTWA</b>: płyny 100ml w worku, elektronika i powerbank osobno.', checked: false, sec: true},
                         {id: 'mp7i10', text: '🇪🇺 Włochy → Polska = <b>Schengen</b>, bez kontroli granicznej. Dowód/paszport do linii i przy bramce.', checked: false},
                         {id: 'mp7i11', text: 'Tablica odlotów — <b>numer gate</b> pojawia się ~40–60 min przed odlotem. Boarding ok. <b>22:30</b>.', checked: false},
@@ -1275,7 +1302,8 @@
             foodSpots: [],
             journalEntries: [],
             cashStart: { dawid: 40, gosia: 40 },
-            planVersion: 2,
+            inpost: { pointCode: '', trackingOut: '', trackingBack: '' },
+            planVersion: 3,
             planDayMeta: {
                 mp1: { outbound: '03:30 wyjazd · 05:50 lot', return: '07:45 przylot' },
                 mp2: { outbound: '', return: '' },
@@ -1516,12 +1544,35 @@
                 departureAt: '2026-09-30T03:30:00',
                 returnLabel: 'do Krakowa',
                 seed: MONOPOLI_SEED,
+                inpost: {
+                    sendFrom: '2026-09-24',
+                    sendBy: '2026-09-25',
+                    arrivalWindow: '30.09–02.10',
+                    pickupFrom: '2026-09-30',
+                    returnDate: '2026-10-06',
+                    returnArrival: 'ok. 12–13.10',
+                    transit: '3–5 dni roboczych',
+                    maxSize: '39 × 38 × 64 cm',
+                    maxWeight: '25 kg',
+                    holdDays: 3,
+                    point: {
+                        code: 'ITMON156755D',
+                        name: 'Agenzia multiservizi Delyfast',
+                        address: 'Via Guglielmo Oberdan 39, 70043 Monopoli (BA)',
+                        hours: 'pn–sb 7:30–13:00 i 16:30–20:00 · niedziela nieczynna',
+                        walk: '2 min od stacji Monopoli · ~10 min od Via Fiume 19',
+                        mapsQuery: 'Via+Guglielmo+Oberdan+39,+70043+Monopoli+BA',
+                        poiId: 'mon-inpost'
+                    }
+                },
                 preDepartureChecklist: [
+                    'Walizka nadana InPostem 24–25.09? Bez tego nie dotrze na czas do Monopoli',
+                    'Etykieta powrotna kupiona i WYDRUKOWANA — we Włoszech bez wydruku nie nadasz paczki',
                     'Check-in Ryanair zrobiony? Boarding passy FR2722 w telefonie (rezerwacja RVI88V)',
                     'Wyjazd z domu 03:30 — bramki na lotnisku zamykają się 05:20',
-                    'Paszporty / dowody i EKUZ w podręcznym plecaku — nie w walizce!',
-                    'Powerbank i płyny 100ml do kuwety — powerbank nie może jechać w nadanej walizce',
-                    'W Bari jesteście 07:45, a check-in w Monopoli dopiero 16:00 — ustal, gdzie zostawiacie bagaże'
+                    'Paszporty / dowody i EKUZ w plecaku — nie w walizce jadącej InPostem!',
+                    'Powerbank i płyny 100ml do kuwety — powerbanku InPost w ogóle nie przewozi',
+                    'Na loty tylko plecaki 40 × 30 × 20 cm — nic poza tym nie wchodzi na pokład'
                 ],
                 magnetDays: ['2026-10-02', '2026-10-05', '2026-10-06'],
                 checkoutVideoDate: '2026-10-06',
@@ -1548,6 +1599,11 @@
                 cashNote: 'Odejmuje tylko wydatki <b>Gotówka</b> tej osoby z rozliczeń.',
                 trainLinkNote: 'Wycieczki: Polignano, Bari, Ostuni, Alberobello',
                 features: { aptBus: false, falAlert: false, muvt: false, insuranceImages: false },
+                bagOverrides: {
+                    bag1: { name: 'Walizka InPost (jedzie osobno)', icon: 'fa-box-open', color: 'text-amber-700' },
+                    bag2: { name: 'Plecak Dawida (na pokład)' },
+                    bag3: { name: 'Plecak Gosi (na pokład)' }
+                },
                 bagSeedItems: {
                     bagTemp: [],
                     bag1: [
@@ -1556,19 +1612,25 @@
                         { id: 'mb1i3', text: 'Stroje kąpielowe (woda jeszcze ciepła!)', qty: 2, checked: false },
                         { id: 'mb1i4', text: 'Bluza / lekka kurtka na wieczory', qty: 2, checked: false },
                         { id: 'mb1i5', text: 'Piżamy', qty: 2, checked: false },
-                        { id: 'mb1i6', text: 'Ręcznik plażowy (szybkoschnący)', qty: 2, checked: false }
+                        { id: 'mb1i6', text: 'Ręcznik plażowy (szybkoschnący)', qty: 2, checked: false },
+                        { id: 'mb1i7', text: '⚠️ Ta walizka znika z domu 25.09 — nic z niej nie będzie potrzebne do 30.09', qty: 1, checked: false },
+                        { id: 'mb1i8', text: '🚫 Bez powerbanku, aerozoli, leków, alkoholu i szkła — InPost tego nie przewozi', qty: 1, checked: false }
                     ],
                     bag2: [
                         { id: 'mb2i1', text: 'Paszporty / Dowody', sec: true, pocket: true, qty: 1, checked: false },
                         { id: 'mb2i2', text: 'Portfel (karty, EKUZ)', sec: true, pocket: true, qty: 1, checked: false },
                         { id: 'mb2i3', text: 'Powerbank (tylko w podręcznym!)', sec: true, pocket: true, qty: 1, checked: false },
                         { id: 'mb2i4', text: 'Kosmetyczka z płynami (worek 100ml!)', sec: true, qty: 1, checked: false },
-                        { id: 'mb2i5', text: 'Gotówka na start (taksa klimatyczna, targ)', qty: 1, checked: false }
+                        { id: 'mb2i5', text: 'Gotówka na start (taksa klimatyczna, targ)', qty: 1, checked: false },
+                        { id: 'mb2i6', text: '📦 Wydrukowana etykieta powrotna InPost + taśma klejąca', pocket: true, qty: 1, checked: false },
+                        { id: 'mb2i7', text: 'Ubranie na pierwszy dzień — walizkę odbieracie dopiero ok. 16:30', qty: 1, checked: false }
                     ],
                     bag3: [
                         { id: 'mb3i1', text: 'Okulary przeciwsłoneczne', qty: 1, checked: false },
                         { id: 'mb3i2', text: 'Płyny/kosmetyki Gosi (worek 100ml!)', sec: true, qty: 1, checked: false },
-                        { id: 'mb3i3', text: 'Krem z filtrem', sec: true, qty: 1, checked: false }
+                        { id: 'mb3i3', text: 'Krem z filtrem', sec: true, qty: 1, checked: false },
+                        { id: 'mb3i4', text: 'Leki na wyjazd — InPost nie przewozi leków, muszą jechać z Wami', sec: true, qty: 1, checked: false },
+                        { id: 'mb3i5', text: 'Ubranie na pierwszy dzień — walizka dopiero po check-inie', qty: 1, checked: false }
                     ]
                 }
             },
@@ -1810,6 +1872,7 @@
                 if(parsed.cashStart !== undefined) state.cashStart = parsed.cashStart;
                 if(parsed.planDayMeta) state.planDayMeta = parsed.planDayMeta;
                 if(parsed.removedBagSeedIds) state.removedBagSeedIds = parsed.removedBagSeedIds;
+                if(parsed.inpost) state.inpost = parsed.inpost;
                 state.planVersion = parsed.planVersion || 1;
                 if (!state.removedBagSeedIds) state.removedBagSeedIds = [];
                 ensureTripPlanVersion();
@@ -1823,8 +1886,10 @@
                 ensurePlanDayMeta();
                 ensureTempBag();
                 ensureBagSeedItems();
+                ensureBagOverrides();
                 normalizeBagItems();
                 ensureCashStart();
+                ensureInpostState();
                 ensureCustomMapPinColors();
             } catch(e) {}
         }
@@ -1968,6 +2033,27 @@
                 });
             });
             return changed;
+        }
+
+        // Nazwy bagaży nie są edytowalne w UI, więc definicja wyjazdu może je nadpisywać.
+        function ensureBagOverrides() {
+            if (!state.bagsData || !TRIP.bagOverrides) return false;
+            let changed = false;
+            Object.entries(TRIP.bagOverrides).forEach(([bagId, override]) => {
+                const bag = state.bagsData.find(b => b.id === bagId);
+                if (!bag) return;
+                Object.entries(override).forEach(([key, value]) => {
+                    if (bag[key] !== value) { bag[key] = value; changed = true; }
+                });
+            });
+            return changed;
+        }
+
+        function ensureInpostState() {
+            if (!TRIP.inpost) return false;
+            if (state.inpost && typeof state.inpost === 'object') return false;
+            state.inpost = { pointCode: '', trackingOut: '', trackingBack: '' };
+            return true;
         }
 
         const SIESTA_TEXT = '13:00–17:00 — <b>SIESTA</b>: Sklepy i większość lokali zamknięta. Jedz i rób zakupy rano lub po 17:00.';
@@ -2298,7 +2384,16 @@
             }
 
             if (!state.planDayMeta) ensurePlanDayMeta();
-            let migrated = ensureTripPlanVersion() || ensureTempBag() || ensureBagSeedItems() || normalizeBagItems() || ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureKikoPlanItem() || ensureMagnetShopItems() || ensureDay6ReturnPlan() || ensureDay6PlanRefresh() || ensurePlanDayMeta() || ensureCashStart() || ensureCustomMapPinColors();
+            // Każda migracja musi się wykonać w tym samym przebiegu — stąd forEach zamiast łańcucha ||,
+            // który zatrzymywał się na pierwszej, która coś zmieniła.
+            const migrations = [
+                ensureTripPlanVersion, ensureTempBag, ensureBagSeedItems, ensureBagOverrides, normalizeBagItems,
+                ensureSiestaItems, ensureCheckinItems, ensureMagnetItems, ensureKikoPlanItem, ensureMagnetShopItems,
+                ensureDay6ReturnPlan, ensureDay6PlanRefresh, ensurePlanDayMeta, ensureCashStart, ensureInpostState,
+                ensureCustomMapPinColors
+            ];
+            let migrated = false;
+            migrations.forEach(migrate => { if (migrate()) migrated = true; });
             if (migrated) saveState();
             renderAll();
         }
@@ -2592,6 +2687,7 @@
                 returnBtn.classList.replace('text-orange-800', 'text-slate-700');
             }
 
+            renderInpostPanel();
             renderSplitExpenses();
             if(kuwetaActive) renderKuwetaItems();
 
@@ -2817,6 +2913,7 @@
                 ['awaria-polisa', false],
                 ['awaria-ekuz-img', false],
                 ['narzedzia-shop', false],
+                ['inpost', false],
             ].forEach(([key, def]) => initSectionPanel(key, def));
         }
 
@@ -3529,6 +3626,145 @@
             });
         }
 
+        /* --- WALIZKA WYSYŁANA INPOSTEM --- */
+        const INPOST_TRACK_URL = 'https://inpost.pl/sledzenie-przesylek?number=';
+        const INPOST_SEND_URL = 'https://inpost.pl/SzybkieNadania/pl/wysylam-za-granice';
+        const INPOST_FIND_URL = 'https://inpost.it/trova-un-locker';
+
+        function inpostDay(iso) {
+            const [, m, d] = String(iso).split('-');
+            return d + '.' + m;
+        }
+
+        function getInpostStatus() {
+            const cfg = TRIP.inpost;
+            const today = todayISO();
+            if (today < cfg.sendFrom) {
+                const days = isoDaysDiff(today, cfg.sendBy);
+                return { label: 'Nadaj za ' + days + ' dni', cls: 'bg-amber-100 text-amber-800', step: 0 };
+            }
+            if (today <= cfg.sendBy) return { label: 'Nadaj teraz!', cls: 'bg-red-100 text-red-700', step: 0 };
+            if (today < cfg.pickupFrom) return { label: 'Paczka w drodze', cls: 'bg-blue-100 text-blue-700', step: 1 };
+            if (today < cfg.returnDate) return { label: 'Do odbioru', cls: 'bg-green-100 text-green-700', step: 2 };
+            if (today === cfg.returnDate) return { label: 'Dziś wysyłka powrotna', cls: 'bg-red-100 text-red-700', step: 3 };
+            return { label: 'Po wyjeździe', cls: 'bg-slate-100 text-slate-600', step: 4 };
+        }
+
+        function inpostStepHtml(index, currentStep, icon, title, when, desc) {
+            const done = index < currentStep;
+            const active = index === currentStep;
+            const dotCls = done ? 'bg-green-500 text-white' : (active ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-500');
+            const titleCls = active ? 'text-amber-900' : (done ? 'text-slate-400 line-through' : 'text-slate-700');
+            return `
+                <div class="flex gap-3">
+                    <div class="flex flex-col items-center shrink-0">
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] ${dotCls}"><i class="fa-solid ${done ? 'fa-check' : icon}"></i></div>
+                        ${index < 3 ? '<div class="w-px flex-1 bg-slate-200 my-1"></div>' : ''}
+                    </div>
+                    <div class="pb-3 min-w-0">
+                        <p class="text-xs font-bold ${titleCls}">${escapeHtml(title)} <span class="font-normal text-slate-500">· ${escapeHtml(when)}</span></p>
+                        <p class="text-[10px] text-slate-500 leading-snug">${desc}</p>
+                    </div>
+                </div>`;
+        }
+
+        function inpostTrackingRow(key, label) {
+            const value = (state.inpost && state.inpost[key]) || '';
+            const track = value
+                ? `<a href="${INPOST_TRACK_URL}${encodeURIComponent(value)}" target="_blank" rel="noopener" class="text-[10px] font-bold bg-slate-800 text-white px-2 py-1 rounded shrink-0"><i class="fa-solid fa-magnifying-glass"></i> Śledź</a>`
+                : '';
+            return `
+                <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                    <div class="min-w-0 flex-1 cursor-pointer" onclick="editInpostField('${key}', '${escapeHtml(label)}')">
+                        <p class="text-[9px] uppercase text-slate-500 font-bold">${escapeHtml(label)}</p>
+                        <p class="text-xs font-bold text-slate-800 truncate">${value ? escapeHtml(value) : '<span class="font-normal text-slate-400">tapnij, by wpisać numer</span>'}</p>
+                    </div>
+                    ${track}
+                </div>`;
+        }
+
+        function renderInpostPanel() {
+            const section = document.getElementById('inpost-section');
+            if (!section) return;
+            const cfg = TRIP.inpost;
+            if (!cfg) { section.classList.add('hidden'); return; }
+            section.classList.remove('hidden');
+
+            const status = getInpostStatus();
+            const badge = document.getElementById('inpost-badge');
+            if (badge) { badge.textContent = status.label; badge.className = 'text-[9px] font-bold uppercase px-2 py-1 rounded-full ' + status.cls; }
+
+            const point = cfg.point;
+            const chosenCode = (state.inpost && state.inpost.pointCode) || point.code;
+            const panel = document.getElementById('inpost-panel');
+            if (!panel) return;
+            panel.innerHTML = `
+                <div class="mb-4">
+                    ${inpostStepHtml(0, status.step, 'fa-box', 'Nadanie z Polski', inpostDay(cfg.sendFrom) + '–' + inpostDay(cfg.sendBy), 'Do Włoch jedzie ' + escapeHtml(cfg.transit) + '. Nadana później może nie zdążyć przed przylotem.')}
+                    ${inpostStepHtml(1, status.step, 'fa-truck', 'W drodze', cfg.arrivalWindow, 'Powiadomienie o gotowości do odbioru przyjdzie SMS-em i mailem.')}
+                    ${inpostStepHtml(2, status.step, 'fa-box-open', 'Odbiór w Monopoli', 'od ' + inpostDay(cfg.pickupFrom), '<b>Paczka czeka tylko ok. ' + cfg.holdDays + ' dni</b> od powiadomienia, potem wraca do nadawcy.')}
+                    ${inpostStepHtml(3, status.step, 'fa-rotate-left', 'Wysyłka powrotna', inpostDay(cfg.returnDate) + ' rano', 'Zaraz po check-oucie, punkt czynny do 13:00. Do Polski wraca ' + escapeHtml(cfg.returnArrival) + '.')}
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
+                    <p class="text-[9px] uppercase text-amber-700 font-bold mb-1"><i class="fa-solid fa-location-dot"></i> Punkt odbioru i nadania</p>
+                    <p class="text-sm font-bold text-amber-900">${escapeHtml(chosenCode)}</p>
+                    <p class="text-[11px] text-amber-900">${escapeHtml(point.address)}</p>
+                    <p class="text-[10px] text-amber-800 mt-1">${escapeHtml(point.name)} · ${escapeHtml(point.walk)}</p>
+                    <p class="text-[10px] text-amber-800 font-bold mt-1"><i class="fa-regular fa-clock"></i> ${escapeHtml(point.hours)}</p>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <a href="https://maps.google.com/?q=${point.mapsQuery}" target="_blank" rel="noopener" class="text-[10px] font-bold bg-blue-600 text-white px-2.5 py-1.5 rounded-lg active:scale-95"><i class="fa-solid fa-location-arrow"></i> Nawiguj</a>
+                        <button type="button" onclick="focusMapPoi('${point.poiId}')" class="text-[10px] font-bold bg-slate-700 text-white px-2.5 py-1.5 rounded-lg active:scale-95"><i class="fa-solid fa-map"></i> Pinezka</button>
+                        <button type="button" onclick="editInpostField('pointCode', 'Kod punktu InPost')" class="text-[10px] font-bold bg-white border border-amber-300 text-amber-800 px-2.5 py-1.5 rounded-lg active:scale-95"><i class="fa-solid fa-pen"></i> Zmień punkt</button>
+                    </div>
+                </div>
+
+                <div class="space-y-2 mb-3">
+                    ${inpostTrackingRow('trackingOut', 'Przesyłka tam (Polska → Monopoli)')}
+                    ${inpostTrackingRow('trackingBack', 'Przesyłka powrotna (Monopoli → Polska)')}
+                </div>
+
+                <div class="bg-red-50 border border-red-200 rounded-xl p-3 mb-3">
+                    <p class="text-[9px] uppercase text-red-700 font-bold mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Dwie rzeczy, które psują wysyłkę</p>
+                    <ul class="text-[10px] text-red-900 space-y-1 ml-4 list-disc marker:text-red-400">
+                        <li><b>Etykieta musi być wydrukowana.</b> We Włoszech InPost nie przyjmuje paczki z kodem QR z telefonu — wydrukuj etykietę powrotną jeszcze w Polsce.</li>
+                        <li><b>Zakazane w paczce:</b> powerbank i luźne baterie, aerozole, alkohol, leki, szkło i ceramika, płyny powyżej 750 ml, gotówka i biżuteria.</li>
+                    </ul>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-center mb-3">
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg py-2">
+                        <p class="text-[9px] uppercase text-slate-500 font-bold">Max wymiary</p>
+                        <p class="text-xs font-bold text-slate-800">${escapeHtml(cfg.maxSize)}</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg py-2">
+                        <p class="text-[9px] uppercase text-slate-500 font-bold">Max waga</p>
+                        <p class="text-xs font-bold text-slate-800">${escapeHtml(cfg.maxWeight)}</p>
+                    </div>
+                </div>
+                <p class="text-[9px] text-slate-500 leading-snug mb-3">Kółka i uchwyty wliczają się w wymiar — typowa kabinówka 55 × 40 × 20 cm jest o ok. 2 cm za szeroka. Zmierz walizkę przed opłaceniem etykiety.</p>
+
+                <div class="flex flex-wrap gap-2">
+                    <a href="${INPOST_SEND_URL}" target="_blank" rel="noopener" class="text-[10px] font-bold bg-[#ffcc00] text-slate-900 px-2.5 py-1.5 rounded-lg active:scale-95"><i class="fa-solid fa-box"></i> Nadaj przesyłkę</a>
+                    <a href="${INPOST_FIND_URL}" target="_blank" rel="noopener" class="text-[10px] font-bold bg-white border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg active:scale-95"><i class="fa-solid fa-magnifying-glass-location"></i> Znajdź inny punkt</a>
+                </div>`;
+        }
+
+        function editInpostField(key, title) {
+            if (!state.inpost) state.inpost = { pointCode: '', trackingOut: '', trackingBack: '' };
+            openModal({
+                title: 'Edycja: ' + title,
+                defaultValue: state.inpost[key] || '',
+                onConfirm: (val) => {
+                    if (val === null) return;
+                    state.inpost[key] = val.trim();
+                    saveState();
+                    renderInpostPanel();
+                    showToast('Zapisano!');
+                }
+            });
+        }
+
         function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-msg').innerText = msg;
@@ -4218,7 +4454,8 @@
 
         const ALL_MAP_POIS = [
             { id: 'home', trip: 'bari', zone: 'bari', cat: 'transport', lat: 41.11987, lng: 16.86204, title: 'Apartament', desc: 'Via Trevisani 236 — check-in 12:00', icon: 'fa-house', color: '#e74c3c' },
-            { id: 'home-monopoli', trip: 'monopoli', zone: 'monopoli', cat: 'transport', lat: 40.94990, lng: 17.29500, title: 'Apartament — La casa di Gio Mar', desc: 'Via Fiume 19 · check-in 16:00–19:00, check-out 8:00–10:00. Pinezka przybliżona — popraw ją po przyjeździe.', icon: 'fa-house', color: '#e74c3c' },
+            { id: 'home-monopoli', trip: 'monopoli', zone: 'monopoli', cat: 'transport', lat: 40.95550, lng: 17.29780, title: 'Apartament — La casa di Gio Mar', desc: 'Via Fiume 19 · check-in 16:00–19:00, check-out 8:00–10:00. Pinezka przybliżona — popraw ją po przyjeździe.', icon: 'fa-house', color: '#e74c3c' },
+            { id: 'mon-inpost', trip: 'monopoli', zone: 'monopoli', cat: 'transport', lat: 40.94900, lng: 17.29720, title: 'InPost ITMON156755D — walizka', desc: 'Via Guglielmo Oberdan 39 (Agenzia Delyfast) · odbiór walizki 30.09 i nadanie powrotne 06.10. Czynne pn–sb 7:30–13:00 i 16:30–20:00, w niedzielę nieczynne. 2 min od stacji, ~10 min od apartamentu. Pinezka przybliżona.', icon: 'fa-box-open', color: '#ca8a04' },
             { id: 'mon-cattedrale', zone: 'monopoli', cat: 'attraction', lat: 40.95150, lng: 17.29860, title: 'Cattedrale della Madia', desc: 'Barokowa katedra Monopoli — serce starego miasta', icon: 'fa-church', color: '#d97706' },
             { id: 'mon-castello', zone: 'monopoli', cat: 'attraction', lat: 40.95200, lng: 17.30050, title: 'Castello Carlo V', desc: 'Zamek nad morzem przy starym porcie', icon: 'fa-chess-rook', color: '#7c3aed' },
             { id: 'mon-cala', zone: 'monopoli', cat: 'attraction', lat: 40.95230, lng: 17.30110, title: 'Cala Porta Vecchia', desc: 'Miejska plaża pod murami starówki — na początku października woda wciąż ciepła', icon: 'fa-umbrella-beach', color: '#0284c7' },
