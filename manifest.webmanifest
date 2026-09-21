@@ -1,7 +1,7 @@
 {
   "name": "Autopilot — wyjazdy",
   "short_name": "Autopilot",
-  "description": "Planer wyjazdów: Monopoli 2026, Bari 2026",
+  "description": "Planer wyjazdów: Monopoli 2026, Katania 2026/27, Bari 2026",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -13,6 +13,13 @@
       "short_name": "Monopoli",
       "description": "Otwórz wyjazd Monopoli (30.09–06.10.2026)",
       "url": "./index.html?trip=monopoli",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Katania 2026/27",
+      "short_name": "Katania",
+      "description": "Otwórz wyjazd Katania (23.12.2026–01.01.2027)",
+      "url": "./index.html?trip=katania",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
