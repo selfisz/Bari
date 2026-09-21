@@ -1,4 +1,4 @@
-const CACHE = 'bari-autopilot-v24';
+const CACHE = 'bari-autopilot-v25';
 const CDN_CACHE = 'bari-autopilot-cdn-v2';
 
 const BASE = (() => {
@@ -16,6 +16,8 @@ const SHELL = [
   BASE + 'icons/apple-touch-icon.png',
   BASE + 'assets/polisa-uniqa-1.png',
   BASE + 'assets/polisa-uniqa-2.png',
+  BASE + 'assets/polisa-uniqa-monopoli-1.jpg',
+  BASE + 'assets/polisa-uniqa-monopoli-2.jpg',
   BASE + 'assets/ekuz-karty.png',
   BASE + 'assets/apt-bus-schedules.js',
   BASE + 'data/trips.js',

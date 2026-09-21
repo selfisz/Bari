@@ -868,23 +868,13 @@
                         <button type="button" onclick="toggleSectionPanel('awaria-polisa')" class="w-full p-3 flex items-center justify-between text-left active:bg-emerald-100/60 transition-colors">
                             <div class="min-w-0">
                                 <p class="text-[10px] uppercase text-emerald-700 font-bold"><i class="fa-solid fa-shield-heart"></i> Polisa UNIQA</p>
-                                <p class="font-mono font-bold text-sm text-slate-800 break-all" id="awaria_polisa">MUBI/03627396</p>
+                                <p class="font-mono font-bold text-sm text-slate-800 break-all" id="awaria_polisa">—</p>
                             </div>
                             <i id="section-awaria-polisa-chevron" class="fa-solid fa-chevron-down text-emerald-400 transition-transform duration-200 shrink-0 ml-2"></i>
                         </button>
                         <div id="section-awaria-polisa-body" class="hidden px-3 pb-3 border-t border-emerald-200">
                             <button type="button" onclick="editInline('awaria_polisa', 'Numer polisy turystycznej')" class="w-full mt-2 text-[10px] text-emerald-700 font-bold py-1.5 rounded-lg border border-dashed border-emerald-300 active:bg-emerald-100"><i class="fa-solid fa-pen"></i> Edytuj numer polisy</button>
-                            <p id="insurance-note" class="text-[10px] text-emerald-800 mt-2 mb-2 leading-snug"></p>
-                            <a href="tel:+48225999185" class="block w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-bold text-center mb-3 active:scale-95 shadow-sm">
-                                <i class="fa-solid fa-phone"></i> UNIQA Pomoc 24h: +48 22 599 91 85
-                            </a>
-                            <a href="sms:+48661001601" class="block w-full bg-white border border-emerald-300 text-emerald-800 py-2 rounded-xl text-xs font-bold text-center mb-3 active:scale-95">
-                                <i class="fa-solid fa-comment-sms"></i> SMS: +48 661 001 601
-                            </a>
-                            <div id="insurance-images">
-                                <img src="assets/polisa-uniqa-1.png" alt="Polisa UNIQA strona 1" class="w-full rounded-xl border border-emerald-200 shadow-sm mb-2" loading="lazy">
-                                <img src="assets/polisa-uniqa-2.png" alt="Polisa UNIQA strona 2" class="w-full rounded-xl border border-emerald-200 shadow-sm" loading="lazy">
-                            </div>
+                            <div id="insurance-panel"></div>
                         </div>
                     </div>
 
@@ -2684,16 +2674,25 @@
             });
         }
 
-        /* --- PRZYPOMNIENIA --- */
-        const INSURANCE_DEFAULTS = {
+        /* --- UBEZPIECZENIE --- */
+        // Karty EKUZ są te same na każdym wyjeździe, numer polisy jest już per wyjazd.
+        const EKUZ_DEFAULTS = {
             ekuz_dawid: '80616000060054226357',
-            ekuz_gosia: '80616000060050923017',
-            awaria_polisa: 'MUBI/03627396'
+            ekuz_gosia: '80616000060050923017'
         };
+        // Numery polis, które przed rozdzieleniem wyjazdów wpisywały się wszędzie z Bari.
+        const LEGACY_POLICY_NUMBERS = ['MUBI/03627396'];
 
         function ensureInsuranceDefaults() {
             let changed = false;
-            Object.entries(INSURANCE_DEFAULTS).forEach(([key, val]) => {
+            const tripPolicy = (TRIP.insurance && TRIP.insurance.policyNumber) || '';
+            if (inlineFields.awaria_polisa
+                && inlineFields.awaria_polisa !== tripPolicy
+                && LEGACY_POLICY_NUMBERS.includes(inlineFields.awaria_polisa)) {
+                inlineFields.awaria_polisa = '';
+            }
+            const defaults = Object.assign({}, EKUZ_DEFAULTS, tripPolicy ? { awaria_polisa: tripPolicy } : {});
+            Object.entries(defaults).forEach(([key, val]) => {
                 if (inlineFields[key]) return;
                 inlineFields[key] = val;
                 try { localStorage.setItem(LS_PREFIX + '' + key, val); } catch (e) {}
@@ -2701,6 +2700,60 @@
                 changed = true;
             });
             return changed;
+        }
+
+        function renderInsurancePanel() {
+            const el = document.getElementById('insurance-panel');
+            if (!el) return;
+            const ins = TRIP.insurance || {};
+            const row = (item, valueClass) => `
+                <div class="flex items-start justify-between gap-2 py-1.5 border-b border-emerald-100 last:border-0">
+                    <span class="text-[10px] text-emerald-800 leading-snug">${escapeHtml(item.label)}</span>
+                    <span class="text-[11px] font-bold text-slate-800 text-right shrink-0 ${valueClass || ''}">${escapeHtml(item.value)}</span>
+                </div>`;
+
+            const noteHtml = TRIP.insuranceNote
+                ? `<p class="text-[10px] text-emerald-800 mt-2 mb-2 leading-snug">${escapeHtml(TRIP.insuranceNote)}</p>`
+                : '';
+
+            const helpPhone = ins.helpPhone || '';
+            const phonesHtml = `
+                ${helpPhone ? `<a href="tel:${helpPhone}" class="block w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-bold text-center mb-2 active:scale-95 shadow-sm">
+                    <i class="fa-solid fa-phone"></i> UNIQA Pomoc 24h: ${escapeHtml(ins.helpPhoneLabel || helpPhone)}
+                </a>` : ''}
+                ${ins.smsPhone ? `<a href="sms:${ins.smsPhone}" class="block w-full bg-white border border-emerald-300 text-emerald-800 py-2 rounded-xl text-xs font-bold text-center mb-3 active:scale-95">
+                    <i class="fa-solid fa-comment-sms"></i> SMS: ${escapeHtml(ins.smsLabel || ins.smsPhone)}
+                </a>` : ''}`;
+
+            const factsHtml = (ins.facts && ins.facts.length) ? `
+                <div class="bg-white border border-emerald-200 rounded-xl p-2.5 mb-2">
+                    <p class="text-[9px] uppercase font-bold text-emerald-700 mb-1">Polisa${ins.provider ? ' · ' + escapeHtml(ins.provider) : ''}</p>
+                    ${ins.facts.map(f => row(f)).join('')}
+                    ${ins.owuIndex ? `<p class="text-[9px] text-slate-400 mt-1.5">Index OWU: ${escapeHtml(ins.owuIndex)}</p>` : ''}
+                </div>` : '';
+
+            const coverageHtml = (ins.coverage && ins.coverage.length) ? `
+                <div class="bg-white border border-emerald-200 rounded-xl p-2.5 mb-2">
+                    <p class="text-[9px] uppercase font-bold text-emerald-700 mb-1">Na co jesteście kryci</p>
+                    ${ins.coverage.map(c => row(c, 'text-emerald-800')).join('')}
+                </div>` : '';
+
+            const insuredHtml = (ins.insured && ins.insured.length) ? `
+                <div class="bg-white border border-emerald-200 rounded-xl p-2.5 mb-2">
+                    <p class="text-[9px] uppercase font-bold text-emerald-700 mb-1">Ubezpieczeni</p>
+                    ${ins.insured.map(p => `<p class="text-[10px] text-slate-700 leading-snug">• ${escapeHtml(p)}</p>`).join('')}
+                </div>` : '';
+
+            const warningsHtml = (ins.warnings && ins.warnings.length) ? `
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 mb-2 space-y-1.5">
+                    ${ins.warnings.map(w => `<p class="text-[10px] text-amber-900 leading-snug">${w}</p>`).join('')}
+                </div>` : '';
+
+            const imagesHtml = (ins.images && ins.images.length)
+                ? ins.images.map(img => `<img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt || 'Polisa')}" class="w-full rounded-xl border border-emerald-200 shadow-sm mb-2" loading="lazy">`).join('')
+                : '';
+
+            el.innerHTML = noteHtml + phonesHtml + factsHtml + coverageHtml + insuredHtml + warningsHtml + imagesHtml;
         }
 
         function updateMagnetAlert() {
@@ -4776,7 +4829,7 @@
                 ? 'Numer jest zapisany — możesz go zmienić w sekcji Apartament poniżej.'
                 : 'Wpisz numer gospodarza w sekcji Apartament poniżej, żeby przycisk działał.');
             setHtml('cash-note', TRIP.cashNote);
-            setText('insurance-note', TRIP.insuranceNote);
+            renderInsurancePanel();
             setText('transport-train-note', TRIP.trainLinkNote);
             setText('settings-trip-name', TRIP.name + ' · ' + formatTripRange(TRIP) + (TRIP_ARCHIVED ? ' · zakończony' : ''));
             setText('notif-description', TRIP_ARCHIVED
@@ -4789,7 +4842,6 @@
             setHidden('transport-fal-alert', !TRIP.features.falAlert);
             setHidden('transport-muvt-card', !TRIP.features.muvt);
             setHidden('apt-bus-panel', !TRIP.features.aptBus);
-            setHidden('insurance-images', !TRIP.features.insuranceImages);
 
             if (TRIP_ARCHIVED) {
                 setHidden('magnet-alert', true);

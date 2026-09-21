@@ -271,9 +271,20 @@ registerTrip('katania', {
         },
         transportNotesDefault: 'Alibus lotnisko ↔ Centrale (4€) · pociągi Taormina / Syrakuzy — wpisz godziny',
         insuranceNote: '23.12.2026–01.01.2027 · Europa — uzupełnij dane polisy na ten wyjazd',
+        insurance: {
+            provider: 'UNIQA',
+            policyNumber: '',
+            helpPhone: '+48225999185',
+            helpPhoneLabel: '+48 22 599 91 85',
+            smsPhone: '+48661001601',
+            smsLabel: '+48 661 001 601',
+            warnings: [
+                'Polisy na ten wyjazd jeszcze nie ma. Przy kupnie sprawdź, czy wariant obejmuje <b>Etnę i zimowe wejście w terenie wysokogórskim</b> — podstawowe polisy potrafią to wyłączać.'
+            ]
+        },
         cashNote: 'Odejmuje tylko wydatki <b>Gotówka</b> tej osoby z rozliczeń. Pamiętaj: bilet AST na Etnę (6,60€) kupujesz u kierowcy za gotówkę.',
         trainLinkNote: 'Wycieczki: Taormina, Syrakuzy, Acireale, Etna',
-        features: { aptBus: false, falAlert: false, muvt: false, insuranceImages: false },
+        features: { aptBus: false, falAlert: false, muvt: false },
         bagSeedItems: {
             bagTemp: [],
             bag1: [

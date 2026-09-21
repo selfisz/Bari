@@ -259,10 +259,54 @@ registerTrip('monopoli', {
             hostMessage: 'Buongiorno, siamo la prenotazione Booking per La casa di Gio Mar, Via Fiume 19. '
         },
         transportNotesDefault: 'Monopoli ↔ Bari / Polignano — wpisz godziny pociągów',
-        insuranceNote: '30.09–06.10.2026 · Europa — uzupełnij dane polisy na ten wyjazd',
+        insuranceNote: '30.09–06.10.2026 · Europa · wariant Podstawowy · 2 osoby · 82,39 PLN',
+        insurance: {
+            provider: 'UNIQA TU S.A.',
+            policyNumber: '4106154908',
+            owuIndex: 'SPT/25/12/11',
+            helpPhone: '+48225999185',
+            helpPhoneLabel: '+48 22 599 91 85',
+            smsPhone: '+48661001601',
+            smsLabel: '+48 661 001 601',
+            facts: [
+                { label: 'Okres ochrony', value: '30.09.2026 od 00:00 → 06.10.2026 do 23:59' },
+                { label: 'Liczba dni', value: '7' },
+                { label: 'Wariant', value: 'Podstawowy' },
+                { label: 'Zakres terytorialny', value: 'Europa' },
+                { label: 'Liczba osób', value: '2' },
+                { label: 'Składka', value: '82,39 zł · gotówka, zainkasowana u agenta' },
+                { label: 'Data wystawienia', value: '21.09.2026, 15:10' },
+                { label: 'Agent', value: 'Internetowy Agent Ubezpieczeniowy sp. z o.o.' }
+            ],
+            insured: [
+                'Dawid Rek — ur. 29.04.1994 (też ubezpieczający, Sosnowiecka 36 m. 39, 31-345 Kraków)',
+                'Małgorzata Zięba — ur. 20.09.1993'
+            ],
+            coverage: [
+                { label: 'Koszty leczenia', value: '300 000 zł' },
+                { label: 'Natychmiastowa pomoc assistance', value: '300 000 zł' },
+                { label: 'Odpowiedzialność cywilna', value: '200 000 zł' },
+                { label: 'Następstwa nieszczęśliwych wypadków', value: '30 000 zł' },
+                { label: 'Bagaż', value: '2 000 zł' },
+                { label: 'Opóźnienie lotu', value: '250 zł' },
+                { label: 'Koszty leczenia w RP', value: '250 zł' },
+                { label: 'Rehabilitacja w RP', value: '250 zł' },
+                { label: 'Szpital w RP (za dzień)', value: '125 zł' },
+                { label: 'Amatorskie uprawianie sportów', value: 'w cenie' }
+            ],
+            warnings: [
+                'Ochrona zaczyna się <b>30.09 o 00:00</b> — czyli jeszcze przed wyjazdem z domu o 03:30. Wracając 06.10 jesteście kryci do 23:59.',
+                'Bagaż 2 000 zł dotyczy bagażu, <b>który jedzie z Wami</b>. Walizka nadana InPostem to przesyłka — za nią odpowiada InPost (reklamacja przez inpost.pl), nie UNIQA.',
+                'Przy wizycie u lekarza <b>najpierw dzwoń na pomoc 24h</b> i podaj numer polisy — inaczej możecie płacić z własnej kieszeni.'
+            ],
+            images: [
+                { src: 'assets/polisa-uniqa-monopoli-1.jpg', alt: 'Polisa UNIQA 4106154908 — strona 1 (zakres ubezpieczenia)' },
+                { src: 'assets/polisa-uniqa-monopoli-2.jpg', alt: 'Polisa UNIQA 4106154908 — strona 2' }
+            ]
+        },
         cashNote: 'Odejmuje tylko wydatki <b>Gotówka</b> tej osoby z rozliczeń.',
         trainLinkNote: 'Wycieczki: Polignano, Bari, Ostuni, Alberobello',
-        features: { aptBus: false, falAlert: false, muvt: false, insuranceImages: false },
+        features: { aptBus: false, falAlert: false, muvt: false },
         bagOverrides: {
             bag1: { name: 'Walizka InPost (jedzie osobno)', icon: 'fa-box-open', color: 'text-amber-700' },
             bag2: { name: 'Plecak Dawida (na pokład)' },

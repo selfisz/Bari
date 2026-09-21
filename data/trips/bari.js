@@ -205,8 +205,24 @@ registerTrip('bari', {
         },
         transportNotesDefault: 'Via Trevisani ↔ Centrum — wpisz numery linii',
         insuranceNote: '10.06–16.06.2026 · Europa · wariant Podstawowy · 77 PLN',
-        cashNote: 'Odejmuje tylko wydatki <b>Gotówka</b> tej osoby z rozliczeń. Pamiętaj: 21€ na Katię!',
-        trainLinkNote: 'Wycieczki: Polignano, Monopoli, Trani',
-        features: { aptBus: true, falAlert: true, muvt: true, insuranceImages: true }
+        insurance: {
+            provider: 'UNIQA (kupione przez Mubi)',
+            policyNumber: 'MUBI/03627396',
+            helpPhone: '+48225999185',
+            helpPhoneLabel: '+48 22 599 91 85',
+            smsPhone: '+48661001601',
+            smsLabel: '+48 661 001 601',
+            facts: [
+                { label: 'Okres ochrony', value: '10.06.2026 → 16.06.2026' },
+                { label: 'Wariant', value: 'Podstawowy' },
+                { label: 'Zakres terytorialny', value: 'Europa' },
+                { label: 'Składka', value: '77 zł' }
+            ],
+            images: [
+                { src: 'assets/polisa-uniqa-1.png', alt: 'Polisa UNIQA — strona 1' },
+                { src: 'assets/polisa-uniqa-2.png', alt: 'Polisa UNIQA — strona 2' }
+            ]
+        },
+        features: { aptBus: true, falAlert: true, muvt: true }
     }
 });
