@@ -1,4 +1,4 @@
-const CACHE = 'bari-autopilot-v22';
+const CACHE = 'bari-autopilot-v23';
 const CDN_CACHE = 'bari-autopilot-cdn-v2';
 
 const BASE = (() => {
