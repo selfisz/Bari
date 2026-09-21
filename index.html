@@ -3319,7 +3319,7 @@
             const marker = bariMapFoodMarkers[spotId];
             if (!spot || spot.lat == null || !marker || !bariMap) return;
             if (spot.lng != null) setMapZone(detectMapZoneFromCoords(spot.lat, spot.lng), false);
-            bariMap.flyTo([spot.lat, spot.lng], 17, { duration: 0.6 });
+            flyToSafe([spot.lat, spot.lng], 17, 0.6);
             setTimeout(() => marker.openPopup(), 400);
         }
 
@@ -4359,14 +4359,19 @@
             renderBariMapLegend();
             if (bariMap && flyToCenter !== false) {
                 const z = MAP_ZONES[zoneId];
-                // Gdy mapa dopiero się pokazuje, jej kontener ma zerowy rozmiar i flyTo wywala się na NaN.
-                const size = bariMap.getSize();
-                if (!size.x || !size.y) bariMap.invalidateSize();
-                try {
-                    bariMap.flyTo(z.center, z.zoom, { duration: 0.5 });
-                } catch (e) {
-                    bariMap.setView(z.center, z.zoom);
-                }
+                flyToSafe(z.center, z.zoom, 0.5);
+            }
+        }
+
+        // Gdy mapa dopiero się pokazuje, jej kontener ma zerowy rozmiar i flyTo wywala się na NaN.
+        function flyToSafe(center, zoom, duration) {
+            if (!bariMap) return;
+            const size = bariMap.getSize();
+            if (!size.x || !size.y) bariMap.invalidateSize();
+            try {
+                bariMap.flyTo(center, zoom, { duration: duration });
+            } catch (e) {
+                try { bariMap.setView(center, zoom); } catch (e2) {}
             }
         }
 
@@ -4912,6 +4917,7 @@
         }
 
         function focusDarioTip(tipId) {
+            switchToBazaTab();
             if (!bazaMapPanelOpen) {
                 bazaMapPanelOpen = true;
                 updateBazaMapPanelUI();
@@ -4919,11 +4925,11 @@
             } else {
                 initBariMap();
             }
-            setMapZone(tip.zone || 'bari', false);
             const tip = DARIO_TIPS.find(t => t.id === tipId);
             const marker = bariMapDarioMarkers[tipId];
             if (!tip || !marker || !bariMap) return;
-            bariMap.flyTo([tip.lat, tip.lng], 17, { duration: 0.6 });
+            setMapZone(tip.zone || 'bari', false);
+            flyToSafe([tip.lat, tip.lng], 17, 0.6);
             setTimeout(() => marker.openPopup(), 400);
         }
 
@@ -5041,6 +5047,7 @@
         }
 
         function focusCustomMapPin(pinId) {
+            switchToBazaTab();
             if (!bazaMapPanelOpen) {
                 bazaMapPanelOpen = true;
                 updateBazaMapPanelUI();
@@ -5052,7 +5059,7 @@
             const marker = bariMapCustomMarkers[pinId];
             if (!pin || !marker || !bariMap) return;
             setMapZone(detectMapZoneFromCoords(pin.lat, pin.lng), false);
-            bariMap.flyTo([pin.lat, pin.lng], 17, { duration: 0.6 });
+            flyToSafe([pin.lat, pin.lng], 17, 0.6);
             setTimeout(() => marker.openPopup(), 400);
         }
 
@@ -5206,6 +5213,8 @@
         }
 
         function focusMapPoi(poiId) {
+            // Bez przejścia na Bazę mapa renderuje się w ukrytej zakładce i ma zerowy rozmiar.
+            switchToBazaTab();
             if (!bazaMapPanelOpen) {
                 bazaMapPanelOpen = true;
                 updateBazaMapPanelUI();
@@ -5217,7 +5226,7 @@
             const marker = bariMapMarkers[poiId];
             if (!poi || !marker || !bariMap) return;
             setMapZone(poi.zone, false);
-            bariMap.flyTo([poi.lat, poi.lng], 16, { duration: 0.6 });
+            flyToSafe([poi.lat, poi.lng], 16, 0.6);
             setTimeout(() => marker.openPopup(), 400);
         }
 
