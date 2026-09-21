@@ -10,8 +10,36 @@
             if (path === '/Bari' || path.indexOf('/Bari/') === 0) return '/Bari/';
             return '/';
         })();
+
+        // Motywy wyjazdów — jedno źródło prawdy, używane też przez TRIP_DEFS niżej.
+        // Ustawiane tutaj (w <head>), żeby nagłówek od razu malował się w kolorach wyjazdu.
+        window.__TRIP_THEMES__ = {
+            monopoli: { primary: '#0f6f86', accent: '#f0803c', dark: '#0a4457', light: '#f1f8fa', bar: '#0a4457' },
+            bari:     { primary: '#2c3e50', accent: '#e74c3c', dark: '#1a252f', light: '#f4f7f6', bar: '#1a252f' }
+        };
+
+        window.__applyTripTheme__ = function(tripId) {
+            var theme = window.__TRIP_THEMES__[tripId];
+            if (!theme) return;
+            var root = document.documentElement;
+            root.style.setProperty('--trip-primary', theme.primary);
+            root.style.setProperty('--trip-accent', theme.accent);
+            root.style.setProperty('--trip-dark', theme.dark);
+            root.style.setProperty('--trip-light', theme.light);
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', theme.bar);
+        };
+
+        (function() {
+            var id = null;
+            try { id = new URLSearchParams(location.search).get('trip'); } catch (e) {}
+            if (!id || !window.__TRIP_THEMES__[id]) {
+                try { id = localStorage.getItem('tripsApp_active_trip'); } catch (e) {}
+            }
+            window.__applyTripTheme__(window.__TRIP_THEMES__[id] ? id : 'monopoli');
+        })();
     </script>
-    <meta name="theme-color" content="#009246">
+    <meta name="theme-color" content="#0a4457">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Autopilot">
@@ -32,12 +60,20 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: { bari: { primary: '#2c3e50', accent: '#e74c3c', dark: '#1a252f', light: '#f4f7f6' } }
+                    colors: {
+                        bari: {
+                            primary: 'var(--trip-primary)',
+                            accent: 'var(--trip-accent)',
+                            dark: 'var(--trip-dark)',
+                            light: 'var(--trip-light)'
+                        }
+                    }
                 }
             }
         }
     </script>
     <style>
+        :root { --trip-primary: #0f6f86; --trip-accent: #f0803c; --trip-dark: #0a4457; --trip-light: #f1f8fa; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
         .tab-content.active { display: block; }
@@ -47,13 +83,13 @@
         .cb-container input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
         .checkmark { position: absolute; top: 0; left: 0; height: 22px; width: 22px; background-color: #eee; border-radius: 6px; transition: 0.2s; border: 1px solid #ddd; }
         .cb-container:hover input ~ .checkmark { background-color: #ccc; }
-        .cb-container input:checked ~ .checkmark { background-color: #e74c3c; border-color: #e74c3c; }
+        .cb-container input:checked ~ .checkmark { background-color: var(--trip-accent); border-color: var(--trip-accent); }
         .checkmark:after { content: ""; position: absolute; display: none; }
         .cb-container input:checked ~ .checkmark:after { display: block; }
         .cb-container .checkmark:after { left: 7px; top: 3px; width: 6px; height: 12px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
         .cb-container.crossed { color: #9ca3af; text-decoration: line-through; }
 
-        input[type="checkbox"].custom-cb { width: 1.25rem; height: 1.25rem; accent-color: #e74c3c; cursor: pointer; }
+        input[type="checkbox"].custom-cb { width: 1.25rem; height: 1.25rem; accent-color: var(--trip-accent); cursor: pointer; }
         .slide-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         #toast { transition: opacity 0.3s, transform 0.3s; z-index: 1000;}
 
@@ -82,7 +118,7 @@
             display: none;
             flex-shrink: 0;
             padding: 10px 14px;
-            background: linear-gradient(to right, #1a252f, #2c3e50);
+            background: linear-gradient(to right, var(--trip-dark), var(--trip-primary));
             color: #fff;
             align-items: center;
             justify-content: space-between;
@@ -106,17 +142,30 @@
         .bari-live-marker.gosia { box-shadow: 0 0 0 4px rgba(219, 39, 119, 0.2); }
         .leaflet-popup-content { margin: 10px 12px; font-size: 13px; line-height: 1.35; }
         .leaflet-popup-content-wrapper { border-radius: 12px; }
+
+        @keyframes tripHintIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        #trip-hint { animation: tripHintIn 0.35s ease-out; }
+        #trip-chip-dot { animation: tripDot 1.6s ease-in-out infinite; }
+        @keyframes tripDot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.55; } }
     </style>
 </head>
 <body class="bg-bari-light text-slate-800 antialiased pb-24">
 
     <!-- HEADER -->
     <header class="bg-gradient-to-br from-bari-dark to-bari-primary text-white p-5 sticky top-0 z-50 rounded-b-3xl shadow-lg">
-        <div class="flex justify-between items-center">
-            <button type="button" onclick="openTripSwitcher()" class="text-left active:scale-95 transition-transform" title="Zmień wyjazd">
+        <div class="flex justify-between items-start gap-3">
+            <div class="min-w-0">
                 <h1 id="dynamic-greeting" class="text-xl font-bold tracking-tight">Autopilot ✈️</h1>
-                <p id="trip-header-sub" class="text-[10px] uppercase tracking-wider text-white/70 font-bold"></p>
-            </button>
+                <div class="relative inline-block">
+                    <button type="button" id="trip-chip" onclick="openTripSwitcher()" class="mt-2 flex items-center gap-2 bg-white/15 border border-white/30 rounded-full pl-3 pr-2.5 py-1.5 active:scale-95 transition-transform" title="Zmień wyjazd">
+                        <i id="trip-chip-icon" class="fa-solid fa-umbrella-beach text-[11px] text-white/80"></i>
+                        <span id="trip-chip-name" class="text-xs font-bold tracking-tight">Wyjazd</span>
+                        <span id="trip-chip-badge" class="hidden text-[8px] font-bold uppercase tracking-wider bg-white/25 rounded-full px-1.5 py-0.5">Archiwum</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-white/80"></i>
+                    </button>
+                    <span id="trip-chip-dot" class="hidden absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-300 border border-white/60"></span>
+                </div>
+            </div>
         </div>
         <div class="mt-4 bg-white/10 rounded-xl p-3 flex items-center justify-between backdrop-blur-sm border border-white/20">
             <div id="countdown" class="text-sm font-bold text-orange-200">⏳ Obliczanie...</div>
@@ -127,6 +176,13 @@
             </div>
         </div>
     </header>
+
+    <!-- Jednorazowa podpowiedź: gdzie zmienić wyjazd -->
+    <div id="trip-hint" class="hidden fixed top-[7.5rem] left-4 right-4 z-[70] bg-amber-300 text-slate-900 px-4 py-3 rounded-xl shadow-xl text-[12px] font-bold flex items-center gap-3 border-2 border-amber-200">
+        <i class="fa-solid fa-arrow-up text-lg"></i>
+        <span class="flex-1 leading-snug">Tutaj przełączysz wyjazd — Monopoli, Bari i kolejne. Apka zawsze startuje w bieżącym.</span>
+        <button type="button" onclick="dismissTripHint()" class="text-slate-700 text-lg px-1" title="Rozumiem"><i class="fa-solid fa-xmark"></i></button>
+    </div>
 
     <!-- Przypomnienie: magnesy (dzień 3 i 6) -->
     <div id="magnet-alert" class="hidden fixed top-[7.5rem] left-4 right-4 z-[55] bg-purple-600 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-bold flex items-center gap-2 border-2 border-purple-400">
@@ -213,9 +269,9 @@
             </div>
 
             <!-- Wyjazd -->
-            <div class="bg-orange-50 rounded-xl p-4 border border-orange-200 mb-4">
+            <div class="bg-bari-light rounded-xl p-4 border border-slate-200 mb-4">
                 <h4 class="font-bold text-bari-primary mb-1 flex items-center gap-2"><i class="fa-solid fa-suitcase-rolling text-bari-accent"></i> Wyjazd</h4>
-                <p id="settings-trip-name" class="text-[11px] text-orange-900 mb-3"></p>
+                <p id="settings-trip-name" class="text-[11px] text-slate-600 mb-3"></p>
                 <button type="button" onclick="closeSettings(); setTimeout(openTripSwitcher, 320);" class="w-full bg-bari-accent text-white py-2.5 rounded-lg font-bold text-sm active:scale-95">
                     <i class="fa-solid fa-right-left"></i> Zmień wyjazd
                 </button>
@@ -1401,11 +1457,18 @@
             }
             let stored = null;
             try { stored = localStorage.getItem(ACTIVE_TRIP_LS); } catch (e) {}
-            if (stored && TRIP_DEFS[stored]) return stored;
+            if (stored && TRIP_DEFS[stored]) {
+                // Wyjazd, który właśnie trwa, ma pierwszeństwo przed zapamiętanym archiwum.
+                const ongoing = TRIP_ORDER.find(id => getTripStatus(TRIP_DEFS[id]) === 'ongoing');
+                if (ongoing && getTripStatus(TRIP_DEFS[stored]) === 'archived') return ongoing;
+                return stored;
+            }
             return pickDefaultTripId();
         })();
 
         const TRIP = TRIP_DEFS[ACTIVE_TRIP_ID];
+        TRIP.theme = (window.__TRIP_THEMES__ || {})[ACTIVE_TRIP_ID] || null;
+        if (window.__applyTripTheme__) window.__applyTripTheme__(ACTIVE_TRIP_ID);
         TRIP.status = getTripStatus(TRIP);
         const TRIP_ARCHIVED = TRIP.status === 'archived';
         const LS_PREFIX = TRIP.lsPrefix;
@@ -1877,7 +1940,11 @@
             let serverData = null;
             if (supabaseClient) {
                 try {
-                    const { data, error } = await supabaseClient.from('app_state').select('key,value').eq('room_id', ROOM_ID);
+                    // Bez limitu czasu wisząca sieć (słaby roaming) zatrzymuje całe uruchomienie apki.
+                    const { data, error } = await Promise.race([
+                        supabaseClient.from('app_state').select('key,value').eq('room_id', ROOM_ID),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+                    ]);
                     if (!error && data) {
                         serverData = {};
                         data.forEach(row => { serverData[row.key] = row.value; });
@@ -4811,7 +4878,7 @@
                 else greeting = TRIP.greetings.evening;
             }
             const el = document.getElementById('dynamic-greeting');
-            if (el) el.innerHTML = escapeHtml(greeting) + ' <i class="fa-solid fa-chevron-down text-xs opacity-70"></i>';
+            if (el) el.textContent = greeting;
         }
 
         function updateCountdown() {
@@ -4885,18 +4952,24 @@
                     : (getTripStatus(trip) === 'archived'
                         ? 'Wspomnienia wczytają się po otwarciu wyjazdu'
                         : 'Plan gotowy — jeszcze bez wpisów');
+                const theme = (window.__TRIP_THEMES__ || {})[id] || { primary: '#334155', accent: '#64748b' };
                 return `
-                    <button type="button" onclick="switchTrip('${id}')" class="w-full text-left p-4 rounded-2xl border-2 transition-all active:scale-[0.99] ${active ? 'border-bari-accent bg-orange-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'}">
+                    <button type="button" onclick="switchTrip('${id}')" class="w-full text-left p-4 rounded-2xl border-2 transition-all active:scale-[0.99] bg-white ${active ? 'shadow-sm' : 'border-slate-200 hover:border-slate-300'}" ${active ? `style="border-color:${theme.accent};background:${theme.light || '#fff'}"` : ''}>
                         <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <p class="font-bold text-bari-dark leading-snug"><i class="fa-solid ${trip.icon} text-bari-accent"></i> ${escapeHtml(trip.name)}</p>
-                                <p class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(trip.subtitle)}</p>
-                                <p class="text-[11px] font-bold text-slate-600 mt-1"><i class="fa-regular fa-calendar"></i> ${formatTripRange(trip)}</p>
-                                <p class="text-[10px] text-slate-400 mt-1 leading-snug">${escapeHtml(stats)}</p>
+                            <div class="flex items-start gap-3 min-w-0">
+                                <span class="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm" style="background:linear-gradient(135deg, ${theme.dark || theme.primary}, ${theme.primary})">
+                                    <i class="fa-solid ${trip.icon}"></i>
+                                </span>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-slate-800 leading-snug">${escapeHtml(trip.name)}</p>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(trip.subtitle)}</p>
+                                    <p class="text-[11px] font-bold text-slate-600 mt-1"><i class="fa-regular fa-calendar"></i> ${formatTripRange(trip)}</p>
+                                    <p class="text-[10px] text-slate-400 mt-1 leading-snug">${escapeHtml(stats)}</p>
+                                </div>
                             </div>
                             <div class="flex flex-col items-end gap-1.5 shrink-0">
                                 ${tripStatusBadge(trip)}
-                                ${active ? '<span class="text-[9px] font-bold uppercase text-bari-accent">Otwarty</span>' : ''}
+                                ${active ? `<span class="text-[9px] font-bold uppercase" style="color:${theme.accent}">Otwarty</span>` : '<span class="text-[9px] font-bold uppercase text-slate-400">Otwórz</span>'}
                             </div>
                         </div>
                     </button>
@@ -4904,10 +4977,41 @@
             }).join('');
         }
 
+        const TRIP_HINT_LS = 'tripsApp_switcher_seen_v2';
+
+        function tripSwitcherSeen() {
+            try { return localStorage.getItem(TRIP_HINT_LS) === '1'; } catch (e) { return true; }
+        }
+
+        function markTripSwitcherSeen() {
+            try { localStorage.setItem(TRIP_HINT_LS, '1'); } catch (e) {}
+        }
+
+        function maybeShowTripHint() {
+            if (TRIP_ORDER.length < 2 || tripSwitcherSeen()) return;
+            const dot = document.getElementById('trip-chip-dot');
+            if (dot) dot.classList.remove('hidden');
+            const hint = document.getElementById('trip-hint');
+            if (!hint) return;
+            const header = document.querySelector('header');
+            if (header) hint.style.top = (header.getBoundingClientRect().bottom + 10) + 'px';
+            hint.classList.remove('hidden');
+            setTimeout(() => { if (!tripSwitcherSeen()) hint.classList.add('hidden'); }, 12000);
+        }
+
+        function dismissTripHint() {
+            markTripSwitcherSeen();
+            const hint = document.getElementById('trip-hint');
+            if (hint) hint.classList.add('hidden');
+            const dot = document.getElementById('trip-chip-dot');
+            if (dot) dot.classList.add('hidden');
+        }
+
         function openTripSwitcher() {
             const panel = document.getElementById('trip-switcher');
             const sheet = document.getElementById('trip-switcher-sheet');
             if (!panel) return;
+            dismissTripHint();
             renderTripList();
             panel.classList.remove('hidden');
             setTimeout(() => { panel.classList.remove('opacity-0'); if (sheet) sheet.classList.remove('translate-y-full'); }, 10);
@@ -4946,7 +5050,12 @@
             };
 
             document.title = TRIP.appTitle.replace(' ✈️', '');
-            setText('trip-header-sub', TRIP.name + (TRIP_ARCHIVED ? ' · archiwum' : ''));
+            setText('trip-chip-name', TRIP.name);
+            setHidden('trip-chip-badge', !TRIP_ARCHIVED);
+            const chipIcon = document.getElementById('trip-chip-icon');
+            if (chipIcon) chipIcon.className = 'fa-solid ' + TRIP.icon + ' text-[11px] text-white/80';
+            const chip = document.getElementById('trip-chip');
+            if (chip) chip.title = 'Wyjazd: ' + TRIP.name + ' — dotknij, żeby zmienić';
             setText('start-tab-title', TRIP.startTabTitle);
             setHtml('plan-siesta-note', TRIP.siestaNote);
             setHtml('plan-zones-note', TRIP.planZonesNote);
@@ -5507,13 +5616,7 @@
                 openJournalTab();
             }
 
-            // Po aktualizacji apki pokaż raz listę wyjazdów, żeby było wiadomo, gdzie jest Bari.
-            try {
-                if (!localStorage.getItem('tripsApp_seen_switcher')) {
-                    localStorage.setItem('tripsApp_seen_switcher', '1');
-                    setTimeout(openTripSwitcher, 900);
-                }
-            } catch (e) {}
+            setTimeout(maybeShowTripHint, 1200);
         };
     </script>
 </body>
