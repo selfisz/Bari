@@ -1214,6 +1214,8 @@
             });
 
             state.startBari = mergeSeedItems(state.startBari, JSON.parse(JSON.stringify(TRIP.seed.startBari || [])));
+            state.shopData = mergeSeedItems(state.shopData, JSON.parse(JSON.stringify(TRIP.seed.shopData || [])));
+            state.checkoutData = mergeSeedItems(state.checkoutData, JSON.parse(JSON.stringify(TRIP.seed.checkoutData || [])));
 
             const seedMeta = TRIP.seed.planDayMeta || {};
             if (!state.planDayMeta) state.planDayMeta = {};
@@ -4201,10 +4203,26 @@
                 </button>
             `;
             const shopInner = shopPois.length ? `
-                <p class="text-[9px] text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2 leading-snug"><b>Po polsku:</b> Eurospin ≈ tania Biedronka, Lidl = Lidl, Penny ≈ mała Biedronka. <b>Sjesta 13–17</b> — kupuj rano lub po 17:00. <b>Niedziela</b> — większość do 13:30 (Penny Maratona też 17–20).</p>
+                <p class="text-[9px] text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2 leading-snug">${MAP_SHOP_NOTES[activeMapZone] || MAP_SHOP_NOTE_DEFAULT}</p>
                 ${shopPois.map(shopRow).join('')}
             ` : '';
             const shopsHtml = mapLegendPanel('map-shops-' + activeMapZone, 'Tanie sklepy 🛒', shopPois.length, shopInner, 'text-emerald-700');
+
+            const eatPois = zonePois.filter(p => p.cat === 'food');
+            const eatRow = (poi) => `
+                <button type="button" onclick="focusMapPoi('${poi.id}')" class="w-full flex items-center gap-3 bg-pink-50 border border-pink-200 p-2.5 rounded-lg text-left active:scale-[0.98] transition-transform hover:bg-pink-100">
+                    <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm" style="background:${poi.color}20;color:${poi.color};border:2px solid ${poi.color}">
+                        <i class="fa-solid ${poi.icon} text-xs"></i>
+                    </span>
+                    <span class="min-w-0">
+                        <span class="block text-sm font-bold text-slate-800">${poi.title}</span>
+                        <span class="block text-[10px] text-slate-500">${poi.desc}</span>
+                        ${poi.note ? `<span class="block text-[10px] text-pink-800 font-bold mt-0.5 leading-snug">${poi.note}</span>` : ''}
+                    </span>
+                    <i class="fa-solid fa-location-arrow text-pink-600 ml-auto shrink-0 text-xs"></i>
+                </button>
+            `;
+            const eatHtml = mapLegendPanel('map-eat-' + activeMapZone, 'Lody & śniadania 🍦', eatPois.length, eatPois.map(eatRow).join(''), 'text-pink-700');
 
             const darioZoneTips = DARIO_TIPS.filter(t => (t.zone || 'bari') === activeMapZone);
             const darioDestinations = darioZoneTips.filter(t => t.cat === 'destination');
@@ -4292,9 +4310,10 @@
             };
             const otherPinsHtml = mapLegendPanel('map-pins-' + activeMapZone, 'Inne pinezki', otherCustomPins.length, otherCustomPins.map(otherPinRow).join(''));
 
-            legend.innerHTML = builtinHtml + shopsHtml + darioHtml + foodHtml + visitedHtml + otherPinsHtml;
+            legend.innerHTML = builtinHtml + shopsHtml + eatHtml + darioHtml + foodHtml + visitedHtml + otherPinsHtml;
 
             if (shopPois.length) initSectionPanel('map-shops-' + activeMapZone, activeMapZone === HOME_MAP_ZONE);
+            if (eatPois.length) initSectionPanel('map-eat-' + activeMapZone, false);
             if (darioZoneTips.length) initSectionPanel('map-dario-' + activeMapZone, false);
             if (visitedPins.length) initSectionPanel('map-visited-' + activeMapZone, false);
             if (otherCustomPins.length) initSectionPanel('map-pins-' + activeMapZone, false);
@@ -4479,6 +4498,7 @@
                 marker.bindPopup(`
                     <p class="font-bold text-slate-800 mb-1">${poi.title}</p>
                     <p class="text-slate-600 text-xs mb-2">${poi.desc}</p>
+                    ${poi.note ? `<p class="text-emerald-800 text-xs font-bold mb-2 leading-snug">${poi.note}</p>` : ''}
                     ${extraHtml}
                     <a href="${mapsNavUrl(poi)}" target="_blank" class="inline-block bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Nawiguj <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                 `);

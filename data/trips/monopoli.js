@@ -30,7 +30,8 @@ const MONOPOLI_SEED = {
         {id: 'msh3', text: 'Lokalne wino (Primitivo / Verdeca z Valle d\'Itria)', checked: false},
         {id: 'msh4', text: '🧲 Magnesy na pamiątkę (Polignano — dzień 3)', checked: false},
         {id: 'msh5', text: '🧲 Magnesy — ostatnia szansa (Monopoli — dzień 6/7)', checked: false},
-        {id: 'msh6', text: '⚠️ <b>Wino i oliwa NIE pojadą walizką InPost</b> — alkohol i szkło są wyłączone z przewozu. Butelki bierzecie w plecaku (kupione po kontroli na lotnisku) albo odpuszczacie.', checked: false}
+        {id: 'msh6', text: '⚠️ <b>Wino i oliwa NIE pojadą walizką InPost</b> — alkohol i szkło są wyłączone z przewozu. Butelki bierzecie w plecaku (kupione po kontroli na lotnisku) albo odpuszczacie.', checked: false},
+        {id: 'msh7', text: '🛒 <b>Gdzie kupować:</b> <b>Carrefour Express</b> (Via Kennedy, 3 min) na szybkie rzeczy · <b>Compro Bene</b> (Via Vittorio Veneto, nie zamyka na sjestę) na codzienne · <b>Lidl</b> (Viale Aldo Moro, otwarty też w niedzielę) na duże zakupy. Pinezki wszystkich sklepów są na mapie w Bazie.', checked: false}
     ],
     checkoutData: [
         {id: 'mco1', text: 'Wyrzucone śmieci', checked: false},
@@ -85,11 +86,12 @@ const MONOPOLI_SEED = {
             id: 'mp2', date: 'Dzień 2 (01.10) - Monopoli na spokojnie',
             items: [
                 {id: 'mp2i1', text: 'Poranna <b>focaccia barese</b> w piekarni przy starówce (kilka euro, must-have).', checked: false},
+                {id: 'mp2i6', text: '🍟 <b>Albo po Waszemu:</b> śniadanie w <b>McCafé, Viale Aldo Moro 69</b> (otwarte codziennie od 7:00), a potem duże zakupy w <b>Lidlu 150 m dalej</b> — ~18 min pieszo z Via Fiume. Oba punkty są na mapie w Bazie.', checked: false},
                 {id: 'mp2i2', text: '<b>Centro storico</b> — białe uliczki, Cattedrale Maria SS. della Madia, mury nad morzem.', checked: false},
                 {id: 'mp2i3', text: '<b>Castello Carlo V</b> i <b>Porto Antico</b> — kolorowe łodzie gozzi, najlepsze zdjęcia późnym popołudniem.', checked: false},
                 {id: 'mp2siesta', text: '13:00–17:00 — <b>SIESTA</b>: Sklepy i większość lokali zamknięta. Jedz i rób zakupy rano lub po 17:00.', checked: false, siesta: true},
                 {id: 'mp2i4', text: '<b>Cala Porta Vecchia</b> — miejska plaża pod murami. Na początku października woda wciąż ciepła!', checked: false},
-                {id: 'mp2i5', text: 'Gelato na deptaku i kolacja w starym mieście.', checked: false}
+                {id: 'mp2i5', text: 'Gelato i kolacja w starym mieście. Sprawdzone lodziarnie: <b>Gasperini</b> (Largo Plebiscito, najlepsze oceny), <b>Frescolatte</b> (Via Barnaba, od ~16:00), <b>Il Gelato per Passione</b> (nad plażą Porta Vecchia).', checked: false}
             ]
         },
         {
@@ -165,7 +167,7 @@ const MONOPOLI_SEED = {
     journalEntries: [],
     cashStart: { dawid: 40, gosia: 40 },
     inpost: { pointCode: '', trackingOut: '', trackingBack: '' },
-    planVersion: 3,
+    planVersion: 4,
     planDayMeta: {
         mp1: { outbound: '03:30 wyjazd · 05:50 lot', return: '07:45 przylot' },
         mp2: { outbound: '', return: '' },
