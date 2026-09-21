@@ -1070,18 +1070,20 @@
         };
 
         const MONOPOLI_SEED = {
-            targetDate: "2026-09-30T06:00",
+            targetDate: "2026-09-30T03:30",
             isReturnMode: false,
             splitExpenses: [],
             removedBagSeedIds: [],
             startBari: [
-                {id: 'ms1', text: '<b>Loty:</b> wpisz numer rejsu i godziny (edytuj ten punkt), gdy kupicie bilety.', checked: false},
-                {id: 'ms2', text: 'Online check-in w apce linii (otwiera się 24h przed lotem) — boarding pass na telefon.', checked: false},
-                {id: 'ms3', text: 'Transport na lotnisko w Krakowie — zamów z zapasem (bramki zamykają się 30 min przed odlotem).', checked: false},
-                {id: 'ms4', text: 'Dokumenty: dowód/paszport, EKUZ, polisa. Powerbank i płyny 100ml do <b>podręcznego</b>.', checked: false},
-                {id: 'ms5', text: 'Po wylądowaniu w Bari: <b>Ferrotramviaria FR2</b> z lotniska → <b>Bari Centrale</b> (5.30€, QR na bramce).', checked: false},
-                {id: 'ms6', text: 'Z Bari Centrale: <b>Trenitalia regionale → Monopoli</b> (~30–40 min, ok. 3–5€). Check-in w apce, jeśli bilet elektroniczny.', checked: false},
-                {id: 'ms7', text: 'Z dworca w Monopoli do apartamentu <b>Via Fiume 19</b> — ~8 min pieszo.', checked: false}
+                {id: 'ms1', text: '<b>Lot tam: FR2722 · śr. 30.09 · 05:50 Kraków → 07:45 Bari</b> (1 godz. 55 min). Rezerwacja <b>RVI88V</b>.', checked: false},
+                {id: 'ms2', text: '<b>Lot powrotny: FR2723 · wt. 06.10 · 23:00 Bari → 00:55 Kraków</b> (lądowanie już 07.10).', checked: false},
+                {id: 'ms3', text: '⚠️ <b>CHECK-IN Ryanair</b> — otwiera się <b>29.09 o 05:50</b> (24h przed). Boarding passy na telefon! <a href="https://www.ryanair.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-yellow-400 text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-plane"></i> Ryanair</a>', checked: false},
+                {id: 'ms4', text: '<b>03:30 wyjazd na lotnisko</b> (Uber/taxi) — na miejscu ok. 04:00. <b>Bramki zamykają się 05:20!</b>', checked: false},
+                {id: 'ms5', text: 'Dokumenty: dowód/paszport, EKUZ, polisa. Powerbank i płyny 100ml do <b>podręcznego</b>.', checked: false},
+                {id: 'ms6', text: 'Po wylądowaniu (07:45): za <b>niebieską linią</b> do stacji, bilet <b>FR2 → Bari Centrale (5.30€)</b>, QR na bramce.', checked: false},
+                {id: 'ms7', text: '<b>Bari Centrale → Monopoli</b> — Trenitalia regionale, ~35–45 min, ok. 3–5€. Kursy mniej więcej co godzinę.', checked: false},
+                {id: 'ms8', text: '⚠️ <b>Check-in w Monopoli dopiero 16:00–19:00</b> — zaplanuj, gdzie zostawić bagaże na kilka godzin (patrz dzień 1).', checked: false},
+                {id: 'ms9', text: 'Z dworca w Monopoli do apartamentu <b>Via Fiume 19</b> — ~8 min pieszo.', checked: false}
             ],
             shopData: [
                 {id: 'msh1', text: 'Zgrzewka wody mineralnej', checked: false},
@@ -1117,16 +1119,22 @@
             ],
             planBari: [
                 {
-                    id: 'mp1', date: 'Dzień 1 (30.09) - Przylot i check-in w Monopoli',
+                    id: 'mp1', date: 'Dzień 1 (30.09) - Przylot 07:45, dzień w drodze, check-in 16:00',
                     items: [
-                        {id: 'mp1i1', text: '<b>Lot do Bari</b> — wpisz godziny i numer rejsu po zakupie biletów.', checked: false},
-                        {id: 'mp1i2', text: 'Bari Aeroporto: idź za <b>niebieską linią</b> do stacji kolejowej (tunel ~300 m). Bilet <b>FR2 → Bari Centrale (5.30€)</b> z automatu, <b>QR skanuj na bramce</b>.', checked: false},
-                        {id: 'mp1i3', text: '<b>Bari Centrale → Monopoli</b> — Trenitalia regionale, ~30–40 min. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
+                        {id: 'mp1i0', text: '<b>03:30</b> — wyjazd z domu na lotnisko w Krakowie (Uber/taxi). <b>Bramki zamykają się 05:20!</b>', checked: false},
+                        {id: 'mp1ryanair', text: '⚠️ <b>CHECK-IN Ryanair</b> zrobiony? Boarding passy w telefonie (lot FR2722, rezerwacja RVI88V). <a href="https://www.ryanair.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-yellow-400 text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-plane"></i> Ryanair</a>', checked: false, checkin: true},
+                        {id: 'mp1i1', text: '<b>05:50 → 07:45 — lot FR2722 Kraków → Bari</b> (1 godz. 55 min).', checked: false},
+                        {id: 'mp1i2', text: 'Bari Aeroporto: hala przylotów → skręć w <b>LEWO</b> i idź za <b>niebieską linią</b> do stacji (tunel ~300 m). Bilet <b>FR2 → Bari Centrale (5.30€)</b> z automatu, <b>QR skanuj na bramce</b>.', checked: false},
+                        {id: 'mp1i3', text: '⏳ <b>Uwaga: check-in w Monopoli dopiero 16:00–19:00</b>, a w Bari jesteście ok. 08:30. Zostaje ~7 godzin z bagażami — wybierz plan A lub B poniżej.', checked: false},
+                        {id: 'mp1planA', text: '<b>Plan A (znane Bari):</b> zostaw bagaże w przechowalni na <b>Bari Centrale</b> (KiPoint / deposito bagagli przy dworcu, ok. 6€ za sztukę), zrób focaccię i Bari Vecchia do ~14:00, potem pociąg do Monopoli.', checked: false},
+                        {id: 'mp1planB', text: '<b>Plan B (od razu nad morze):</b> jedź prosto do Monopoli (~35–45 min), zostaw bagaże w przechowalni w mieście lub dogadaj z gospodarzem wcześniejsze podrzucenie walizki, i spędź dzień na starówce i plaży.', checked: false},
+                        {id: 'mp1i4', text: '<b>Bari Centrale → Monopoli</b> — Trenitalia regionale, ~35–45 min, ok. 3–5€. Sprawdź godziny, kursy są mniej więcej co godzinę. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
                         {id: 'mp1checkin', text: '⚠️ <b>CHECK-IN Trenitalia</b> w apce przed odjazdem (bilet elektroniczny)!', checked: false, checkin: true},
-                        {id: 'mp1i4', text: 'Ze stacji Monopoli pieszo do <b>Via Fiume 19</b> (~8 min). <a href="https://maps.google.com/?q=Via+Fiume+19,+70043+Monopoli+BA" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Apartament</a>', checked: false},
-                        {id: 'mp1i5', text: '<b>16:00–19:00 CHECK-IN</b> — „La casa di Gio Mar”, Via Fiume 19. Napisz gospodarzowi godzinę przyjazdu z wyprzedzeniem!', checked: false},
-                        {id: 'mp1i6', text: 'Pierwsze zakupy: woda, śniadanie na jutro. <b>Sklepy zamykają ok. 20:30</b>, w niedzielę krócej.', checked: false},
-                        {id: 'mp1i7', text: 'Kolacja przy <b>Porto Antico</b> — świeże ryby i spacer po nabrzeżu.', checked: false}
+                        {id: 'mp1siesta', text: '13:00–17:00 — <b>SIESTA</b>: Sklepy zamknięte. Lunch przed 13:00 albo po 17:00.', checked: false, siesta: true},
+                        {id: 'mp1i5', text: 'Ze stacji Monopoli pieszo do <b>Via Fiume 19</b> (~8 min). <a href="https://maps.google.com/?q=Via+Fiume+19,+70043+Monopoli+BA" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Apartament</a>', checked: false},
+                        {id: 'mp1i6', text: '<b>16:00–19:00 CHECK-IN</b> — „La casa di Gio Mar”, Via Fiume 19. <b>Napisz gospodarzowi godzinę przyjazdu</b> jeszcze rano!', checked: false},
+                        {id: 'mp1i7', text: 'Pierwsze zakupy: woda, śniadanie na jutro. <b>Sklepy zamykają ok. 20:30</b>.', checked: false},
+                        {id: 'mp1i8', text: 'Kolacja przy <b>Porto Antico</b> — świeże ryby i spacer po nabrzeżu.', checked: false}
                     ]
                 },
                 {
@@ -1185,16 +1193,22 @@
                     ]
                 },
                 {
-                    id: 'mp7', date: 'Dzień 7 (06.10) - Check-out i powrót ✈️',
+                    id: 'mp7', date: 'Dzień 7 (06.10) - Check-out rano, wylot 23:00 ✈️',
                     items: [
                         {id: 'mp7i1', text: '<b>CHECK-OUT 8:00–10:00</b> — Via Fiume 19. <b>NAGRAJ WIDEO</b> całego mieszkania, wyrzuć śmieci, klucze wg instrukcji gospodarza.', checked: false, sec: true},
-                        {id: 'mp7i2', text: 'Pieszo na <b>stację Monopoli</b> (~8 min z bagażami) — bilet do <b>Bari Centrale</b>.', checked: false},
-                        {id: 'mp7i3', text: 'W Bari Centrale przesiadka na <b>Ferrotramviaria FR2 → Bari Aeroporto</b> (5.30€, QR na bramce przed peronem).', checked: false},
-                        {id: 'mp7i4', text: 'Na stacji lotniskowej: <b>tunel ~300 m</b> do terminala, potem <b>piętro 1 — Partenze</b>.', checked: false},
-                        {id: 'mp7i5', text: 'Bag drop zamyka się <b>60 min przed odlotem</b>. Tylko plecaki? Od razu na security.', checked: false},
-                        {id: 'mp7i6', text: '<b>KONTROLA BEZPIECZEŃSTWA</b>: płyny 100ml w worku, elektronika i powerbank osobno.', checked: false, sec: true},
-                        {id: 'mp7i7', text: '🇪🇺 Włochy → Polska = <b>Schengen</b>, bez kontroli granicznej. Dowód/paszport do linii i przy bramce.', checked: false},
-                        {id: 'mp7i8', text: 'Sprawdź tablicę odlotów — <b>numer gate</b> pojawia się ~40–60 min przed odlotem.', checked: false}
+                        {id: 'mp7i2', text: '⏳ <b>Lot dopiero o 23:00</b> — po check-oucie macie cały dzień. Dogadaj z gospodarzem zostawienie bagaży albo skorzystaj z przechowalni w mieście (ok. 5€ za sztukę).', checked: false},
+                        {id: 'mp7ryanair', text: '⚠️ <b>CHECK-IN Ryanair na powrót</b> — otwiera się <b>05.10 o 23:00</b>. Boarding passy w telefonie (FR2723). <a href="https://www.ryanair.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-yellow-400 text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-plane"></i> Ryanair</a>', checked: false, checkin: true},
+                        {id: 'mp7i3', text: 'Ostatni dzień w Monopoli: kąpiel, starówka, gelato. <b>Lunch przed 13:00</b> — potem sjesta.', checked: false},
+                        {id: 'mp7magnet', text: '🧲 <b>Ostatnia szansa na magnesy</b> i pamiątki — sklepy zamykają na sjestę i wieczorem.', checked: false, magnet: true},
+                        {id: 'mp7i4', text: '<b>Ok. 19:00</b> — odbierz bagaże, kolacja albo focaccia na drogę.', checked: false},
+                        {id: 'mp7i5', text: '<b>~19:30–20:00</b> — pociąg <b>Monopoli → Bari Centrale</b> (~35–45 min). <b>Sprawdź dokładną godzinę rano</b> — wieczorem kursy są rzadsze! <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
+                        {id: 'mp7i6', text: 'W Bari Centrale przesiadka na <b>Ferrotramviaria FR2 → Bari Aeroporto</b> (5.30€, ~15 min, QR na bramce przed peronem). <b>Ostatnie kursy ok. 22:30 — nie zostawiaj tego na ostatnią chwilę.</b>', checked: false},
+                        {id: 'mp7i7', text: 'Cel: być na lotnisku <b>ok. 21:00</b>. Na stacji lotniskowej <b>tunel ~300 m</b> do terminala, potem <b>piętro 1 — Partenze</b>.', checked: false},
+                        {id: 'mp7i8', text: 'Walizka do nadania? <b>Bag drop zamyka się o 22:00</b> (60 min przed odlotem). Tylko plecaki? Od razu na security.', checked: false},
+                        {id: 'mp7i9', text: '<b>KONTROLA BEZPIECZEŃSTWA</b>: płyny 100ml w worku, elektronika i powerbank osobno.', checked: false, sec: true},
+                        {id: 'mp7i10', text: '🇪🇺 Włochy → Polska = <b>Schengen</b>, bez kontroli granicznej. Dowód/paszport do linii i przy bramce.', checked: false},
+                        {id: 'mp7i11', text: 'Tablica odlotów — <b>numer gate</b> pojawia się ~40–60 min przed odlotem. Boarding ok. <b>22:30</b>.', checked: false},
+                        {id: 'mp7i12', text: '<b>23:00 → 00:55 — lot FR2723 Bari → Kraków</b>. Lądowanie już 7 października w nocy — zamów transport z lotniska.', checked: false}
                     ]
                 }
             ],
@@ -1204,14 +1218,15 @@
             foodSpots: [],
             journalEntries: [],
             cashStart: { dawid: 40, gosia: 40 },
+            planVersion: 2,
             planDayMeta: {
-                mp1: { outbound: '', return: '' },
+                mp1: { outbound: '03:30 wyjazd · 05:50 lot', return: '07:45 przylot' },
                 mp2: { outbound: '', return: '' },
                 mp3: { outbound: '', return: '' },
                 mp4: { outbound: '', return: '' },
                 mp5: { outbound: '', return: '' },
                 mp6: { outbound: '', return: '' },
-                mp7: { outbound: '', return: '' }
+                mp7: { outbound: '~19:30 pociąg', return: '23:00 wylot' }
             }
         };
 
@@ -1237,10 +1252,17 @@
                 },
                 start: '2026-09-30',
                 end: '2026-10-06',
-                departureAt: '2026-09-30T06:00:00',
+                departureAt: '2026-09-30T03:30:00',
                 returnLabel: 'do Krakowa',
                 seed: MONOPOLI_SEED,
-                magnetDays: ['2026-10-02', '2026-10-05'],
+                preDepartureChecklist: [
+                    'Check-in Ryanair zrobiony? Boarding passy FR2722 w telefonie (rezerwacja RVI88V)',
+                    'Wyjazd z domu 03:30 — bramki na lotnisku zamykają się 05:20',
+                    'Paszporty / dowody i EKUZ w podręcznym plecaku — nie w walizce!',
+                    'Powerbank i płyny 100ml do kuwety — powerbank nie może jechać w nadanej walizce',
+                    'W Bari jesteście 07:45, a check-in w Monopoli dopiero 16:00 — ustal, gdzie zostawiacie bagaże'
+                ],
+                magnetDays: ['2026-10-02', '2026-10-05', '2026-10-06'],
                 checkoutVideoDate: '2026-10-06',
                 startTabTitle: 'Start (30 września)',
                 siestaNote: 'Sjesta w Apulii: <b>13:00 - 17:00</b>. Sklepy i restauracje mogą być zamknięte.',
@@ -1439,7 +1461,9 @@
                 if(parsed.cashStart !== undefined) state.cashStart = parsed.cashStart;
                 if(parsed.planDayMeta) state.planDayMeta = parsed.planDayMeta;
                 if(parsed.removedBagSeedIds) state.removedBagSeedIds = parsed.removedBagSeedIds;
+                state.planVersion = parsed.planVersion || 1;
                 if (!state.removedBagSeedIds) state.removedBagSeedIds = [];
+                ensureTripPlanVersion();
                 ensureSiestaItems();
                 ensureCheckinItems();
                 ensureMagnetItems();
@@ -1520,6 +1544,49 @@
                 changed = true;
             }
             return changed;
+        }
+
+        /* Odświeżenie planu po zmianie danych wyjazdu w apce (np. dosypanie godzin lotów).
+           Zaznaczenia zostają, a punkty dopisane ręcznie nie znikają. */
+        function mergeSeedItems(currentItems, seedItems) {
+            const current = currentItems || [];
+            const checkedById = {};
+            current.forEach(i => { checkedById[i.id] = i.checked; });
+            const seedIds = new Set(seedItems.map(i => i.id));
+            const merged = seedItems.map(i => ({ ...i, checked: !!checkedById[i.id] }));
+            current.forEach(i => { if (!seedIds.has(i.id)) merged.push(i); });
+            return merged;
+        }
+
+        function ensureTripPlanVersion() {
+            const target = TRIP.seed.planVersion || 1;
+            if (!state.planVersion) state.planVersion = 1;
+            if (state.planVersion >= target) return false;
+
+            const seedDays = JSON.parse(JSON.stringify(TRIP.seed.planBari || []));
+            const currentDays = state.planBari || [];
+            state.planBari = seedDays.map(seedDay => {
+                const currentDay = currentDays.find(d => d.id === seedDay.id);
+                return { ...seedDay, items: mergeSeedItems(currentDay && currentDay.items, seedDay.items) };
+            });
+            currentDays.forEach(day => {
+                if (!seedDays.some(d => d.id === day.id)) state.planBari.push(day);
+            });
+
+            state.startBari = mergeSeedItems(state.startBari, JSON.parse(JSON.stringify(TRIP.seed.startBari || [])));
+
+            const seedMeta = TRIP.seed.planDayMeta || {};
+            if (!state.planDayMeta) state.planDayMeta = {};
+            Object.entries(seedMeta).forEach(([dayId, meta]) => {
+                const currentMeta = state.planDayMeta[dayId] || { outbound: '', return: '' };
+                state.planDayMeta[dayId] = {
+                    outbound: currentMeta.outbound || meta.outbound,
+                    return: currentMeta.return || meta.return
+                };
+            });
+
+            state.planVersion = target;
+            return true;
         }
 
         function getBagSeedItems() {
@@ -1878,7 +1945,7 @@
             }
 
             if (!state.planDayMeta) ensurePlanDayMeta();
-            let migrated = ensureTempBag() || ensureBagSeedItems() || normalizeBagItems() || ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureKikoPlanItem() || ensureMagnetShopItems() || ensureDay6ReturnPlan() || ensureDay6PlanRefresh() || ensurePlanDayMeta() || ensureCashStart() || ensureCustomMapPinColors();
+            let migrated = ensureTripPlanVersion() || ensureTempBag() || ensureBagSeedItems() || normalizeBagItems() || ensureSiestaItems() || ensureCheckinItems() || ensureMagnetItems() || ensureKikoPlanItem() || ensureMagnetShopItems() || ensureDay6ReturnPlan() || ensureDay6PlanRefresh() || ensurePlanDayMeta() || ensureCashStart() || ensureCustomMapPinColors();
             if (migrated) saveState();
             renderAll();
         }
