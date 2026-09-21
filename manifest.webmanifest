@@ -1,7 +1,7 @@
 {
-  "name": "Bari Autopilot",
-  "short_name": "Bari",
-  "description": "Planer wyjazdu do Bari",
+  "name": "Autopilot — wyjazdy",
+  "short_name": "Autopilot",
+  "description": "Planer wyjazdów: Monopoli 2026, Bari 2026",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
