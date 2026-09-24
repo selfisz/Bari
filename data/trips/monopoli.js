@@ -13,7 +13,7 @@ const MONOPOLI_SEED = {
         {id: 'ms0c', text: '📏 <b>Zmierz walizkę: max 39 × 38 × 64 cm, do 25 kg.</b> Kółka i uchwyty wliczają się w wymiar — typowa kabinówka 55×40×20 jest o ~2 cm za szeroka w jednym boku. Sprawdź to <b>przed</b> opłaceniem etykiety.', checked: false},
         {id: 'ms0d', text: '🚫 <b>Czego NIE wolno wysłać InPostem:</b> powerbank i luźne baterie, aerozole (dezodorant, lakier, pianka), alkohol, leki, szkło i ceramika, płyny powyżej 750 ml, gotówka i biżuteria. To jedzie w plecaku albo zostaje w domu.', checked: false},
         {id: 'ms1', text: '<b>Lot tam: FR2722 · śr. 30.09 · 05:50 Kraków → 07:45 Bari</b> (1 godz. 55 min). Rezerwacja <b>RVI88V</b>.', checked: false},
-        {id: 'ms2', text: '<b>Lot powrotny: FR2723 · wt. 06.10 · 23:00 Bari → 00:55 Kraków</b> (lądowanie już 07.10).', checked: false},
+        {id: 'ms2', text: '<b>Lot powrotny: FR2723 · wt. 06.10 · 23:00 Bari → 00:55 Kraków</b> (lądowanie już 07.10). W <b>Dniu 7</b>: ścieżka <b>A</b> (Bari + Gentile 1880) albo <b>B</b> (Monopoli → lotnisko).', checked: false},
         {id: 'ms3', text: '⚠️ <b>CHECK-IN Ryanair</b> — otwiera się <b>29.09 o 05:50</b> (24h przed). Boarding passy na telefon! <a href="https://www.ryanair.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-yellow-400 text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-plane"></i> Ryanair</a>', checked: false},
         {id: 'ms4', text: '<b>03:30 wyjazd na lotnisko</b> (Uber/taxi) — na miejscu ok. 04:00. <b>Bramki zamykają się 05:20!</b>', checked: false},
         {id: 'ms5', text: 'Dokumenty: dowód/paszport, EKUZ, polisa. Powerbank i płyny 100ml do <b>podręcznego</b>.', checked: false},
@@ -159,12 +159,22 @@ const MONOPOLI_SEED = {
                 {id: 'mp7inpost1', text: '📦 <b>Zaraz po check-oucie nadaj walizkę</b> w InPost Point, <b>Via Marina del Mondo 22</b> (~8 min pieszo). <b>Rano, do 13:00</b> (potem przerwa do 16:00). Pokaż paczkę obsłudze i poczekaj na skan etykiety. <a href="https://maps.google.com/?q=Via+Marina+del+Mondo+22,+70043+Monopoli+BA" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Nawiguj</a> <button type="button" onclick="event.stopPropagation();focusMapPoi(\'mon-inpost\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Pinezka w apce</button>', checked: false},
                 {id: 'mp7i2', text: '✅ <b>Walizka nadana = problem z bagażem rozwiązany.</b> Lot jest dopiero o 23:00, ale przez cały dzień chodzicie już <b>tylko z plecakami</b> — żadnej przechowalni nie trzeba. Paczka dojedzie do Polski w <b>2–5 dni roboczych</b> (ok. 12–13.10).', checked: false},
                 {id: 'mp7ryanair', text: '⚠️ <b>CHECK-IN Ryanair na powrót</b> — otwiera się <b>05.10 o 23:00</b>. Boarding passy w telefonie (FR2723). <a href="https://www.ryanair.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-yellow-400 text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-plane"></i> Ryanair</a>', checked: false, checkin: true},
-                {id: 'mp7i3', text: 'Ostatni dzień w Monopoli: kąpiel, starówka, gelato. <b>Lunch przed 13:00</b> — potem sjesta.', checked: false},
-                {id: 'mp7magnet', text: '🧲 <b>Ostatnia szansa na magnesy</b> i pamiątki — sklepy zamykają na sjestę i wieczorem.', checked: false, magnet: true},
-                {id: 'mp7i4', text: '<b>Ok. 19:00</b> — kolacja albo focaccia na drogę. Bagaży nie odbieracie — walizka jest już w drodze do Polski.', checked: false},
-                {id: 'mp7i5', text: '<b>~19:30–20:00</b> — pociąg <b>Monopoli → Bari Centrale</b> (~35–45 min). <b>Sprawdź dokładną godzinę rano</b> — wieczorem kursy są rzadsze! <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
-                {id: 'mp7i6', text: 'W Bari Centrale przesiadka na <b>Ferrotramviaria FR2 → Bari Aeroporto</b> (5.30€, ~15 min, QR na bramce przed peronem). <b>Ostatnie kursy ok. 22:30 — nie zostawiaj tego na ostatnią chwilę.</b>', checked: false},
-                {id: 'mp7i7', text: 'Cel: być na lotnisku <b>ok. 21:00</b>. Na stacji lotniskowej <b>tunel ~300 m</b> do terminala, potem <b>piętro 1 — Partenze</b>.', checked: false},
+                {id: 'mp7magnet', text: '🧲 <b>Ostatnia szansa na magnesy</b> — w Monopoli rano (ścieżka B) albo w Bari po południu (ścieżka A).', checked: false, magnet: true},
+                {id: 'mp7algo', text: '🧠 <b>Algorytm wieczoru (06.10, wtorek, wylot 23:00)</b>:<br>① Cel: terminal <b>~21:00</b> (2 h przed lotem, tylko plecaki).<br>② <b>FR2 ostatnie kursy ~22:30</b> z Centrale FNB — zaplanuj FR2 ok. <b>20:15–20:45</b>, nie ostatni pociąg dnia.<br>③ Omijaj regionale <b>17:30–18:30</b> Monopoli↔Bari (tłok dojeżdżających) — wyjedź wcześniej (A) albo po <b>19:00</b> (B).<br>④ FR2: bilet <b>5,30€</b>, QR na bramce FNB · peron <b>Aeroporto / Aeroporto K.W.</b><br>⑤ <b>06.10 rano</b> sprawdź w <b>Trenìt!</b> dokładne godziny Monopoli→Centrale i FR2→lotnisko.', checked: false},
+                {id: 'mp7pick', text: '🔀 <b>Wybierz ścieżkę na lotnisko</b> (odhacz jedną). <b>A</b> = dzień w Bari + <b>Antica Gelateria Gentile</b> (od 1880) → FR2 · <b>B</b> = dzień w Monopoli → pociąg → FR2 bez zwiedzania Bari.', checked: false},
+                {id: 'mp7planA', text: '<b>ŚCIEŻKA A — Monopoli → Bari (dzień) → lotnisko</b>', checked: false},
+                {id: 'mp7a1', text: '<b>A1 · Monopoli → Bari Centrale</b> (rano, po InPost)<br><b>Przewoźnik:</b> Trenitalia Regionale · <b>Wsiąść:</b> <b>Monopoli</b> · <b>Wysiąść:</b> <b>Bari Centrale</b> (RFI).<br><b>Czas:</b> ~35–45 min · <b>~3–5€</b> · apka <b>Trenìt!</b> / Trenitalia · <b>check-in</b> przed peronem.<br><b>Przykład:</b> wyjście z InPost ~10:30 → pociąg ok. <b>10:48–11:18</b> → Centrale ~<b>11:30</b> (mniej tłoku niż szczyt 08:00). <button type="button" onclick="event.stopPropagation();focusMapPoi(\'mon-stazione\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Stacja Monopoli</button>', checked: false},
+                {id: 'mp7a2', text: '<b>A2 · Bari Vecchia (~11:30–17:00):</b> pieszo od dworca w stronę <b>Castello Svevo</b> i murów. Focaccia, <b>Via dell\'Arco Basso</b>, Bazylika św. Mikołaja — tipy na mapie w strefie Bari. Lunch <b>przed 13:00</b>.', checked: false},
+                {id: 'mp7a3', text: '<b>A3 · Lody — Antica Gelateria Gentile</b> (tradycja <b>od 1880</b>, przy zamku)<br><b>Adres:</b> Piazza Federico II di Svevia 33 · <b>~2 min</b> od Castello Svevo.<br>Must: <b>crema antica</b>, mandorla di Toritto. Po sjeście też OK (otwarte wieczorem w sezonie — sprawdź tabliczkę). <button type="button" onclick="event.stopPropagation();focusMapPoi(\'bari-gelato-gentile\')" class="inline-block mt-1 bg-pink-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-ice-cream"></i> Pinezka Gentile</button> <a href="https://maps.google.com/?q=Antica+Gelateria+Gentile,+Piazza+Federico+II+di+Svevia+33,+Bari" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Nawiguj</a>', checked: false},
+                {id: 'mp7siesta', text: '13:00–17:00 — <b>SIESTA</b> w Bari: sklepy zamknięte. Gelato i spacer po 17:00 albo lody Gentile tuż przed wyjazdem na dworzec.', checked: false, siesta: true},
+                {id: 'mp7a4', text: '<b>A4 · Powrót na dworzec ~18:30–19:00</b> — pieszo lub <b>MUVT</b> (Moovit) do <b>Bari Centrale RFI</b>. Ostatnie magnesy / KIKO Sparano jeśli chcecie.', checked: false},
+                {id: 'mp7a5', text: '<b>A5 · FR2 Bari Centrale FNB → Bari Aeroporto</b><br><b>Przewoźnik:</b> Ferrotramviaria FR2 · <b>Wsiąść:</b> <b>Bari Centrale</b> (FNB, podziemna) · <b>Wysiąść:</b> <b>Bari Aeroporto</b> (koniec linii).<br><b>Bilet:</b> 5,30€ · automat FNB / apka Ferrotramviaria · <b>QR przed peronem</b>.<br><b>Przykład:</b> FR2 ok. <b>20:18–20:48</b> (potwierdź w apce!) → lotnisko ~<b>20:35–21:05</b> + tunel 300 m → terminal ~<b>21:00</b>. <a href="https://www.ferrotramviaria.it/en-GB/to-airport" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Ferrotramviaria</a> <button type="button" onclick="event.stopPropagation();focusMapPoi(\'centrale\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Centrale</button>', checked: false},
+                {id: 'mp7planB', text: '<b>ŚCIEŻKA B — Monopoli → lotnisko (bez zwiedzania Bari)</b>', checked: false},
+                {id: 'mp7b1', text: '<b>B1 · Dzień w Monopoli (10:00–18:30):</b> plaża, starówka, focaccia, gelato (Gasperini / Frescolatte — mapa Monopoli). Kolacja / focaccia na drogę <b>przed 19:00</b>.', checked: false},
+                {id: 'mp7b2', text: '<b>B2 · Monopoli → Bari Centrale</b><br><b>Trenitalia Regionale</b> · <b>Monopoli</b> → <b>Bari Centrale</b> · ~35–45 min · Trenìt! · check-in.<br><b>Przykład:</b> wyjście ~<b>19:15</b> → pociąg ok. <b>19:24–19:54</b> → Centrale RFI ~<b>20:10</b> (po szczycie pendlerów). <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-train"></i> Trenitalia</a>', checked: false},
+                {id: 'mp7b3', text: '<b>B3 · Przesiadka FNB → FR2 → lotnisko</b> — z peronów RFI tunel do stacji <b>Ferrotramviaria</b> (FNB). FR2 kierunek <b>Aeroporto</b>, 5,30€, QR na bramce.<br><b>Przykład:</b> po przyjeździe ~20:10 → FR2 ok. <b>20:23–20:53</b> → <b>Bari Aeroporto ~20:40–21:10</b>. Bufor ≥10 min przed ostatnimi kursami!', checked: false},
+                {id: 'mp7checkin', text: '⚠️ <b>CHECK-IN Trenitalia</b> na odcinku Monopoli→Bari (ścieżka A i B). FR2 = tylko QR Ferrotramviaria. <a href="https://www.trenitalia.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-mobile-screen"></i> Trenitalia</a>', checked: false, checkin: true},
+                {id: 'mp7i7', text: '<b>Wspólne — stacja lotniskowa → terminal</b>: tunel <b>~300 m</b> w górę do budynku · <b>piętro 1 Partenze (odloty)</b>. Ryanair FR2723. <button type="button" onclick="event.stopPropagation();focusMapPoi(\'airport\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Stacja lotnisko</button>', checked: false},
                 {id: 'mp7i8', text: '<b>Tylko plecaki — omijacie bag drop</b> i idziecie prosto na security. Plecak musi zmieścić się pod fotel: <b>40 × 30 × 20 cm</b>.', checked: false},
                 {id: 'mp7i9', text: '<b>KONTROLA BEZPIECZEŃSTWA</b>: płyny 100ml w worku, elektronika i powerbank osobno.', checked: false, sec: true},
                 {id: 'mp7i10', text: '🇪🇺 Włochy → Polska = <b>Schengen</b>, bez kontroli granicznej. Dowód/paszport do linii i przy bramce.', checked: false},
@@ -180,7 +190,7 @@ const MONOPOLI_SEED = {
     journalEntries: [],
     cashStart: { dawid: 40, gosia: 40 },
     inpost: { pointCode: '', trackingOut: '', trackingBack: '' },
-    planVersion: 6,
+    planVersion: 7,
     planDayMeta: {
         mp1: { outbound: '03:30 wyjazd · 05:50 lot', return: '07:45 przylot' },
         mp2: { outbound: '', return: '' },
@@ -188,7 +198,7 @@ const MONOPOLI_SEED = {
         mp4: { outbound: '', return: '' },
         mp5: { outbound: '', return: '' },
         mp6: { outbound: '', return: '' },
-        mp7: { outbound: '~19:30 pociąg', return: '23:00 wylot' }
+        mp7: { outbound: 'A: Bari · B: ~19:30 pociąg', return: '23:00 wylot' }
     }
 };
 
@@ -324,7 +334,7 @@ registerTrip('monopoli', {
             ]
         },
         cashNote: 'Odejmuje tylko wydatki <b>Gotówka</b> tej osoby z rozliczeń.',
-        trainLinkNote: 'Dzień 1: FR2 Ferrotramviaria + Trenìt! do Monopoli',
+        trainLinkNote: 'Dzień 1 i 7: FR2 + Trenìt! (Monopoli ↔ lotnisko)',
         features: { aptBus: false, falAlert: false, muvt: false },
         bagOverrides: {
             bag1: { name: 'Walizka InPost (jedzie osobno)', icon: 'fa-box-open', color: 'text-amber-700' },
