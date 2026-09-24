@@ -337,6 +337,93 @@ registerTrip('monopoli', {
         cashNote: 'Odejmuje tylko wydatki <b>Gotówka</b> tej osoby z rozliczeń.',
         trainLinkNote: 'Dzień 1 i 7: FR2 + Trenìt! (Monopoli ↔ lotnisko)',
         features: { aptBus: false, falAlert: false, muvt: false },
+        baggageFallback: {
+            panelTitle: 'Plan B: walizka · odbiór · klucze',
+            intro: 'Na wypadek opóźnienia paczki InPost albo problemu przy odbiorze — bez paniki. <b>Nie zakładamy najgorszego</b>, ale masz tu sklepy w Monopoli, rozmówki i meldunek krok po kroku.',
+            parcelDelay: {
+                heading: 'Walizka jeszcze nie dotarła',
+                lead: 'Macie <b>plecaki na pokład</b> + <b>7 dni</b> na odbiór od SMS-a. Dopóki paczka nie jest gotowa, żyjcie z tego, co w plecakach, i ewentualnie dokupcie nowe rzeczy poniżej.',
+                steps: [
+                    'Sprawdź <b>numer przesyłki</b> w panelu InPost powyżej → Śledź (inpost.pl).',
+                    'Brak SMS-a po <b>30.09–02.10</b>? Poczekaj jeszcze 1–2 dni robocze, potem <b>Szybkie Nadania / InPost PL</b>.',
+                    'Jesteś w Monopoli bez walizki: <b>minimum w plecakach</b> (lista) + sklepy z pinezką.',
+                    'Po SMS „gotowa do odbioru” — Tabaccheria Pantano, Via Marina del Mondo 22 (godz. pn–pt 8–13 i 16–20).'
+                ],
+                essentials: [
+                    'Ubranie na pierwszy dzień (już w plecaku — checklista Tymczasowa)',
+                    'Kąpielówki + klapki w plecaku',
+                    'Krem z filtrem, leki, dokumenty — tylko przy sobie, nie w paczce'
+                ],
+                shopsHeading: 'Dokupić nowe — tylko Monopoli (sieciówki)',
+                shopsNote: '<b>Intimissimi / Calzedonia / OVS</b> = nowe ubrania i bielizna. <b>Lidl, Compro Bene, Carrefour</b> = skarpety, podstawowe koszulki czasem, kosmetyki. <b>To nie ciucholandy</b> — zero second-hand. Uwaga na <b>sjestę 13–17</b> (Corso zamknięte, Lidl otwarty).',
+                shopPoiIds: ['mon-intimissimi', 'mon-calzedonia', 'mon-ovs', 'mon-compro-bene', 'mon-lidl', 'mon-carrefour']
+            },
+            checkIn: {
+                heading: 'Check-in — ktoś Was przywita i da klucze',
+                lead: 'Gospodarz (lub osoba przez niego) <b>spotyka Was na miejscu</b> w apartamencie <b>Via Fiume 19</b>. Okno <b>16:00–19:00</b> w dniu przyjazdu (30.09).',
+                steps: [
+                    { title: 'Rano w dniu przyjazdu — napisz godzinę', detail: 'WhatsApp / wiadomość Booking: podaj <b>przybliżoną godzinę</b> (np. „ok. 16:30”). Skopiuj tekst poniżej.' },
+                    { title: 'Przed 16:00 — potwierdzenie Booking', detail: 'Miej <b>aplikację Booking</b> lub mail z rezerwacją <b>RVI88V / La casa di Gio Mar</b> — opłacone, bez dopłaty poza ewentualną taksą klimatyczną.' },
+                    { title: 'Przy Via Fiume 19', detail: 'Zadzwoń / napisz „jesteśmy pod drzwiami”. <b>Ktoś Was przywita</b>, przekaże klucze, krótko objaśni mieszkanie. Zapytaj o <b>śmieci, Wi‑Fi, kontakt na awarie</b>.' },
+                    { title: 'Po wejściu', detail: 'Rozpakuj plecaki. <b>Dopiero potem</b> odbierz walizkę z InPost (Marina del Mondo 22), jeśli SMS już był.' },
+                    { title: 'Check-out 06.10', detail: '8:00–10:00, wideo mieszkania, klucze wg instrukcji — jak w planie dnia 7.' }
+                ],
+                bring: [
+                    'Dowód / paszport',
+                    'Telefon z Bookingiem i numerem gospodarza',
+                    'Gotówka na ewentualną taksę klimatyczną (jeśli proszą)'
+                ],
+                messages: [
+                    {
+                        label: 'WhatsApp — prośba o spotkanie (IT)',
+                        text: 'Buongiorno, siamo Dawid e Małgorzata, prenotazione Booking per La casa di Gio Mar, Via Fiume 19. Arriviamo a Monopoli verso le 16:30. È possibile il check-in oggi? Grazie!'
+                    },
+                    {
+                        label: 'PL — co to znaczy',
+                        text: 'Dzień dobry, jesteśmy Dawid i Małgorzata, rezerwacja Booking La casa di Gio Mar, Via Fiume 19. Przyjeżdżamy ok. 16:30. Czy możliwy check-in dziś? Dziękujemy!'
+                    },
+                    {
+                        label: 'Na miejscu (IT)',
+                        text: 'Buongiorno, siamo la prenotazione Booking per Via Fiume 19. Siamo qui davanti all\'ingresso.'
+                    }
+                ]
+            },
+            phrasesHeading: 'Odbiór paczki w punkcie (ladzie)',
+            phrasesLead: 'Wasz punkt to <b>sklep z obsługą</b> (tabaccheria), nie automat — pokaż SMS z kodem. Jeśli coś nie działa, użyj włoskiego zdania (kopiuj).',
+            pickupPhrases: [
+                {
+                    label: 'Odbiór z kodem',
+                    pl: 'Dzień dobry, odbieram paczkę InPost. Mam kod z SMS-a.',
+                    it: 'Buongiorno, ritiro un pacco InPost. Ho il codice di ritiro nell\'SMS.',
+                    en: 'Hello, I\'m picking up an InPost parcel. I have the pickup code in this text message.'
+                },
+                {
+                    label: 'Automat / system nie działa',
+                    pl: 'Skrytka nie działa — czy mogę odebrać paczkę u Państwa za ladą?',
+                    it: 'Il locker non funziona. Posso ritirare il pacco InPost qui al banco, per favore?',
+                    en: 'The locker isn\'t working. Can I collect my InPost parcel at the counter, please?'
+                },
+                {
+                    label: 'Paczka z Polski, nazwisko',
+                    pl: 'Przesyłka z Polski na nazwisko [wpisz]. Numer śledzenia: [wpisz].',
+                    it: 'Il pacco arriva dalla Polonia, a nome [cognome]. Numero di tracking: [numero].',
+                    en: 'The parcel is from Poland, name [surname]. Tracking number: [number].'
+                },
+                {
+                    label: 'Prośba o sprawdzenie',
+                    pl: 'Czy jest już paczka InPost dla [nazwisko]? Rezerwacja apartamentu obok.',
+                    it: 'C\'è un pacco InPost per [cognome]? Abitiamo qui vicino in Via Fiume 19.',
+                    en: 'Is there an InPost parcel for [surname]? We\'re staying nearby at Via Fiume 19.'
+                }
+            ],
+            supportSteps: [
+                'Zapisz <b>numery tracking</b> w panelu InPost (tam i powrót).',
+                'InPost Włochy — punkt alternatywny: <a href="https://inpost.it/trova-un-locker" target="_blank" rel="noopener">inpost.it/trova-un-locker</a> (u Was i tak ten sam adres Pantano).',
+                'Paczka wróciła do nadawcy? Kontakt <b>Szybkie Nadania</b> / reklamacja InPost PL — UNIQA nie obejmuje walizki InPost.',
+                'Reklamacja opóźnienia lotu (250 zł w polisie) to osobna sprawa od InPost — tylko przy kwalifikowanym opóźnieniu linii.'
+            ],
+            footer: 'Szablon na kolejne wyjazdy: sekcja baggageFallback w definicji wyjazdu + pinezki shopPoiIds na mapie.'
+        },
         bagOverrides: {
             bag1: { name: 'Walizka InPost Parcel (~56 L)', icon: 'fa-box-open', color: 'text-amber-700' },
             bag2: { name: 'Plecak Dawida (na pokład)' },
