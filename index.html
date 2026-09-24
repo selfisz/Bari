@@ -425,7 +425,7 @@
                     </div>
                 </div>
 
-                <p class="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 leading-snug"><i class="fa-solid fa-hourglass-half"></i> <b>Tymczasowa</b> — bez przypisanego bagażu. <i class="fa-solid fa-mobile-screen-button text-violet-600"></i> = przy sobie · <b>− / +</b> = ilość sztuk. <span class="text-amber-600">v12</span></p>
+                <p class="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 leading-snug"><i class="fa-solid fa-hourglass-half"></i> <b>Tymczasowa</b> — bez przypisanego bagażu. <i class="fa-solid fa-mobile-screen-button text-violet-600"></i> = przy sobie · <b>− / +</b> = ilość sztuk.</p>
                 <!-- Check-out Via Trevisani -->
                 <div id="checkout-section" class="hidden mb-6 bg-orange-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden">
                     <button type="button" onclick="toggleSectionPanel('checkout')" class="w-full p-4 flex items-center justify-between text-left active:bg-orange-100/50 transition-colors">
@@ -1173,8 +1173,10 @@
 
         function normalizeBagItems() {
             if (!state.bagsData) return false;
+            ensureBagsStructure();
             let changed = false;
             state.bagsData.forEach(bag => {
+                if (!Array.isArray(bag.items)) return;
                 bag.items.forEach(item => {
                     if (item.weather) { delete item.weather; changed = true; }
                     const mulMatch = item.text.match(/^(.+?)\s*[×x]\s*(\d+)\s*(.*)$/i);
@@ -1277,13 +1279,31 @@
             return true;
         }
 
+        function ensureBagsStructure() {
+            if (!TRIP.seed || !TRIP.seed.bagsData) return false;
+            let changed = false;
+            if (!state.bagsData || !Array.isArray(state.bagsData) || state.bagsData.length === 0) {
+                state.bagsData = JSON.parse(JSON.stringify(TRIP.seed.bagsData));
+                changed = true;
+            }
+            state.bagsData.forEach(bag => {
+                if (!Array.isArray(bag.items)) {
+                    bag.items = [];
+                    changed = true;
+                }
+            });
+            return changed;
+        }
+
         function ensureBagSeedItems() {
             if (!state.bagsData) return false;
+            ensureBagsStructure();
             if (!state.removedBagSeedIds) state.removedBagSeedIds = [];
             let changed = false;
             Object.entries(getBagSeedItems()).forEach(([bagId, seeds]) => {
                 const bag = state.bagsData.find(b => b.id === bagId);
                 if (!bag) return;
+                if (!Array.isArray(bag.items)) bag.items = [];
                 seeds.forEach(seed => {
                     if (state.removedBagSeedIds.includes(seed.id)) return;
                     if (!bag.items.some(i => i.id === seed.id)) {
@@ -1655,7 +1675,7 @@
             // Każda migracja musi się wykonać w tym samym przebiegu — stąd forEach zamiast łańcucha ||,
             // który zatrzymywał się na pierwszej, która coś zmieniła.
             const migrations = [
-                ensureTripPlanVersion, ensureBagLayoutVersion, ensureTempBag, ensureBagSeedItems, ensureBagOverrides, normalizeBagItems,
+                ensureBagsStructure, ensureTripPlanVersion, ensureBagLayoutVersion, ensureTempBag, ensureBagSeedItems, ensureBagOverrides, normalizeBagItems,
                 ensureSiestaItems, ensureCheckinItems, ensureMagnetItems, ensureKikoPlanItem, ensureMagnetShopItems,
                 ensureDay6ReturnPlan, ensureDay6PlanRefresh, ensurePlanDayMeta, ensureCashStart, ensureInpostState,
                 ensureCustomMapPinColors
@@ -1830,13 +1850,19 @@
         }
 
         function renderAll() {
-            if (ensureTempBag() || normalizeBagItems()) saveState();
+            try {
+            if (ensureBagsStructure() || ensureTempBag() || normalizeBagItems()) saveState();
             renderChecklist('start-list-container', state.startBari, 'startBari');
             renderChecklist('shop-list-container', state.shopData, 'shopData');
 
             const bagsContainer = document.getElementById('bags-container');
+            if (!bagsContainer) return;
             bagsContainer.innerHTML = '';
-            state.bagsData.forEach(bag => {
+            if (!state.bagsData || !state.bagsData.length) {
+                bagsContainer.innerHTML = '<p class="text-sm text-red-600 p-4">Błąd listy bagaży — odśwież stronę. Jeśli wraca: Ustawienia → Przywróć fabryczne.</p>';
+            }
+            (state.bagsData || []).forEach(bag => {
+                if (!Array.isArray(bag.items)) bag.items = [];
                 const panelKey = 'bag-' + bag.id;
                 const isTemp = bag.temp === true;
                 const bagDiv = document.createElement('div');
@@ -1956,9 +1982,16 @@
             }
 
             renderInpostPanel();
-            renderBaggageFallbackPanel();
+            try { renderBaggageFallbackPanel(); } catch (planBErr) { console.warn('Plan B panel:', planBErr); }
             renderSplitExpenses();
             if(kuwetaActive) renderKuwetaItems();
+            } catch (renderErr) {
+                console.error('renderAll:', renderErr);
+                const bagsContainer = document.getElementById('bags-container');
+                if (bagsContainer && !bagsContainer.innerHTML.trim()) {
+                    bagsContainer.innerHTML = '<p class="text-sm text-red-600 p-4">Coś poszło nie tak przy rysowaniu listy — zamknij kartę i otwórz apę ponownie.</p>';
+                }
+            }
 
             const wifiEl = document.getElementById('baza_wifi');
             if(wifiEl) wifiEl.innerText = inlineFields.baza_wifi || '_Wpisz Wi-Fi_';
@@ -3129,7 +3162,8 @@
 
             const delay = cfg.parcelDelay || {};
             const checkIn = cfg.checkIn || {};
-            const shops = (delay.shopPoiIds || []).map(id => ALL_MAP_POIS.find(p => p.id === id)).filter(Boolean);
+            const poiList = (typeof ALL_MAP_POIS !== 'undefined' && ALL_MAP_POIS) ? ALL_MAP_POIS : [];
+            const shops = (delay.shopPoiIds || []).map(id => poiList.find(p => p.id === id)).filter(Boolean);
 
             const shopRows = shops.map(poi => `
                 <div class="flex items-start gap-2 bg-slate-50 border border-slate-200 rounded-lg p-2 mb-1.5">
@@ -5457,7 +5491,16 @@
 
         window.onload = async () => {
             applyTripChrome();
-            await initStorage();
+            updateCountdown();
+            updateDynamicGreeting();
+            try {
+                await initStorage();
+            } catch (bootErr) {
+                console.error('initStorage:', bootErr);
+                ensureBagsStructure();
+                ensureBagSeedItems();
+                renderAll();
+            }
             subscribeRealtime();
             updateCountdown();
             updateDynamicGreeting();
