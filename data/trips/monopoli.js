@@ -10,7 +10,7 @@ const MONOPOLI_SEED = {
     startBari: [
         {id: 'ms0a', text: '📦 <b>InPost — nadaj walizkę jutro (25.09).</b> Cel: <b>Via Marina del Mondo 22</b>, Monopoli (Tabaccheria Pantano). Do Włoch jedzie <b>2–5 dni roboczych</b> (tak podaje InPost) — szacowany dotarcie ok. <b>30.09–02.10</b>, czyli w okolicach przylotu. <b>Po dotarciu paczka czeka na odbiór 7 dni</b> od SMS-a — nie 3. Pakuj dziś, nadajesz jutro. <a href="https://inpost.pl/SzybkieNadania/pl/wysylam-za-granice" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-[#ffcc00] text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-box"></i> Szybkie Nadania</a>', checked: false},
         {id: 'ms0b', text: '🖨️ <b>Wydrukuj DWIE etykiety: na wyjazd i na powrót.</b> We Włoszech InPost wymaga naklejonej, wydrukowanej etykiety, a w Monopoli nie będziecie mieć drukarki. Przesyłkę powrotną (Włochy → Polska) kup na SzybkieNadania.pl jeszcze w Krakowie i <b>weź wydruk ze sobą w plecaku</b>. Dorzuć taśmę klejącą.', checked: false},
-        {id: 'ms0c', text: '📏 <b>Zmierz walizkę: max 39 × 38 × 64 cm, do 25 kg.</b> Kółka i uchwyty wliczają się w wymiar — typowa kabinówka 55×40×20 jest o ~2 cm za szeroka w jednym boku. Sprawdź to <b>przed</b> opłaceniem etykiety.', checked: false},
+        {id: 'ms0c', text: '📏 <b>Wasza walizka InPost Parcel:</b> ok. <b>35 × 37 × 59 cm</b> (56 L, pusta ~3,3 kg). Limit przesyłki <b>Duża</b>: <b>39 × 38 × 64 cm</b>, <b>25 kg</b> — macie zapas vs kabinówka Ryanair 10 kg. Kółka/uchwyty wliczają się w pomiar InPost.', checked: false},
         {id: 'ms0d', text: '🚫 <b>Czego NIE wolno wysłać InPostem:</b> powerbank i luźne baterie, aerozole (dezodorant, lakier, pianka), alkohol, leki, szkło i ceramika, płyny powyżej 750 ml, gotówka i biżuteria. To jedzie w plecaku albo zostaje w domu.', checked: false},
         {id: 'ms1', text: '<b>Lot tam: FR2722 · śr. 30.09 · 05:50 Kraków → 07:45 Bari</b> (1 godz. 55 min). Rezerwacja <b>RVI88V</b>.', checked: false},
         {id: 'ms2', text: '<b>Lot powrotny: FR2723 · wt. 06.10 · 23:00 Bari → 00:55 Kraków</b> (lądowanie już 07.10). W <b>Dniu 7</b>: ścieżka <b>A</b> (Bari + Gentile 1880) albo <b>B</b> (Monopoli → lotnisko).', checked: false},
@@ -48,7 +48,7 @@ const MONOPOLI_SEED = {
             items: []
         },
         {
-            id: 'bag1', name: 'Walizka 10kg (Główna)', icon: 'fa-suitcase', color: 'text-slate-600',
+            id: 'bag1', name: 'Walizka InPost Parcel', icon: 'fa-suitcase', color: 'text-slate-600',
             items: []
         },
         {
@@ -190,6 +190,7 @@ const MONOPOLI_SEED = {
     journalEntries: [],
     cashStart: { dawid: 40, gosia: 40 },
     inpost: { pointCode: '', trackingOut: '', trackingBack: '' },
+    bagLayoutVersion: 1,
     planVersion: 7,
     planDayMeta: {
         mp1: { outbound: '03:30 wyjazd · 05:50 lot', return: '07:45 przylot' },
@@ -242,8 +243,8 @@ registerTrip('monopoli', {
             returnArrival: 'ok. 12–13.10',
             transit: '2–5 dni roboczych',
             transitNote: 'Czas dostawy Polska → Włochy i z powrotem — według InPost przy nadaniu.',
-            maxSize: '39 × 38 × 64 cm',
-            maxWeight: '25 kg',
+            maxSize: '35 × 37 × 59 cm (walizka) · limit InPost Duża: 39 × 38 × 64 cm',
+            maxWeight: '25 kg łącznie (walizka pusta ~3,3 kg)',
             holdDays: 7,
             holdNote: '7 dni od SMS-a o gotowości do odbioru w punkcie docelowym (InPost).',
             point: {
@@ -337,38 +338,41 @@ registerTrip('monopoli', {
         trainLinkNote: 'Dzień 1 i 7: FR2 + Trenìt! (Monopoli ↔ lotnisko)',
         features: { aptBus: false, falAlert: false, muvt: false },
         bagOverrides: {
-            bag1: { name: 'Walizka InPost (jedzie osobno)', icon: 'fa-box-open', color: 'text-amber-700' },
+            bag1: { name: 'Walizka InPost Parcel (~56 L)', icon: 'fa-box-open', color: 'text-amber-700' },
             bag2: { name: 'Plecak Dawida (na pokład)' },
             bag3: { name: 'Plecak Gosi (na pokład)' }
         },
         bagSeedItems: {
-            bagTemp: [],
-            bag1: [
-                { id: 'mb1i1', text: 'Wygodne buty na zwiedzanie', qty: 1, checked: false },
-                { id: 'mb1i2', text: 'Klapki / sandały', qty: 2, checked: false },
-                { id: 'mb1i3', text: 'Stroje kąpielowe (woda jeszcze ciepła!)', qty: 2, checked: false },
-                { id: 'mb1i4', text: 'Bluza / lekka kurtka na wieczory', qty: 2, checked: false },
-                { id: 'mb1i5', text: 'Piżamy', qty: 2, checked: false },
-                { id: 'mb1i6', text: 'Ręcznik plażowy (szybkoschnący)', qty: 2, checked: false },
-                { id: 'mb1i7', text: '⚠️ Ta walizka znika z domu 25.09 — nic z niej nie będzie potrzebne do 30.09', qty: 1, checked: false },
-                { id: 'mb1i8', text: '🚫 Bez powerbanku, aerozoli, leków, alkoholu i szkła — InPost tego nie przewozi', qty: 1, checked: false }
+            bagTemp: [
+                { id: 'mtemp-note', text: '📋 <b>Lista startowa z wyjazdu Bari</b> — przenieś ręcznie do walizki InPost / plecaków. Folia stretch na walizkę opcjonalnie (OutOfTheBox).', qty: 1, checked: false },
+                { id: 'btemp1', text: 'Kąpielówki Dawid', qty: 1, checked: false },
+                { id: 'btemp2', text: 'T-shirty Dawid (do walizki?)', qty: 3, checked: false },
+                { id: 'btemp3', text: 'Majtki Dawid (do walizki)', qty: 1, checked: false },
+                { id: 'b1i3', text: 'Wygodne buty na zwiedzanie', qty: 1, checked: false },
+                { id: 'b1i4', text: 'Klapki Dawid', qty: 1, checked: false },
+                { id: 'b1i5', text: 'Buty do wody Dawid', qty: 1, checked: false },
+                { id: 'b1i6', text: 'Buty do wody Gosia', qty: 1, checked: false },
+                { id: 'b1i7', text: 'Piżama Dawid', qty: 1, checked: false },
+                { id: 'b1i8', text: 'Piżama Gosia', qty: 1, checked: false },
+                { id: 'b1i9', text: 'Sandały Gosia', qty: 1, checked: false },
+                { id: 'b2i1', text: 'Paszporty / Dowody', sec: true, pocket: true, qty: 1, checked: false },
+                { id: 'b2i2', text: 'Portfel (Karty płatnicze, EKUZ)', sec: true, pocket: true, qty: 1, checked: false },
+                { id: 'b2i5', text: '<b class="text-green-700">Dokładnie 21€ dla Katii (Sprzątaczki)</b> — z Bari, na Monopoli niepotrzebne', qty: 1, checked: false },
+                { id: 'b2i3', text: 'Powerbank (Musi być w podręcznym!)', sec: true, pocket: true, qty: 1, checked: false },
+                { id: 'b2d1', text: 'Majtki', qty: 6, checked: false },
+                { id: 'b2d2', text: 'Spodenki krótkie', qty: 3, checked: false },
+                { id: 'b2d3', text: 'Spodnie długie', qty: 1, checked: false },
+                { id: 'b2d4', text: 'Koszula', qty: 1, checked: false },
+                { id: 'b2d5', text: 'T-shirty', qty: 3, checked: false },
+                { id: 'b2d6', text: 'Kosmetyczka z płynami (work 100ml!)', sec: true, qty: 1, checked: false },
+                { id: 'b3i1', text: 'Okulary przeciwsłoneczne', qty: 1, checked: false },
+                { id: 'b3i4', text: 'Płyny/Błyszczyki Gosi (do worka 100ml!)', sec: true, qty: 1, checked: false },
+                { id: 'mtemp-inpost1', text: '📦 Wydrukowana etykieta powrotna InPost + taśma klejąca (Monopoli)', pocket: true, qty: 1, checked: false },
+                { id: 'mtemp-inpost2', text: '🚫 Do walizki InPost NIE: powerbank, aerozole, leki, alkohol, szkło — tylko plecaki', qty: 1, checked: false }
             ],
-            bag2: [
-                { id: 'mb2i1', text: 'Paszporty / Dowody', sec: true, pocket: true, qty: 1, checked: false },
-                { id: 'mb2i2', text: 'Portfel (karty, EKUZ)', sec: true, pocket: true, qty: 1, checked: false },
-                { id: 'mb2i3', text: 'Powerbank (tylko w podręcznym!)', sec: true, pocket: true, qty: 1, checked: false },
-                { id: 'mb2i4', text: 'Kosmetyczka z płynami (worek 100ml!)', sec: true, qty: 1, checked: false },
-                { id: 'mb2i5', text: 'Gotówka na start (taksa klimatyczna, targ)', qty: 1, checked: false },
-                { id: 'mb2i6', text: '📦 Wydrukowana etykieta powrotna InPost + taśma klejąca', pocket: true, qty: 1, checked: false },
-                { id: 'mb2i7', text: 'Ubranie na pierwszy dzień — walizkę odbieracie dopiero ok. 16:30', qty: 1, checked: false }
-            ],
-            bag3: [
-                { id: 'mb3i1', text: 'Okulary przeciwsłoneczne', qty: 1, checked: false },
-                { id: 'mb3i2', text: 'Płyny/kosmetyki Gosi (worek 100ml!)', sec: true, qty: 1, checked: false },
-                { id: 'mb3i3', text: 'Krem z filtrem', sec: true, qty: 1, checked: false },
-                { id: 'mb3i4', text: 'Leki na wyjazd — InPost nie przewozi leków, muszą jechać z Wami', sec: true, qty: 1, checked: false },
-                { id: 'mb3i5', text: 'Ubranie na pierwszy dzień — walizka dopiero po check-inie', qty: 1, checked: false }
-            ]
+            bag1: [],
+            bag2: [],
+            bag3: []
         }
     }
 });
