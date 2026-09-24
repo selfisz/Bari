@@ -1279,9 +1279,17 @@
 
         function ensureInpostState() {
             if (!TRIP.inpost) return false;
-            if (state.inpost && typeof state.inpost === 'object') return false;
-            state.inpost = { pointCode: '', trackingOut: '', trackingBack: '' };
-            return true;
+            let changed = false;
+            if (!state.inpost || typeof state.inpost !== 'object') {
+                state.inpost = { pointCode: '', trackingOut: '', trackingBack: '' };
+                changed = true;
+            }
+            const defaultCode = TRIP.inpost.point && TRIP.inpost.point.code;
+            if (state.inpost.pointCode === 'ITMON156755D' && defaultCode && defaultCode !== 'ITMON156755D') {
+                state.inpost.pointCode = '';
+                changed = true;
+            }
+            return changed;
         }
 
         const SIESTA_TEXT = '13:00–17:00 — <b>SIESTA</b>: Sklepy i większość lokali zamknięta. Jedz i rób zakupy rano lub po 17:00.';
@@ -2993,8 +3001,8 @@
                 <div class="mb-4">
                     ${inpostStepHtml(0, status.step, 'fa-box', 'Nadanie z Polski', inpostDay(cfg.sendFrom) + '–' + inpostDay(cfg.sendBy), 'Do Włoch jedzie ' + escapeHtml(cfg.transit) + '. Nadana później może nie zdążyć przed przylotem.')}
                     ${inpostStepHtml(1, status.step, 'fa-truck', 'W drodze', cfg.arrivalWindow, 'Powiadomienie o gotowości do odbioru przyjdzie SMS-em i mailem.')}
-                    ${inpostStepHtml(2, status.step, 'fa-box-open', 'Odbiór w Monopoli', 'od ' + inpostDay(cfg.pickupFrom), '<b>Paczka czeka tylko ok. ' + cfg.holdDays + ' dni</b> od powiadomienia, potem wraca do nadawcy.')}
-                    ${inpostStepHtml(3, status.step, 'fa-rotate-left', 'Wysyłka powrotna', inpostDay(cfg.returnDate) + ' rano', 'Zaraz po check-oucie, punkt czynny do 13:00. Do Polski wraca ' + escapeHtml(cfg.returnArrival) + '.')}
+                    ${inpostStepHtml(2, status.step, 'fa-box-open', 'Odbiór w Monopoli', 'od ' + inpostDay(cfg.pickupFrom), '<b>Paczka czeka ' + cfg.holdDays + ' dni</b> od SMS-a o odbiorze (InPost), potem wraca do nadawcy.' + (cfg.holdNote ? ' ' + escapeHtml(cfg.holdNote) : ''))}
+                    ${inpostStepHtml(3, status.step, 'fa-rotate-left', 'Wysyłka powrotna', inpostDay(cfg.returnDate) + ' rano', escapeHtml(point.returnHint || 'Zaraz po check-oucie — nadaj rano.') + ' Do Polski wraca ' + escapeHtml(cfg.returnArrival) + ' (' + escapeHtml(cfg.transit) + ').')}
                 </div>
 
                 <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
@@ -3003,6 +3011,7 @@
                     <p class="text-[11px] text-amber-900">${escapeHtml(point.address)}</p>
                     <p class="text-[10px] text-amber-800 mt-1">${escapeHtml(point.name)} · ${escapeHtml(point.walk)}</p>
                     <p class="text-[10px] text-amber-800 font-bold mt-1"><i class="fa-regular fa-clock"></i> ${escapeHtml(point.hours)}</p>
+                    ${point.phone ? '<p class="text-[10px] text-amber-800 mt-0.5"><i class="fa-solid fa-phone"></i> ' + escapeHtml(point.phone) + '</p>' : ''}
                     <div class="flex flex-wrap gap-2 mt-2">
                         <a href="https://maps.google.com/?q=${point.mapsQuery}" target="_blank" rel="noopener" class="text-[10px] font-bold bg-blue-600 text-white px-2.5 py-1.5 rounded-lg active:scale-95"><i class="fa-solid fa-location-arrow"></i> Nawiguj</a>
                         <button type="button" onclick="focusMapPoi('${point.poiId}')" class="text-[10px] font-bold bg-slate-700 text-white px-2.5 py-1.5 rounded-lg active:scale-95"><i class="fa-solid fa-map"></i> Pinezka</button>

@@ -8,7 +8,7 @@ const MONOPOLI_SEED = {
     splitExpenses: [],
     removedBagSeedIds: [],
     startBari: [
-        {id: 'ms0a', text: '📦 <b>InPost — nadaj walizkę 24–25.09.</b> Do Włoch jedzie <b>3–5 dni roboczych</b>: nadana w piątek 25.09 dotrze do Monopoli ok. <b>30.09–02.10</b>, czyli już po Waszym przylocie. <b>Nie nadawaj wcześniej</b> — punkt trzyma paczkę tylko ok. 3 dni i odsyła ją do nadawcy. <a href="https://inpost.pl/SzybkieNadania/pl/wysylam-za-granice" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-[#ffcc00] text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-box"></i> Szybkie Nadania</a>', checked: false},
+        {id: 'ms0a', text: '📦 <b>InPost — nadaj walizkę jutro (25.09).</b> Cel: <b>Via Marina del Mondo 22</b>, Monopoli (Tabaccheria Pantano). Do Włoch jedzie <b>2–5 dni roboczych</b> (tak podaje InPost) — szacowany dotarcie ok. <b>30.09–02.10</b>, czyli w okolicach przylotu. <b>Po dotarciu paczka czeka na odbiór 7 dni</b> od SMS-a — nie 3. Pakuj dziś, nadajesz jutro. <a href="https://inpost.pl/SzybkieNadania/pl/wysylam-za-granice" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-[#ffcc00] text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-box"></i> Szybkie Nadania</a>', checked: false},
         {id: 'ms0b', text: '🖨️ <b>Wydrukuj DWIE etykiety: na wyjazd i na powrót.</b> We Włoszech InPost wymaga naklejonej, wydrukowanej etykiety, a w Monopoli nie będziecie mieć drukarki. Przesyłkę powrotną (Włochy → Polska) kup na SzybkieNadania.pl jeszcze w Krakowie i <b>weź wydruk ze sobą w plecaku</b>. Dorzuć taśmę klejącą.', checked: false},
         {id: 'ms0c', text: '📏 <b>Zmierz walizkę: max 39 × 38 × 64 cm, do 25 kg.</b> Kółka i uchwyty wliczają się w wymiar — typowa kabinówka 55×40×20 jest o ~2 cm za szeroka w jednym boku. Sprawdź to <b>przed</b> opłaceniem etykiety.', checked: false},
         {id: 'ms0d', text: '🚫 <b>Czego NIE wolno wysłać InPostem:</b> powerbank i luźne baterie, aerozole (dezodorant, lakier, pianka), alkohol, leki, szkło i ceramika, płyny powyżej 750 ml, gotówka i biżuteria. To jedzie w plecaku albo zostaje w domu.', checked: false},
@@ -21,7 +21,7 @@ const MONOPOLI_SEED = {
         {id: 'ms7', text: '<b>Bari Centrale → Monopoli</b> — Trenitalia regionale, ~35–45 min, ok. 3–5€. Kursy mniej więcej co godzinę.', checked: false},
         {id: 'ms8', text: '⚠️ <b>Check-in w Monopoli dopiero 16:00–19:00</b> — zaplanuj, gdzie zostawić bagaże na kilka godzin (patrz dzień 1).', checked: false},
         {id: 'ms9', text: 'Z dworca w Monopoli do apartamentu <b>Via Fiume 19</b> — ~8 min pieszo.', checked: false},
-        {id: 'ms10', text: '📦 <b>Odbiór walizki: punkt InPost ITMON156755D</b>, Via Guglielmo Oberdan 39 — <b>2 min od stacji Monopoli</b>, po drodze do apartamentu. Czynne <b>pn–sb 7:30–13:00 i 16:30–20:00</b>, w niedzielę nieczynne. Kod odbioru przyjdzie SMS-em i mailem.', checked: false},
+        {id: 'ms10', text: '📦 <b>Odbiór walizki: InPost Point</b> — <b>Via Marina del Mondo 22</b> (Tabaccheria Pantano). ~8 min pieszo od Via Fiume 19, obok Todisa. Czynne <b>pn–pt 8:00–13:00 i 16:00–20:00</b> (sob/nd — sprawdź na miejscu). Kod odbioru przyjdzie SMS-em i mailem.', checked: false},
         {id: 'ms11', text: '✈️ <b>Na oba loty tylko plecaki.</b> Walizka jedzie i wraca InPostem. Darmowy plecak Ryanaira pod fotel to <b>40 × 30 × 20 cm</b> (z kółkami i uchwytami) — nic więcej nie wnosicie na pokład.', checked: false}
     ],
     shopData: [
@@ -40,7 +40,7 @@ const MONOPOLI_SEED = {
         {id: 'mco4', text: '<b>NAGRAĆ WIDEO CAŁEGO MIESZKANIA</b> przy wyjściu', checked: false},
         {id: 'mco5', text: 'Klucze zwrócone według instrukcji gospodarza', checked: false},
         {id: 'mco6', text: '📦 <b>Walizka InPost spakowana i zaklejona</b>, wydrukowana etykieta powrotna naklejona kodem do góry. Powerbank, płyny, leki i dokumenty <b>wyjęte do plecaka</b>.', checked: false},
-        {id: 'mco7', text: '📦 <b>Walizka nadana</b> w punkcie InPost przy Via Oberdan (przed 13:00!) — dalej idziecie już tylko z plecakami.', checked: false}
+        {id: 'mco7', text: '📦 <b>Walizka nadana</b> w InPost Point, Via Marina del Mondo 22 (rano, do 13:00!) — dalej idziecie już tylko z plecakami.', checked: false}
     ],
     bagsData: [
         {
@@ -76,8 +76,8 @@ const MONOPOLI_SEED = {
                 {id: 'mp1siesta', text: '13:00–17:00 — <b>SIESTA</b>: Sklepy zamknięte. Lunch przed 13:00 albo po 17:00.', checked: false, siesta: true},
                 {id: 'mp1i5', text: 'Ze stacji Monopoli pieszo do <b>Via Fiume 19</b> (~8 min). <a href="https://maps.google.com/?q=Via+Fiume+19,+70043+Monopoli+BA" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Apartament</a>', checked: false},
                 {id: 'mp1i6', text: '<b>16:00–19:00 CHECK-IN</b> — „La casa di Gio Mar”, Via Fiume 19. <b>Napisz gospodarzowi godzinę przyjazdu</b> jeszcze rano!', checked: false},
-                {id: 'mp1inpost', text: '📦 <b>Odbierz walizkę z InPostu — po check-inie.</b> Punkt <b>ITMON156755D</b>, Via Guglielmo Oberdan 39, czynny 7:30–13:00 i <b>16:30–20:00</b> (w południe sjesta). Z Via Fiume 19 ~10 min pieszo. Kod odbioru masz w SMS-ie i mailu. <a href="https://maps.google.com/?q=Via+Guglielmo+Oberdan+39,+70043+Monopoli+BA" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Nawiguj</a> <button type="button" onclick="event.stopPropagation();focusMapPoi(\'mon-inpost\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Pinezka w apce</button>', checked: false},
-                {id: 'mp1inpost2', text: '⏳ <b>Paczka czeka tylko ok. 3 dni</b> od powiadomienia, potem wraca do nadawcy. Jeśli 30.09 jeszcze nie dotarła (szacowane 30.09–02.10) — czekaj na SMS i odbierz <b>od razu następnego dnia</b>.', checked: false},
+                {id: 'mp1inpost', text: '📦 <b>Odbierz walizkę z InPostu — po check-inie.</b> <b>Via Marina del Mondo 22</b> (Tabaccheria Pantano · InPost Point). Czynne pn–pt 8:00–13:00 i 16:00–20:00. Z Via Fiume 19 ~8 min pieszo. Kod odbioru masz w SMS-ie i mailu. <a href="https://maps.google.com/?q=Via+Marina+del+Mondo+22,+70043+Monopoli+BA" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Nawiguj</a> <button type="button" onclick="event.stopPropagation();focusMapPoi(\'mon-inpost\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Pinezka w apce</button>', checked: false},
+                {id: 'mp1inpost2', text: '⏳ <b>Paczka czeka 7 dni</b> od SMS-a o gotowości do odbioru (tak podaje InPost), potem wraca do nadawcy. Dotarcie z Polski trwa <b>2–5 dni roboczych</b> — jeśli 30.09 jeszcze nie ma, czekaj na powiadomienie i odbierz w ciągu tygodnia.', checked: false},
                 {id: 'mp1i7', text: 'Pierwsze zakupy: woda, śniadanie na jutro. <b>Sklepy zamykają ok. 20:30</b>.', checked: false},
                 {id: 'mp1i8', text: 'Kolacja przy <b>Porto Antico</b> — świeże ryby i spacer po nabrzeżu.', checked: false}
             ]
@@ -143,8 +143,8 @@ const MONOPOLI_SEED = {
             items: [
                 {id: 'mp7inpost0', text: '📦 <b>Rano spakuj walizkę do wysyłki</b> — zaklej taśmą, naklej <b>wydrukowaną etykietę powrotną</b> (kod dobrze widoczny). Powerbank, płyny, leki, dokumenty i wartościowe rzeczy <b>wyjmij do plecaka</b> — InPost ich nie przewozi.', checked: false, sec: true},
                 {id: 'mp7i1', text: '<b>CHECK-OUT 8:00–10:00</b> — Via Fiume 19. <b>NAGRAJ WIDEO</b> całego mieszkania, wyrzuć śmieci, klucze wg instrukcji gospodarza.', checked: false, sec: true},
-                {id: 'mp7inpost1', text: '📦 <b>Zaraz po check-oucie nadaj walizkę</b> w punkcie InPost, Via Guglielmo Oberdan 39 (~10 min pieszo). <b>Czynne do 13:00</b>, potem dopiero od 16:30 — zrób to rano. Pokaż paczkę obsłudze i poczekaj na skan etykiety. <a href="https://maps.google.com/?q=Via+Guglielmo+Oberdan+39,+70043+Monopoli+BA" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Nawiguj</a> <button type="button" onclick="event.stopPropagation();focusMapPoi(\'mon-inpost\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Pinezka w apce</button>', checked: false},
-                {id: 'mp7i2', text: '✅ <b>Walizka nadana = problem z bagażem rozwiązany.</b> Lot jest dopiero o 23:00, ale przez cały dzień chodzicie już <b>tylko z plecakami</b> — żadnej przechowalni nie trzeba. Paczka dojedzie do Polski w 3–5 dni roboczych (ok. 12–13.10).', checked: false},
+                {id: 'mp7inpost1', text: '📦 <b>Zaraz po check-oucie nadaj walizkę</b> w InPost Point, <b>Via Marina del Mondo 22</b> (~8 min pieszo). <b>Rano, do 13:00</b> (potem przerwa do 16:00). Pokaż paczkę obsłudze i poczekaj na skan etykiety. <a href="https://maps.google.com/?q=Via+Marina+del+Mondo+22,+70043+Monopoli+BA" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-location-arrow"></i> Nawiguj</a> <button type="button" onclick="event.stopPropagation();focusMapPoi(\'mon-inpost\')" class="inline-block mt-1 bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-map"></i> Pinezka w apce</button>', checked: false},
+                {id: 'mp7i2', text: '✅ <b>Walizka nadana = problem z bagażem rozwiązany.</b> Lot jest dopiero o 23:00, ale przez cały dzień chodzicie już <b>tylko z plecakami</b> — żadnej przechowalni nie trzeba. Paczka dojedzie do Polski w <b>2–5 dni roboczych</b> (ok. 12–13.10).', checked: false},
                 {id: 'mp7ryanair', text: '⚠️ <b>CHECK-IN Ryanair na powrót</b> — otwiera się <b>05.10 o 23:00</b>. Boarding passy w telefonie (FR2723). <a href="https://www.ryanair.com/" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-1 bg-yellow-400 text-slate-900 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-plane"></i> Ryanair</a>', checked: false, checkin: true},
                 {id: 'mp7i3', text: 'Ostatni dzień w Monopoli: kąpiel, starówka, gelato. <b>Lunch przed 13:00</b> — potem sjesta.', checked: false},
                 {id: 'mp7magnet', text: '🧲 <b>Ostatnia szansa na magnesy</b> i pamiątki — sklepy zamykają na sjestę i wieczorem.', checked: false, magnet: true},
@@ -167,7 +167,7 @@ const MONOPOLI_SEED = {
     journalEntries: [],
     cashStart: { dawid: 40, gosia: 40 },
     inpost: { pointCode: '', trackingOut: '', trackingBack: '' },
-    planVersion: 4,
+    planVersion: 5,
     planDayMeta: {
         mp1: { outbound: '03:30 wyjazd · 05:50 lot', return: '07:45 przylot' },
         mp2: { outbound: '', return: '' },
@@ -211,28 +211,32 @@ registerTrip('monopoli', {
         returnLabel: 'do Krakowa',
         seed: MONOPOLI_SEED,
         inpost: {
-            sendFrom: '2026-09-24',
+            sendFrom: '2026-09-25',
             sendBy: '2026-09-25',
             arrivalWindow: '30.09–02.10',
             pickupFrom: '2026-09-30',
             returnDate: '2026-10-06',
             returnArrival: 'ok. 12–13.10',
-            transit: '3–5 dni roboczych',
+            transit: '2–5 dni roboczych',
+            transitNote: 'Czas dostawy Polska → Włochy i z powrotem — według InPost przy nadaniu.',
             maxSize: '39 × 38 × 64 cm',
             maxWeight: '25 kg',
-            holdDays: 3,
+            holdDays: 7,
+            holdNote: '7 dni od SMS-a o gotowości do odbioru w punkcie docelowym (InPost).',
             point: {
-                code: 'ITMON156755D',
-                name: 'Agenzia multiservizi Delyfast',
-                address: 'Via Guglielmo Oberdan 39, 70043 Monopoli (BA)',
-                hours: 'pn–sb 7:30–13:00 i 16:30–20:00 · niedziela nieczynna',
-                walk: '2 min od stacji Monopoli · ~10 min od Via Fiume 19',
-                mapsQuery: 'Via+Guglielmo+Oberdan+39,+70043+Monopoli+BA',
-                poiId: 'mon-inpost'
+                code: 'ITPBA03611P',
+                name: 'Tabaccheria Pantano N. 69 (InPost Point)',
+                address: 'Via Marina del Mondo 22, 70043 Monopoli (BA)',
+                hours: 'pn–pt 8:00–13:00 i 16:00–20:00 · sob/nd — sprawdź na miejscu',
+                walk: '~8 min pieszo od Via Fiume 19 · ten sam adres co Todis obok',
+                phone: '+39 080 937 6439',
+                mapsQuery: 'Via+Marina+del+Mondo+22,+70043+Monopoli+BA',
+                poiId: 'mon-inpost',
+                returnHint: 'Nadanie powrotne rano w dniu check-outu — do 13:00, potem przerwa do 16:00.'
             }
         },
         preDepartureChecklist: [
-            'Walizka nadana InPostem 24–25.09? Bez tego nie dotrze na czas do Monopoli',
+            'Walizka nadana InPostem 25.09 (Via Marina del Mondo 22)? Bez tego nie dotrze na czas',
             'Etykieta powrotna kupiona i WYDRUKOWANA — we Włoszech bez wydruku nie nadasz paczki',
             'Check-in Ryanair zrobiony? Boarding passy FR2722 w telefonie (rezerwacja RVI88V)',
             'Wyjazd z domu 03:30 — bramki na lotnisku zamykają się 05:20',
