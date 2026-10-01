@@ -1042,9 +1042,7 @@
             let stored = null;
             try { stored = localStorage.getItem(ACTIVE_TRIP_LS); } catch (e) {}
             if (stored && TRIP_DEFS[stored]) {
-                // Wyjazd, który właśnie trwa, ma pierwszeństwo przed zapamiętanym archiwum.
-                const ongoing = TRIP_ORDER.find(id => getTripStatus(TRIP_DEFS[id]) === 'ongoing');
-                if (ongoing && getTripStatus(TRIP_DEFS[stored]) === 'archived') return ongoing;
+                // Szanuj wybór użytkownika z przełącznika (także archiwum Bari w trakcie Monopoli).
                 return stored;
             }
             return pickDefaultTripId();
