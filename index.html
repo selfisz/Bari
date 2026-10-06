@@ -821,6 +821,10 @@
                 </div>
                 <div id="split-expenses-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
 
+                <button type="button" onclick="copySplitExpenses()" class="w-full mt-2 bg-white text-slate-700 border border-slate-300 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-50">
+                    <i class="fa-regular fa-copy"></i> Kopiuj wszystkie transakcje
+                </button>
+
                 <!-- NOWY PRZYCISK: RESET BILANSU -->
                 <button onclick="resetSplitExpenses()" class="w-full mt-3 bg-slate-100 text-slate-600 border border-slate-200 py-2 rounded-lg font-bold text-xs active:scale-95 transition-transform hover:bg-slate-200">
                     <i class="fa-solid fa-rotate-left"></i> Zresetuj bilans (Zapłacone/BLIK)
@@ -3264,15 +3268,11 @@
             });
         }
 
-        function renderSplitExpenses() {
-            const container = document.getElementById('split-expenses-list');
-            const totalEl = document.getElementById('split-total');
-            const balanceEl = document.getElementById('split-balance');
-            container.innerHTML = '';
-
-            let totalEur = 0; let dawidOwesGosia = 0; let gosiaOwesDawid = 0;
-
-            state.splitExpenses.forEach(ex => {
+        function computeSplitTotals() {
+            let totalEur = 0;
+            let dawidOwesGosia = 0;
+            let gosiaOwesDawid = 0;
+            (state.splitExpenses || []).forEach(ex => {
                 totalEur += ex.amount;
                 if (ex.who === 'Dawid') {
                     if (ex.splitFor === '50/50') gosiaOwesDawid += (ex.amount / 2);
@@ -3281,7 +3281,54 @@
                     if (ex.splitFor === '50/50') dawidOwesGosia += (ex.amount / 2);
                     if (ex.splitFor === 'Dawid') dawidOwesGosia += ex.amount;
                 }
+            });
+            return { totalEur, balanceEur: dawidOwesGosia - gosiaOwesDawid };
+        }
 
+        function formatSplitExpensesClipboardText() {
+            const list = state.splitExpenses || [];
+            const tripName = (TRIP.def && TRIP.def.name) ? TRIP.def.name : 'Wyjazd';
+            const manual = state.euroRateSettings && state.euroRateSettings.manual;
+            const rateLine = 'Kurs: 1 EUR = ' + EURO_RATE.toFixed(4) + ' PLN' + (manual ? ' (ręcznie)' : ' (ECB)');
+            const lines = ['Rozliczenia — ' + tripName, rateLine, ''];
+            list.forEach((ex, i) => {
+                lines.push(
+                    (i + 1) + '. ' + ex.amount.toFixed(2) + ' € — ' + ex.desc,
+                    '   Płacił: ' + ex.who + ' · ' + ex.method + ' · Dla: ' + ex.splitFor
+                );
+            });
+            const { totalEur, balanceEur } = computeSplitTotals();
+            lines.push('', 'Łącznie wydano: ' + totalEur.toFixed(2) + ' €');
+            const absEur = Math.abs(balanceEur);
+            const balancePln = absEur * EURO_RATE;
+            if (balanceEur > 0.01) {
+                lines.push('Bilans: Dawid wisi Gosi — ' + balancePln.toFixed(2) + ' PLN (' + absEur.toFixed(2) + ' €)');
+            } else if (balanceEur < -0.01) {
+                lines.push('Bilans: Gosia wisi Dawidowi — ' + balancePln.toFixed(2) + ' PLN (' + absEur.toFixed(2) + ' €)');
+            } else {
+                lines.push('Bilans: jesteście na zero');
+            }
+            return lines.join('\n');
+        }
+
+        function copySplitExpenses() {
+            const list = state.splitExpenses || [];
+            if (!list.length) {
+                showToast('Brak transakcji do skopiowania');
+                return;
+            }
+            copyAndToast(formatSplitExpensesClipboardText());
+        }
+
+        function renderSplitExpenses() {
+            const container = document.getElementById('split-expenses-list');
+            const totalEl = document.getElementById('split-total');
+            const balanceEl = document.getElementById('split-balance');
+            container.innerHTML = '';
+
+            const { totalEur, balanceEur } = computeSplitTotals();
+
+            state.splitExpenses.forEach(ex => {
                 const icon = ex.method === 'Karta' ? '<i class="fa-regular fa-credit-card"></i>' : '<i class="fa-solid fa-coins"></i>';
                 const avatar = ex.who === 'Dawid' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700';
 
@@ -3303,7 +3350,6 @@
             });
 
             totalEl.innerText = `Łącznie wydano: ${totalEur.toFixed(2)} €`;
-            let balanceEur = dawidOwesGosia - gosiaOwesDawid;
             let balancePln = Math.abs(balanceEur) * EURO_RATE;
 
             const eurLine = (amt) => `<span class="text-[11px] text-slate-500 font-normal">${amt.toFixed(2)} €</span>`;
