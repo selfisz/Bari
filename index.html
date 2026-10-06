@@ -735,6 +735,10 @@
                         </div>
                     </div>
                     <p class="text-[10px] text-slate-400 text-center" id="calc-rate-info">Kurs: ładowanie...</p>
+                    <div class="flex flex-wrap gap-2 mt-2 justify-center">
+                        <button type="button" onclick="openManualEuroRateEditor()" class="text-[10px] font-bold bg-white border border-slate-300 text-slate-700 px-2.5 py-1.5 rounded-lg active:scale-95"><i class="fa-solid fa-pen"></i> Ustaw kurs ręcznie</button>
+                        <button type="button" id="btn-euro-rate-ecb" onclick="resetEuroRateFromEcb()" class="text-[10px] font-bold bg-slate-100 border border-slate-200 text-slate-600 px-2.5 py-1.5 rounded-lg active:scale-95 hidden"><i class="fa-solid fa-cloud-arrow-down"></i> Pobierz z ECB</button>
+                    </div>
                 </div>
                 </div>
             </div>
@@ -1107,6 +1111,7 @@
                 if(parsed.planDayMeta) state.planDayMeta = parsed.planDayMeta;
                 if(parsed.removedBagSeedIds) state.removedBagSeedIds = parsed.removedBagSeedIds;
                 if(parsed.inpost) state.inpost = parsed.inpost;
+                if (parsed.euroRateSettings) state.euroRateSettings = parsed.euroRateSettings;
                 state.planVersion = parsed.planVersion || 1;
                 state.bagLayoutVersion = parsed.bagLayoutVersion || 0;
                 if (!state.removedBagSeedIds) state.removedBagSeedIds = [];
@@ -1125,6 +1130,7 @@
                 ensureBagOverrides();
                 normalizeBagItems();
                 ensureCashStart();
+                ensureEuroRateSettings();
                 ensureInpostState();
                 ensureCustomMapPinColors();
             } catch(e) {}
@@ -1675,8 +1681,8 @@
             const migrations = [
                 ensureBagsStructure, ensureTripPlanVersion, ensureBagLayoutVersion, ensureTempBag, ensureBagSeedItems, ensureBagOverrides, normalizeBagItems,
                 ensureSiestaItems, ensureCheckinItems, ensureMagnetItems, ensureKikoPlanItem, ensureMagnetShopItems,
-                ensureDay6ReturnPlan, ensureDay6PlanRefresh, ensurePlanDayMeta, ensureCashStart, ensureInpostState,
-                ensureCustomMapPinColors
+                ensureDay6ReturnPlan, ensureDay6PlanRefresh, ensurePlanDayMeta, ensureCashStart, ensureEuroRateSettings,
+                ensureInpostState, ensureCustomMapPinColors
             ];
             let migrated = false;
             migrations.forEach(migrate => { if (migrate()) migrated = true; });
@@ -3300,10 +3306,11 @@
             let balanceEur = dawidOwesGosia - gosiaOwesDawid;
             let balancePln = Math.abs(balanceEur) * EURO_RATE;
 
+            const eurLine = (amt) => `<span class="text-[11px] text-slate-500 font-normal">${amt.toFixed(2)} €</span>`;
             if (balanceEur > 0.01) {
-                balanceEl.innerHTML = `<span class="text-blue-700">Dawid wisi Gosi:</span> <br>${balancePln.toFixed(2)} PLN`;
+                balanceEl.innerHTML = `<span class="text-blue-700">Dawid wisi Gosi:</span><br><span class="text-xl">${balancePln.toFixed(2)} PLN</span><br>${eurLine(Math.abs(balanceEur))}`;
             } else if (balanceEur < -0.01) {
-                balanceEl.innerHTML = `<span class="text-pink-700">Gosia wisi Dawidowi:</span> <br>${balancePln.toFixed(2)} PLN`;
+                balanceEl.innerHTML = `<span class="text-pink-700">Gosia wisi Dawidowi:</span><br><span class="text-xl">${balancePln.toFixed(2)} PLN</span><br>${eurLine(Math.abs(balanceEur))}`;
             } else {
                 balanceEl.innerHTML = `Jesteście na zero! <i class="fa-solid fa-handshake"></i>`;
             }
@@ -5045,7 +5052,29 @@
         }
 
         /* --- KALKULATOR EUR/PLN --- */
+        function ensureEuroRateSettings() {
+            if (!state.euroRateSettings || typeof state.euroRateSettings !== 'object') {
+                state.euroRateSettings = { manual: false, rate: null };
+                return true;
+            }
+            return false;
+        }
+
+        function applyEuroRateFromState() {
+            ensureEuroRateSettings();
+            if (state.euroRateSettings.manual && state.euroRateSettings.rate > 0) {
+                EURO_RATE = state.euroRateSettings.rate;
+                return true;
+            }
+            return false;
+        }
+
         function fetchEuroRate() {
+            if (applyEuroRateFromState()) {
+                updateRateInfo();
+                renderSplitExpenses();
+                return;
+            }
             fetch('https://api.frankfurter.dev/v1/latest?base=EUR&symbols=PLN')
                 .then(r => r.json())
                 .then(data => {
@@ -5053,17 +5082,66 @@
                         EURO_RATE = data.rates.PLN;
                         try { localStorage.setItem(LS_PREFIX + 'euroRate', EURO_RATE); } catch(e) {}
                         updateRateInfo();
+                        renderSplitExpenses();
                     }
                 })
                 .catch(() => {
                     const cached = localStorage.getItem(LS_PREFIX + 'euroRate');
                     if (cached) EURO_RATE = parseFloat(cached);
                     updateRateInfo();
+                    renderSplitExpenses();
                 });
         }
+
         function updateRateInfo() {
             const el = document.getElementById('calc-rate-info');
-            if (el) el.textContent = '1 EUR = ' + EURO_RATE.toFixed(4) + ' PLN (ECB)';
+            const ecbBtn = document.getElementById('btn-euro-rate-ecb');
+            const manual = state.euroRateSettings && state.euroRateSettings.manual;
+            if (el) el.textContent = '1 EUR = ' + EURO_RATE.toFixed(4) + ' PLN' + (manual ? ' (ręcznie)' : ' (ECB)');
+            if (ecbBtn) ecbBtn.classList.toggle('hidden', !manual);
+        }
+
+        function openManualEuroRateEditor() {
+            openModal({
+                title: 'Kurs EUR → PLN (ręcznie)',
+                defaultValue: EURO_RATE.toFixed(4),
+                onConfirm: (val) => {
+                    if (val === null) return;
+                    const r = parseFloat(String(val).trim().replace(',', '.'));
+                    if (!r || r <= 0) { showToast('Podaj poprawny kurs'); return; }
+                    ensureEuroRateSettings();
+                    state.euroRateSettings.manual = true;
+                    state.euroRateSettings.rate = r;
+                    EURO_RATE = r;
+                    try { localStorage.setItem(LS_PREFIX + 'euroRate', String(r)); } catch(e) {}
+                    saveState();
+                    updateRateInfo();
+                    renderSplitExpenses();
+                    showToast('Kurs ręczny zapisany');
+                }
+            });
+        }
+
+        function resetEuroRateFromEcb() {
+            ensureEuroRateSettings();
+            state.euroRateSettings.manual = false;
+            state.euroRateSettings.rate = null;
+            saveState();
+            fetch('https://api.frankfurter.dev/v1/latest?base=EUR&symbols=PLN')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.rates && data.rates.PLN) {
+                        EURO_RATE = data.rates.PLN;
+                        try { localStorage.setItem(LS_PREFIX + 'euroRate', EURO_RATE); } catch(e) {}
+                    }
+                    updateRateInfo();
+                    renderSplitExpenses();
+                    showToast('Kurs z ECB');
+                })
+                .catch(() => {
+                    updateRateInfo();
+                    showToast('Brak sieci — zostaje ostatni kurs');
+                });
         }
         function calcFromEur() {
             const eur = parseFloat(document.getElementById('calc-eur').value);
